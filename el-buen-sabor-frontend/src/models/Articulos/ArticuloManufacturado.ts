@@ -26,7 +26,8 @@ export class ArticuloManufacturado extends Articulo {
         imagen?: Imagen,
         categoria?: Categoria,
         unidadMedidaId?: number,
-        unidadMedida?: UnidadMedida
+        unidadMedida?: UnidadMedida,
+
     ) {
         super(denominacion, precioVenta, categoriaId, id, imagenId, imagen, categoria);
         this.descripcion = descripcion;
@@ -35,5 +36,6 @@ export class ArticuloManufacturado extends Articulo {
         this.detalles = detalles;
         this.unidadMedidaId = unidadMedidaId;
         this.unidadMedida = unidadMedida;
+
     }
 }

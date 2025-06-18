@@ -162,11 +162,6 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             return;
         }
 
-        const uniqueDetalles = Array.from(
-            new Map(formData.detalles.map(
-                d => [`${d.articuloInsumoId}-${d.cantidad}`, d])
-            ).values()
-        );
         // Prepara el payload limpio (sólo IDs, nunca objetos)
         const payload = {
             denominacion: formData.denominacion,

@@ -109,6 +109,10 @@ export class ArticuloService {
         });
     }
 
+    async toggleArticuloManufacturadoBaja(id: number, baja: boolean): Promise<void> {
+        await axios.patch(`http://localhost:8080/api/articuloManufacturado/${id}/baja?baja=${baja}`);
+    }
+
     // --- Métodos para ArticuloInsumo (ABM de Insumos) ---
 
     /**

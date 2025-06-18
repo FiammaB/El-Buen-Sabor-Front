@@ -57,6 +57,19 @@ const ArticuloManufacturadoList: React.FC = () => {
     }
   };
 
+  const handleToggleBaja = async (articulo: ArticuloManufacturado) => {
+    try {
+      await articuloService.toggleArticuloManufacturadoBaja(articulo.id!, !articulo.baja);
+      setArticulosManufacturados(prev =>
+          prev.map(a =>
+              a.id === articulo.id ? { ...a, baja: !a.baja } : a
+          )
+      );
+    } catch (err) {
+      alert("Error al actualizar el estado de disponibilidad.");
+    }
+  };
+
   const handleFormSave = async () => {
     setShowForm(false);
     setSelectedArticulo(null);
@@ -116,6 +129,7 @@ const ArticuloManufacturadoList: React.FC = () => {
                   <th className="px-4 py-2 border">Tiempo Estimado (min)</th>
                   <th className="px-4 py-2 border">Categoría</th>
                   <th className="px-4 py-2 border">Imagen</th>
+                  <th className="px-4 py-2 border">Disponible</th>
                   <th className="px-4 py-2 border">Acciones</th>
                 </tr>
               </thead>
@@ -138,6 +152,13 @@ const ArticuloManufacturadoList: React.FC = () => {
                       ) : (
                         <span className="text-gray-400">Sin imagen</span>
                       )}
+                    </td>
+                    <td className="px-4 py-2 border text-center">
+                      <input
+                          type="checkbox"
+                          checked={!articulo.baja}
+                          onChange={() => handleToggleBaja(articulo)}
+                      />
                     </td>
                     <td className="px-4 py-2 border space-x-2">
                       <button
