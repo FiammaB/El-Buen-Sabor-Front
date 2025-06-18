@@ -41,6 +41,7 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                 if (articulo) {
                     setFormData({
                         ...articulo,
+                        categoriaId: articulo.categoriaId ?? articulo.categoria?.id ?? '',
                         detalles: (articulo.detalles || []).map(d => ({
                             id: d.id,
                             cantidad: d.cantidad,
@@ -161,6 +162,11 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             return;
         }
 
+        const uniqueDetalles = Array.from(
+            new Map(formData.detalles.map(
+                d => [`${d.articuloInsumoId}-${d.cantidad}`, d])
+            ).values()
+        );
         // Prepara el payload limpio (sólo IDs, nunca objetos)
         const payload = {
             denominacion: formData.denominacion,
@@ -173,7 +179,7 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             preparacion: formData.preparacion,
             detalles: formData.detalles.map(d => ({
                 cantidad: d.cantidad,
-                articuloInsumoId: Number(d.articuloInsumoId)
+                articuloInsumoId: Number(d.articuloInsumoId) // <-- ESTE CAMPO!
             }))
         };
 
@@ -183,6 +189,8 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             if (formData.id) {
                 await articuloService.updateArticuloManufacturado(formData.id, payload);
                 alert('Artículo manufacturado actualizado exitosamente.');
+                setFormData(new ArticuloManufacturado('', 0, 0, '', 0, '', [], undefined, undefined, undefined, undefined, undefined, undefined));
+                onSave();
             } else {
                 await articuloService.createArticuloManufacturado(payload);
                 alert('Artículo manufacturado creado exitosamente.');
@@ -209,6 +217,12 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             setError(`Error al guardar el artículo: ${errorMessage}`);
             console.error(err);
         }
+
+        if (formData.detalles.some(d => !d.articuloInsumoId || d.articuloInsumoId === 0)) {
+            setError('Todos los ingredientes deben tener un insumo seleccionado.');
+            return;
+        }
+
     };
 
     if (loadingMasterData) return <p>Cargando datos del formulario...</p>;

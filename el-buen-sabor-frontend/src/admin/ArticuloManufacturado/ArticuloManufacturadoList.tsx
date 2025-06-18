@@ -37,9 +37,10 @@ const ArticuloManufacturadoList: React.FC = () => {
     setShowForm(true); // Mostrar el formulario
   };
 
-  const handleEditClick = (articulo: ArticuloManufacturado) => {
-    setSelectedArticulo(articulo); // Establecer el artículo para editar
-    setShowForm(true); // Mostrar el formulario
+  const handleEditClick = async (articulo: ArticuloManufacturado) => {
+    const articuloActualizado = await articuloService.getArticuloManufacturadoById(articulo.id!);
+    setSelectedArticulo(articuloActualizado!);
+    setShowForm(true);
   };
 
   const handleDeleteClick = async (id: number, denominacion: string) => {
@@ -56,10 +57,10 @@ const ArticuloManufacturadoList: React.FC = () => {
     }
   };
 
-  const handleFormSave = () => {
-    setShowForm(false); // Ocultar el formulario
-    setSelectedArticulo(null); // Limpiar selección
-    fetchArticulos(); // Recargar la lista para mostrar los cambios
+  const handleFormSave = async () => {
+    setShowForm(false);
+    setSelectedArticulo(null);
+    await fetchArticulos();
   };
 
   const handleFormCancel = () => {
