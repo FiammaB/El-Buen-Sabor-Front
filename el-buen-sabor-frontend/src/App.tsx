@@ -1,9 +1,9 @@
 // src/App.tsx
 import React from 'react';
-import ArticuloManufacturadoList from './admin/ArticuloManufacturado/ArticuloManufacturadoList';
-import './App.css'; // Si tienes estilos globales
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Ingredientes from './admin/pages/ingredientes';
+import './App.css';
+
+// Páginas públicas
 import Landing from './components/Landing/Landing';
 import CartPage from './pages/cart/CartPage';
 import Checkout from './pages/checkout/Checkout';
@@ -12,23 +12,74 @@ import LoginPage from './pages/auth/login-page';
 import RegisterPage from './pages/auth/register-page';
 import ExplorarPage from './pages/explore/explore-page';
 
+// Admin
+import ArticuloManufacturadoList from './admin/ArticuloManufacturado/ArticuloManufacturadoList';
+import Ingredientes from './admin/pages/ingredientes';
+
+// Dashboards (según rol)
+import ClienteDashboard from './pages/auth/ClienteDashboard';
+import AdminDashboard from './pages/auth/AdminDashboard';
+
+
+// Contexto + Rutas protegidas
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/landing" element={<Landing />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
-        <Route path="/" element={<ArticuloManufacturadoList />} />
-        <Route path="/admin/pages/ingredientes" element={<Ingredientes />} />
-        {/* AUTH */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        {/* Explore */}
-        <Route path="/explore" element={<ExplorarPage />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* Rutas públicas */}
+          <Route path="/landing" element={<Landing />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/explore" element={<ExplorarPage />} />
+
+          {/* Rutas ADMIN */}
+          <Route
+            path="/admin/articulos"
+            element={
+              <ProtectedRoute role="ADMIN">
+                <ArticuloManufacturadoList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/ingredientes"
+            element={
+              <ProtectedRoute role="ADMIN">
+                <Ingredientes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute role="ADMIN">
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rutas CLIENTE */}
+          <Route
+            path="/cliente/dashboard"
+            element={
+              <ProtectedRoute role="CLIENTE">
+                <ClienteDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Ruta por defecto (landing o 404 personalizada si querés agregar después) */}
+          <Route path="*" element={<Landing />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

@@ -4,9 +4,14 @@ import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManuf
 'use client';
 import { Search, MapPin, Clock, Star, Truck, Smartphone, CreditCard, ShoppingBag, Menu, X, ChevronRight, Heart, Plus } from 'lucide-react';
 import { useCart } from "../Cart/context/cart-context";
+import { useAuth } from "../../context/AuthContext";
+
+
 
 export default function Landing() {
 
+const { role } = useAuth();
+console.log("ROL DETECTADO:", role);
 	const [articulosManufacturados, setArticulosManufacturados] = useState<ArticuloManufacturado[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
@@ -133,14 +138,25 @@ export default function Landing() {
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ayuda</a>
 						</nav>
 
-						<div className="hidden md:flex items-center space-x-4">
-							<button className="text-gray-700 hover:text-orange-500 transition duration-200 font-medium">
-								Iniciar Sesión
-							</button>
-							<button className="bg-orange-500 text-white px-6 py-2 rounded-full hover:bg-orange-600 transition duration-200 font-medium">
-								Registrarse
-							</button>
-						</div>
+<div className="hidden md:flex items-center space-x-4">
+  {role === "ADMINISTRADOR" && (
+    <span className="text-green-600 font-bold">Administrador</span>
+  )}
+  {role === "CLIENTE" && (
+    <span className="text-blue-600 font-bold">Cliente</span>
+  )}
+  {!role && (
+    <>
+      <button className="text-gray-700 hover:text-orange-500 transition duration-200 font-medium">
+        Iniciar Sesión
+      </button>
+      <button className="bg-orange-500 text-white px-6 py-2 rounded-full hover:bg-orange-600 transition duration-200 font-medium">
+        Registrarse
+      </button>
+    </>
+  )}
+</div>
+
 
 						{/* Mobile menu button */}
 						<button

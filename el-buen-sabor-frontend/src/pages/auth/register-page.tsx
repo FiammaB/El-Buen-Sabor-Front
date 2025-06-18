@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { ArrowLeft, Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import axios from "axios"
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -35,7 +36,6 @@ export default function RegisterPage() {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }))
-    // Limpiar error cuando el usuario empiece a escribir
     if (errors) {
       setErrors((prev) => ({ ...prev, [name]: "" }))
     }
@@ -53,41 +53,17 @@ export default function RegisterPage() {
       general: "",
     }
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "El nombre es requerido"
-    }
-
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "El apellido es requerido"
-    }
-
-    if (!formData.email) {
-      newErrors.email = "El email es requerido"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "El email no es válido"
-    }
-
-    if (!formData.phone) {
-      newErrors.phone = "El teléfono es requerido"
-    } else if (!/^\+?[\d\s-()]+$/.test(formData.phone)) {
-      newErrors.phone = "El teléfono no es válido"
-    }
-
-    if (!formData.password) {
-      newErrors.password = "La contraseña es requerida"
-    } else if (formData.password.length < 6) {
-      newErrors.password = "La contraseña debe tener al menos 6 caracteres"
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Confirma tu contraseña"
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Las contraseñas no coinciden"
-    }
-
-    if (!formData.acceptTerms) {
-      newErrors.acceptTerms = "Debes aceptar los términos y condiciones"
-    }
+    if (!formData.firstName.trim()) newErrors.firstName = "El nombre es requerido"
+    if (!formData.lastName.trim()) newErrors.lastName = "El apellido es requerido"
+    if (!formData.email) newErrors.email = "El email es requerido"
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "El email no es válido"
+    if (!formData.phone) newErrors.phone = "El teléfono es requerido"
+    else if (!/^\+?[\d\s-()]+$/.test(formData.phone)) newErrors.phone = "El teléfono no es válido"
+    if (!formData.password) newErrors.password = "La contraseña es requerida"
+    else if (formData.password.length < 6) newErrors.password = "Debe tener al menos 6 caracteres"
+    if (!formData.confirmPassword) newErrors.confirmPassword = "Confirma tu contraseña"
+    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "No coinciden"
+    if (!formData.acceptTerms) newErrors.acceptTerms = "Debes aceptar los términos"
 
     setErrors(newErrors)
     return Object.values(newErrors).every((error) => !error)
@@ -95,29 +71,28 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault()
-
-    if (!validateForm()) {
-      return
-    }
+    if (!validateForm()) return
 
     setIsLoading(true)
     setErrors((prev) => ({ ...prev, general: "" }))
 
     try {
-      // Aquí iría la lógica de registro real
-      // Por ahora simularemos una llamada a la API
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const payload = {
+        nombre: formData.firstName,
+        apellido: formData.lastName,
+        username: formData.email,
+        password: formData.password,
+        telefono: formData.phone,
+        fechaNacimiento: "2000-01-01" // Cambiar si querés pedirlo desde el form
+      }
 
-      // Simular registro exitoso
-      console.log("Registro exitoso:", formData)
+      await axios.post("http://localhost:8080/api/auth/register", payload)
 
-      // Guardar datos de usuario
       localStorage.setItem("isAuthenticated", "true")
       localStorage.setItem("userEmail", formData.email)
       localStorage.setItem("userName", `${formData.firstName} ${formData.lastName}`)
 
-      // Mostrar mensaje de éxito y redirigir
-      alert("¡Registro exitoso! Bienvenido a El Buen Sabor")
+      alert("¡Registro exitoso!")
       navigate("/")
     } catch (error) {
       console.error("Error en registro:", error)
@@ -129,6 +104,9 @@ export default function RegisterPage() {
       setIsLoading(false)
     }
   }
+
+  // Tu diseño HTML no se modifica — solo actualizamos la lógica JS
+
 
   return (
     <div className="min-h-screen bg-gray-50">

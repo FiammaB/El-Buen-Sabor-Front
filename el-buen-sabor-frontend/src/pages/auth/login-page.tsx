@@ -1,89 +1,93 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ArrowLeft, Eye, EyeOff, Mail, Lock, User } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { useState } from "react";
+import { ArrowLeft, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useAuth } from "../../context/AuthContext"; // ✅ contexto de auth
 
 export default function LoginPage() {
-  const navigate = useNavigate()
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate();
+  const { login } = useAuth(); // ✅ usamos el login del contexto
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-  })
+  });
   const [errors, setErrors] = useState({
     email: "",
     password: "",
     general: "",
-  })
+  });
 
   const handleInputChange = (e: any) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-    // Limpiar error cuando el usuario empiece a escribir
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors) {
-      setErrors((prev) => ({ ...prev, [name]: "" }))
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-  }
+  };
 
   const validateForm = () => {
     const newErrors = {
       email: "",
       password: "",
       general: "",
-    }
+    };
 
     if (!formData.email) {
-      newErrors.email = "El email es requerido"
+      newErrors.email = "El email es requerido";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "El email no es válido"
+      newErrors.email = "El email no es válido";
     }
 
     if (!formData.password) {
-      newErrors.password = "La contraseña es requerida"
+      newErrors.password = "La contraseña es requerida";
     } else if (formData.password.length < 6) {
-      newErrors.password = "La contraseña debe tener al menos 6 caracteres"
+      newErrors.password = "La contraseña debe tener al menos 6 caracteres";
     }
 
-    setErrors(newErrors)
-    return !newErrors.email && !newErrors.password
-  }
+    setErrors(newErrors);
+    return !newErrors.email && !newErrors.password;
+  };
 
   const handleSubmit = async (e: any) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!validateForm()) {
-      return
+      return;
     }
 
-    setIsLoading(true)
-    setErrors((prev) => ({ ...prev, general: "" }))
+    setIsLoading(true);
+    setErrors((prev) => ({ ...prev, general: "" }));
 
     try {
-      // Aquí iría la lógica de autenticación real
-      // Por ahora simularemos una llamada a la API
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const res = await axios.post("http://localhost:8080/api/auth/login", {
+        username: formData.email,
+        password: formData.password,
+      });
 
-      // Simular login exitoso
-      console.log("Login exitoso:", formData)
+      const { rol, nombre, apellido } = res.data;
 
-      // Guardar token o datos de usuario en localStorage/context
-      localStorage.setItem("isAuthenticated", "true")
-      localStorage.setItem("userEmail", formData.email)
+      // ✅ Guardar el rol y el nombre completo en el contexto
+      login(rol, `${nombre} ${apellido}`);
 
-      // Redirigir al usuario
-      navigate("/")
+      if (rol === "ADMINISTRADOR") navigate("/admin");
+      else if (rol === "CLIENTE") navigate("/cliente");
+      else navigate("/");
+
     } catch (error) {
-      console.error("Error en login:", error)
+      console.error("Error en login:", error);
       setErrors((prev) => ({
         ...prev,
         general: "Error al iniciar sesión. Verifica tus credenciales.",
-      }))
+      }));
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -231,7 +235,6 @@ export default function LoginPage() {
             </form>
           </div>
 
-          {/* Información adicional */}
           <div className="bg-white rounded-2xl shadow-sm p-6">
             <h3 className="font-semibold text-gray-900 mb-4">¿Por qué crear una cuenta?</h3>
             <ul className="space-y-2 text-sm text-gray-600">
@@ -256,5 +259,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
