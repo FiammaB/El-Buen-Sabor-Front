@@ -107,9 +107,10 @@ const ArticuloManufacturadoList: React.FC = () => {
         {showForm && (
           <div className="border border-gray-300 p-6 rounded mb-6 bg-white shadow">
             <ArticuloManufacturadoForm
-              articulo={selectedArticulo}
-              onSave={handleFormSave}
-              onCancel={handleFormCancel}
+                articulo={selectedArticulo}
+                articulosManufacturados={articulosManufacturados}
+                onSave={handleFormSave}
+                onCancel={handleFormCancel}
             />
           </div>
         )}
