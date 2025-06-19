@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+@import "tailwindcss";
+
+>>>>>>> login-con-roles
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -15,6 +20,7 @@
 
 a {
   font-weight: 500;
+<<<<<<< HEAD
   color: #646cff;
   text-decoration: inherit;
 }
@@ -23,12 +29,28 @@ a:hover {
 }
 
 body {
+=======
+  text-decoration: inherit;
+}
+
+.bs-btn {
+  background-color: #111;
+  color: white;
+  font-weight: semibold;
+}
+
+/* body {
+>>>>>>> login-con-roles
   margin: 0;
   display: flex;
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+<<<<<<< HEAD
 }
+=======
+} */
+>>>>>>> login-con-roles
 
 h1 {
   font-size: 3.2em;
@@ -36,6 +58,7 @@ h1 {
 }
 
 /* En estos casos conviene armar una clase ej .ebs-btn */
+<<<<<<< HEAD
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -55,14 +78,24 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+=======
+.ebs-button:not(.ebs-landing button) {
+  @apply bg-orange-500 text-white px-8 py-3 rounded-xl hover:bg-orange-600 transition duration-200 font-medium flex items-center space-x-2;
+}
+
+
+>>>>>>> login-con-roles
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
   }
+<<<<<<< HEAD
   a:hover {
     color: #747bff;
   }
+=======
+>>>>>>> login-con-roles
   button {
     background-color: #f9f9f9;
   }
@@ -105,4 +138,14 @@ button:focus-visible {
   color: green;
   cursor: pointer;
   text-decoration: underline;
+<<<<<<< HEAD
+=======
+}
+
+/* Forms */
+input,
+select,
+textarea {
+  background-color: white;
+>>>>>>> login-con-roles
 }

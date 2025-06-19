@@ -7,6 +7,10 @@ export interface IArticuloResponseDTO {
     id?: number;
     denominacion: string;
     precioVenta: number;
+<<<<<<< HEAD
+=======
+    estaDadoDeBaja: boolean;
+>>>>>>> login-con-roles
     imagenId?: number;
     imagen?: IImagenResponseDTO; // Objeto anidado
     categoriaId: number;

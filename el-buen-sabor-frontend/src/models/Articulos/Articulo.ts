@@ -10,6 +10,10 @@ export abstract class Articulo {
     imagen?: Imagen;
     categoriaId: number;
     categoria?: Categoria;
+<<<<<<< HEAD
+=======
+    baja?: boolean;
+>>>>>>> login-con-roles
 
     constructor(
         denominacion: string,
@@ -18,7 +22,12 @@ export abstract class Articulo {
         id?: number,
         imagenId?: number,
         imagen?: Imagen,
+<<<<<<< HEAD
         categoria?: Categoria
+=======
+        categoria?: Categoria,
+        baja?: boolean
+>>>>>>> login-con-roles
     ) {
         this.denominacion = denominacion;
         this.precioVenta = precioVenta;
@@ -27,5 +36,9 @@ export abstract class Articulo {
         this.imagenId = imagenId;
         this.imagen = imagen;
         this.categoria = categoria;
+<<<<<<< HEAD
+=======
+        this.baja = baja;
+>>>>>>> login-con-roles
     }
 }

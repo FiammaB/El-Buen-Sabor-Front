@@ -25,9 +25,16 @@ export class ArticuloInsumo extends Articulo {
         imagenId?: number,
         imagen?: Imagen,
         categoria?: Categoria,
+<<<<<<< HEAD
         unidadMedida?: UnidadMedida
     ) {
         super(denominacion, precioVenta, categoriaId, id, imagenId, imagen, categoria);
+=======
+        unidadMedida?: UnidadMedida,
+        baja: boolean = false,
+    ) {
+        super(denominacion, precioVenta, categoriaId, id, imagenId, imagen, categoria, baja);
+>>>>>>> login-con-roles
         this.precioCompra = precioCompra;
         this.stockActual = stockActual;
         this.stockMinimo = stockMinimo;

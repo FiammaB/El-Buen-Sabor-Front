@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+<<<<<<< HEAD
+=======
+.env.local
+>>>>>>> login-con-roles
 
 # Editor directories and files
 .vscode/*

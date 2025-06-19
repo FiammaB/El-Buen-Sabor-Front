@@ -19,7 +19,11 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+<<<<<<< HEAD
     "erasableSyntaxOnly": true,
+=======
+    "erasableSyntaxOnly": false,
+>>>>>>> login-con-roles
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
