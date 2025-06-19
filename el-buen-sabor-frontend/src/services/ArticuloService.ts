@@ -100,8 +100,8 @@ export class ArticuloService {
     deleteArticulo(id: number): Promise<void> {
         console.log("Id a desactivar: ", id)
         return fetch(`${API_INSUMO_BASE_URL}/${id}/deactivate`, {
-                method: 'PATCH',
-                headers: {
+            method: 'PATCH',
+            headers: {
                 'Content-Type': 'application/json',
             },
         }).then(response => {
@@ -369,7 +369,7 @@ export class ArticuloService {
         // O que el endpoint general /manufacturados ya ha sido modificado en el backend para solo devolver activos.
         // Si tu backend modificó findAllManufacturados para devolver solo activos, puedes seguir usando getAllArticulosManufacturados.
         // Si tienes un endpoint específico en el backend como "/manufacturados/activos", úsalo aquí.
-        const response = await axios.get<IArticuloManufacturadoResponseDTO[]>(`${API_BASE_URL}/articuloManufacturado/manufacturados`); // O /manufacturados/activos si lo creaste
+        const response = await axios.get<IArticuloManufacturadoResponseDTO[]>(`${API_BASE_URL}/manufacturados`); // O /manufacturados/activos si lo creaste
         return response.data.map(data => this.mapToArticuloManufacturado(data));
     }
 }
