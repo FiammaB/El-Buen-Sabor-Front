@@ -33,7 +33,7 @@ export default function CategoriaForm({ categorias, reloadCategorias }: { catego
 		};
 
 		try {
-			const res = await fetch('http://localhost:8080/api/v1/categorias', {
+			const res = await fetch('http://localhost:8080/api/categorias', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(data),

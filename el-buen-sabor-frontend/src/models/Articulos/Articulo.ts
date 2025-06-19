@@ -10,6 +10,7 @@ export abstract class Articulo {
     imagen?: Imagen;
     categoriaId: number;
     categoria?: Categoria;
+    baja?: boolean;
 
     constructor(
         denominacion: string,
@@ -18,7 +19,8 @@ export abstract class Articulo {
         id?: number,
         imagenId?: number,
         imagen?: Imagen,
-        categoria?: Categoria
+        categoria?: Categoria,
+        baja?: boolean
     ) {
         this.denominacion = denominacion;
         this.precioVenta = precioVenta;
@@ -27,5 +29,6 @@ export abstract class Articulo {
         this.imagenId = imagenId;
         this.imagen = imagen;
         this.categoria = categoria;
+        this.baja = baja;
     }
 }
