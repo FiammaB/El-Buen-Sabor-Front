@@ -11,11 +11,12 @@ import CategoriaForm from '../../components/Categoria/CategoriaForm';
 
 interface ArticuloManufacturadoFormProps {
     articulo?: ArticuloManufacturado | null;
+    articulosManufacturados: ArticuloManufacturado[]; // <-- Agregado
     onSave: () => void;
     onCancel: () => void;
 }
 
-const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ articulo, onSave, onCancel }) => {
+const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ articulo, articulosManufacturados, onSave, onCancel }) => {
     const [formData, setFormData] = useState<ArticuloManufacturado>(
         articulo || new ArticuloManufacturado('', 0, 0, '', 0, '', [], undefined, undefined, undefined, undefined, undefined, undefined)
     );
@@ -41,6 +42,7 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                 if (articulo) {
                     setFormData({
                         ...articulo,
+                        categoriaId: articulo.categoriaId ?? articulo.categoria?.id ?? '',
                         detalles: (articulo.detalles || []).map(d => ({
                             id: d.id,
                             cantidad: d.cantidad,
@@ -63,7 +65,18 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
         // SOLO depende de articulo (NO de insumos ni insumos.length)
     }, [articulo, articuloService]);
 
+    const [nombreDuplicado, setNombreDuplicado] = useState(false);
 
+    useEffect(() => {
+        if (!formData.denominacion || !articulosManufacturados) {
+            setNombreDuplicado(false);
+            return;
+        }
+        const existe = articulosManufacturados
+            .filter(a => !formData.id || a.id !== formData.id)
+            .some(a => a.denominacion.trim().toLowerCase() === formData.denominacion.trim().toLowerCase());
+        setNombreDuplicado(existe);
+    }, [formData.denominacion, formData.id, articulosManufacturados]);
 
     // Cambios para el form principal
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -160,6 +173,10 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             setError('Debe seleccionar una categoría.');
             return;
         }
+        if (nombreDuplicado) {
+            setError('Ya existe un artículo manufacturado con ese nombre.');
+            return;
+        }
 
         // Prepara el payload limpio (sólo IDs, nunca objetos)
         const payload = {
@@ -172,6 +189,7 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             tiempoEstimadoMinutos: formData.tiempoEstimadoMinutos,
             preparacion: formData.preparacion,
             detalles: formData.detalles.map(d => ({
+                id: d.id ?? undefined,
                 cantidad: d.cantidad,
                 articuloInsumoId: Number(d.articuloInsumoId)
             }))
@@ -183,6 +201,8 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             if (formData.id) {
                 await articuloService.updateArticuloManufacturado(formData.id, payload);
                 alert('Artículo manufacturado actualizado exitosamente.');
+                setFormData(new ArticuloManufacturado('', 0, 0, '', 0, '', [], undefined, undefined, undefined, undefined, undefined, undefined));
+                onSave();
             } else {
                 await articuloService.createArticuloManufacturado(payload);
                 alert('Artículo manufacturado creado exitosamente.');
@@ -209,6 +229,12 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             setError(`Error al guardar el artículo: ${errorMessage}`);
             console.error(err);
         }
+
+        if (formData.detalles.some(d => !d.articuloInsumoId || d.articuloInsumoId === 0)) {
+            setError('Todos los ingredientes deben tener un insumo seleccionado.');
+            return;
+        }
+
     };
 
     if (loadingMasterData) return <p>Cargando datos del formulario...</p>;
@@ -221,6 +247,11 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                 <div style={{ marginBottom: '15px' }}>
                     <label>Denominación:</label>
                     <input type="text" name="denominacion" value={formData.denominacion} onChange={handleChange} required style={{ width: '100%', padding: '8px' }} />
+                    {nombreDuplicado && (
+                        <div style={{ color: "red", marginTop: 4, fontSize: 14 }}>
+                            "Ya existe un artículo manufacturado con ese nombre."
+                        </div>
+                    )}
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                     <label>Precio Venta:</label>

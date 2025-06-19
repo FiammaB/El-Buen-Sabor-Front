@@ -24,6 +24,7 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;Node.js.ArticuloService.ts.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
@@ -68,7 +69,10 @@
       <workItem from="1748729903354" duration="11000" />
       <workItem from="1748729950408" duration="752000" />
       <workItem from="1750185814121" duration="164000" />
-      <workItem from="1750186705458" duration="10348000" />
+      <workItem from="1750186705458" duration="10577000" />
+      <workItem from="1750199443691" duration="3538000" />
+      <workItem from="1750263063380" duration="9872000" />
+      <workItem from="1750285212191" duration="5413000" />
     </task>
     <servers />
   </component>

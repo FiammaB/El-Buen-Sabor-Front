@@ -48,7 +48,7 @@ export class ArticuloService {
     async getArticuloManufacturadoById(id: number): Promise<ArticuloManufacturado | null> {
         try {
             // Axios espera una única instancia de la interfaz de respuesta
-            const response = await axios.get<IArticuloManufacturadoResponseDTO>(`${API_BASE_URL}/articuloManufacturado/${id}`);
+            const response = await axios.get<IArticuloManufacturadoResponseDTO>(`${API_BASE_URL}/${id}`);
             return this.mapToArticuloManufacturado(response.data);
         } catch (error) {
             if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -66,7 +66,7 @@ export class ArticuloService {
     async createArticuloManufacturado(articulo: ArticuloManufacturado): Promise<ArticuloManufacturado> {
         // Axios serializa la instancia de clase a JSON.
         // La respuesta se tipa con la interfaz de respuesta del backend.
-        const response = await axios.post<IArticuloManufacturadoResponseDTO>(`${API_BASE_URL}/articuloManufacturado`, articulo);
+        const response = await axios.post<IArticuloManufacturadoResponseDTO>(`${API_BASE_URL}`, articulo);
         return this.mapToArticuloManufacturado(response.data);
     }
 
@@ -77,7 +77,7 @@ export class ArticuloService {
      * @returns Promesa que resuelve al ArticuloManufacturado actualizado.
      */
     async updateArticuloManufacturado(id: number, articulo: ArticuloManufacturado): Promise<ArticuloManufacturado> {
-        const response = await axios.put<IArticuloManufacturadoResponseDTO>(`${API_BASE_URL}/articuloManufacturado/${id}`, articulo);
+        const response = await axios.put<IArticuloManufacturadoResponseDTO>(`${API_BASE_URL}/${id}`, articulo);
         return this.mapToArticuloManufacturado(response.data);
     }
 
@@ -88,7 +88,7 @@ export class ArticuloService {
      */
     async deleteArticuloManufacturado(id: number): Promise<boolean> {
         try {
-            await axios.delete(`${API_BASE_URL}/articuloManufacturado/${id}`); // El endpoint de borrado es general para Articulo
+            await axios.delete(`${API_BASE_URL}/${id}`); // El endpoint de borrado es general para Articulo
             return true;
         } catch (error) {
             console.error("Error al eliminar artículo manufacturado:", error);
@@ -111,6 +111,10 @@ export class ArticuloService {
         });
     }
 
+    async toggleArticuloManufacturadoBaja(id: number, baja: boolean): Promise<void> {
+        await axios.patch(`http://localhost:8080/api/articuloManufacturado/${id}/baja?baja=${baja}`);
+    }
+
     // --- Métodos para ArticuloInsumo (ABM de Insumos) ---
 
     /**
@@ -123,6 +127,15 @@ export class ArticuloService {
         return response.data.map(data => this.mapToArticuloInsumo(data));
     }
 
+    async sumarStock(id: number, cantidad: number): Promise<ArticuloInsumo> {
+        // Usa PUT, tu backend ya espera un param llamado 'cantidad'
+        const response = await axios.put<ArticuloInsumo>(`${API_INSUMO_BASE_URL}/${id}/sumar-stock?cantidad=${cantidad}`);
+        return response.data;
+    }
+
+    async toggleBaja(id: number, baja: boolean): Promise<void> {
+        await axios.patch(`${API_INSUMO_BASE_URL}/${id}/baja?baja=${baja}`);
+    }
     /**
      * Obtiene un artículo insumo por su ID.
      * @param id El ID del artículo insumo.
