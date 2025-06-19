@@ -18,11 +18,17 @@ const CompraIngredientesPage: React.FC = () => {
     const [insumos, setInsumos] = useState<ArticuloInsumo[]>([]);
     const [cantidad, setCantidad] = useState<{ [id: number]: number }>({});
     const [error, setError] = useState<string | null>(null);
+    const [precioCompra, setPrecioCompra] = useState<{ [id: number]: number }>({});
+
 
     const fetchInsumos = async () => {
         try {
             const data = await articuloService.getAllArticulosInsumo();
             setInsumos(data);
+            // Setear precioCompra de cada insumo (estado controlado)
+            const precios: { [id: number]: number } = {};
+            data.forEach(ins => { precios[ins.id] = ins.precioCompra; });
+            setPrecioCompra(precios);
         } catch {
             setError('Error cargando insumos');
         }
@@ -39,7 +45,7 @@ const CompraIngredientesPage: React.FC = () => {
             setCantidad(prev => ({ ...prev, [id]: 0 }));
             await fetchInsumos();
         } catch {
-            setError('Error al actualizar el stock');
+            setError('Error al actualizar el stock y/o precio');
         }
     };
 
@@ -58,6 +64,18 @@ const CompraIngredientesPage: React.FC = () => {
         }
     };
 
+    const handleActualizarPrecio = async (id: number) => {
+        try {
+            // Lógica para actualizar solo el precio de compra
+            const precio = precioCompra[id];
+            // Opcional: Validar que el precio es válido y distinto al actual
+            await axios.put(`/api/articuloInsumo/${id}/actualizar-precio?precioCompra=${precio}`);
+            await fetchInsumos();
+        } catch {
+            setError('Error al actualizar el precio de compra');
+        }
+    };
+
     return (
         <div className="max-w-2xl mx-auto py-8">
             <h1 className="text-2xl font-bold mb-4">Registrar Compra de Ingredientes</h1>
@@ -69,6 +87,7 @@ const CompraIngredientesPage: React.FC = () => {
                     <th>Unidad</th>
                     <th>Stock Actual</th>
                     <th>Precio Compra</th>
+                    <th>Nuevo Precio</th> {/* <--- Nueva columna */}
                     <th>Sumar Stock</th>
                     <th>Activo</th>
                 </tr>
@@ -80,6 +99,26 @@ const CompraIngredientesPage: React.FC = () => {
                         <td>{ins.unidadMedida?.denominacion || '-'}</td>
                         <td>{ins.stockActual}</td>
                         <td>${ins.precioCompra.toFixed(2)}</td>
+                        {/* Nuevo Precio */}
+                        <td>
+                            <input
+                                type="number"
+                                min={0}
+                                step={0.01}
+                                value={precioCompra[ins.id] ?? ''}
+                                onChange={e => setPrecioCompra({ ...precioCompra, [ins.id]: Number(e.target.value) })}
+                                className="border p-1 w-20"
+                                disabled={ins.baja}
+                            />
+                            <button
+                                className="ml-2 px-2 py-1 bg-blue-500 text-white rounded disabled:opacity-50"
+                                disabled={ins.baja || precioCompra[ins.id] === ins.precioCompra}
+                                onClick={() => handleActualizarPrecio(ins.id)}
+                            >
+                                Actualizar
+                            </button>
+                        </td>
+                        {/* Sumar Stock */}
                         <td>
                             <input
                                 type="number"
@@ -91,7 +130,7 @@ const CompraIngredientesPage: React.FC = () => {
                                 placeholder="Cantidad"
                             />
                             <button
-                                className="ml-2 px-2 py-1 bg-green-600 text-white rounded disabled:opacity-50"
+                                className="ml-2 px-2 py-1 bg-green-400 text-white rounded disabled:opacity-50"
                                 disabled={ins.baja || !(cantidad[ins.id] > 0)}
                                 onClick={() => handleSumarStock(ins.id)}
                             >
