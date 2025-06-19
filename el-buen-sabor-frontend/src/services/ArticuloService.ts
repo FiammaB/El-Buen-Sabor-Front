@@ -96,9 +96,11 @@ export class ArticuloService {
         }
     }
 
-    // Borrar articulo
+    // Borrar articulo insumo
     deleteArticulo(id: number): Promise<void> {
-        return fetch(`/api/articuloInsumo/${id}/deactivate`, {
+        console.log("Id a desactivar: ", id)
+        return fetch(`${API_INSUMO_BASE_URL}/${id}/deactivate`, {
+                method: 'PATCH',
                 headers: {
                 'Content-Type': 'application/json',
             },
@@ -117,6 +119,7 @@ export class ArticuloService {
      */
     async getAllArticulosInsumo(): Promise<ArticuloInsumo[]> {
         const response = await axios.get<IArticuloInsumoResponseDTO[]>(`${API_INSUMO_BASE_URL}/insumos`);
+        console.log("ARTICULOS TRAIDOS DEL BACK ", response)
         return response.data.map(data => this.mapToArticuloInsumo(data));
     }
 
@@ -290,7 +293,8 @@ export class ArticuloService {
             data.imagenId,
             imagen,
             categoria,
-            unidadMedida
+            unidadMedida,
+            data.baja
         );
     }
 

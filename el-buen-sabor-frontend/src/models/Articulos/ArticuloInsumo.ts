@@ -26,7 +26,7 @@ export class ArticuloInsumo extends Articulo {
         imagen?: Imagen,
         categoria?: Categoria,
         unidadMedida?: UnidadMedida,
-        baja: boolean = false,
+        baja?: boolean,
     ) {
         super(denominacion, precioVenta, categoriaId, id, imagenId, imagen, categoria, baja);
         this.precioCompra = precioCompra;
