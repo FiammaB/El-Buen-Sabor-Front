@@ -10,8 +10,11 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function Landing() {
 
-const { role } = useAuth();
-console.log("ROL DETECTADO:", role);
+	const { role, logout, username } = useAuth();
+
+
+
+	console.log("ROL DETECTADO:", role);
 	const [articulosManufacturados, setArticulosManufacturados] = useState<ArticuloManufacturado[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
@@ -137,26 +140,66 @@ console.log("ROL DETECTADO:", role);
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ofertas</a>
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ayuda</a>
 						</nav>
+						{/* Botones para usuarios no logueados */}
+						{!role && (
+							<div className="hidden md:flex items-center space-x-4">
+								<a
+									href="/login"
+									className="text-gray-700 hover:text-orange-500 transition duration-200 font-medium"
+								>
+									Iniciar Sesión
+								</a>
+								<a
+									href="/register"
+									className="bg-orange-500 text-white px-6 py-2 rounded-full hover:bg-orange-600 transition duration-200 font-medium"
+								>
+									Registrarse
+								</a>
+							</div>
+						)}
 
-<div className="hidden md:flex items-center space-x-4">
-  {role === "ADMINISTRADOR" && (
-    <span className="text-green-600 font-bold">Administrador</span>
-  )}
-  {role === "CLIENTE" && (
-    <span className="text-blue-600 font-bold">Cliente</span>
-  )}
-  {!role && (
-    <>
-      <button className="text-gray-700 hover:text-orange-500 transition duration-200 font-medium">
-        Iniciar Sesión
-      </button>
-      <button className="bg-orange-500 text-white px-6 py-2 rounded-full hover:bg-orange-600 transition duration-200 font-medium">
-        Registrarse
-      </button>
-    </>
-  )}
-</div>
-
+						{role === "ADMINISTRADOR" && (
+							<div className="flex items-center space-x-4">
+								<span className="text-green-600 font-bold">Administrador</span>
+								<a
+									href="/admin/ingredientes"
+									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+								>
+									Ingredientes
+								</a>
+								<a
+									href="/admin/articulos"
+									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+								>
+									Artículos
+								</a>
+								<a
+									href="/admin/dashboard"
+									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+								>
+									Dashboard
+								</a>
+								<button
+									onClick={logout}
+									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+								>
+									Cerrar Sesión
+								</button>
+							</div>
+						)}
+						{role === "CLIENTE" && (
+							<div className="flex items-center space-x-4">
+								<span className="text-blue-600 font-bold">
+									Cliente: {username || "Invitado"}
+								</span>
+								<button
+									onClick={logout}
+									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+								>
+									Cerrar Sesión
+								</button>
+							</div>
+						)}
 
 						{/* Mobile menu button */}
 						<button
@@ -325,8 +368,8 @@ console.log("ROL DETECTADO:", role);
 											<button
 												onClick={() => addToCart(articulo)}
 												className={`p-2 rounded-full transition duration-200 ${isInCart(articulo.id || 1)
-														? "bg-green-500 text-white"
-														: "bg-orange-500 text-white hover:bg-orange-600"
+													? "bg-green-500 text-white"
+													: "bg-orange-500 text-white hover:bg-orange-600"
 													}`}
 											>
 												{isInCart(articulo.id || 1) ? (

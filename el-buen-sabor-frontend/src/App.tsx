@@ -16,12 +16,11 @@ import ExplorarPage from './pages/explore/explore-page';
 import ArticuloManufacturadoList from './admin/ArticuloManufacturado/ArticuloManufacturadoList';
 import Ingredientes from './admin/pages/ingredientes';
 
-// Dashboards (según rol)
+// Dashboards
 import ClienteDashboard from './pages/auth/ClienteDashboard';
 import AdminDashboard from './pages/auth/AdminDashboard';
 
-
-// Contexto + Rutas protegidas
+// Contexto y rutas protegidas
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -39,11 +38,11 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/explore" element={<ExplorarPage />} />
 
-          {/* Rutas ADMIN */}
+          {/* Rutas ADMINISTRADOR */}
           <Route
             path="/admin/articulos"
             element={
-              <ProtectedRoute role="ADMIN">
+              <ProtectedRoute role="ADMINISTRADOR">
                 <ArticuloManufacturadoList />
               </ProtectedRoute>
             }
@@ -51,7 +50,7 @@ function App() {
           <Route
             path="/admin/ingredientes"
             element={
-              <ProtectedRoute role="ADMIN">
+              <ProtectedRoute role="ADMINISTRADOR">
                 <Ingredientes />
               </ProtectedRoute>
             }
@@ -59,7 +58,7 @@ function App() {
           <Route
             path="/admin/dashboard"
             element={
-              <ProtectedRoute role="ADMIN">
+              <ProtectedRoute role="ADMINISTRADOR">
                 <AdminDashboard />
               </ProtectedRoute>
             }
@@ -75,7 +74,7 @@ function App() {
             }
           />
 
-          {/* Ruta por defecto (landing o 404 personalizada si querés agregar después) */}
+          {/* Ruta por defecto */}
           <Route path="*" element={<Landing />} />
         </Routes>
       </Router>

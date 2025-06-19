@@ -1,18 +1,32 @@
+// src/components/ProtectedRoute.tsx
+
 import { useAuth } from "../context/AuthContext";
 import { Navigate } from "react-router-dom";
 import React, { type ReactNode } from "react";
 
+// Tipos válidos de roles
+type UserRole = "ADMINISTRADOR" | "CLIENTE";
 
-type ProtectedRouteProps = {
+// Props del componente
+interface ProtectedRouteProps {
   children: ReactNode;
-  role: string;
-};
+  role: UserRole;
+}
 
+// Componente protegido
 export default function ProtectedRoute({ children, role }: ProtectedRouteProps) {
   const { isAuthenticated, role: userRole } = useAuth();
 
-  if (!isAuthenticated) return <Navigate to="/login" />;
-  if (userRole !== role) return <Navigate to="/" />;
+  // Esperar a que se recupere el rol (evita redirección prematura)
+  if (!isAuthenticated || userRole === null) {
+    return null; // Podés mostrar un loader si querés
+  }
 
+  // Redirigir si el usuario no tiene el rol requerido
+  if (userRole !== role) {
+    return <Navigate to="/" replace />;
+  }
+
+  // Mostrar contenido protegido
   return <>{children}</>;
 }
