@@ -124,6 +124,15 @@ export class ArticuloService {
         return response.data.map(data => this.mapToArticuloInsumo(data));
     }
 
+    async sumarStock(id: number, cantidad: number): Promise<ArticuloInsumo> {
+        // Usa PUT, tu backend ya espera un param llamado 'cantidad'
+        const response = await axios.put<ArticuloInsumo>(`${API_INSUMO_BASE_URL}/${id}/sumar-stock?cantidad=${cantidad}`);
+        return response.data;
+    }
+
+    async toggleBaja(id: number, baja: boolean): Promise<void> {
+        await axios.patch(`${API_INSUMO_BASE_URL}/${id}/baja?baja=${baja}`);
+    }
     /**
      * Obtiene un artículo insumo por su ID.
      * @param id El ID del artículo insumo.

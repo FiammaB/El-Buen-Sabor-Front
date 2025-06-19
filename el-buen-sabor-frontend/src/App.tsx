@@ -11,6 +11,7 @@ import OrderConfirmationPage from './pages/order-confirmation/OrderConfirmation'
 import LoginPage from './pages/auth/login-page';
 import RegisterPage from './pages/auth/register-page';
 import ExplorarPage from './pages/explore/explore-page';
+import CompraIngredientesPage from "./pages/CompraIngrediente/CompraIngredientesPage.tsx";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
         <Route path="/" element={<ArticuloManufacturadoList />} />
         <Route path="/admin/pages/ingredientes" element={<Ingredientes />} />
+        <Route path="/compras-ingredientes" element={<CompraIngredientesPage />} />
         {/* AUTH */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

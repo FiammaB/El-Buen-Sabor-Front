@@ -189,8 +189,9 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             tiempoEstimadoMinutos: formData.tiempoEstimadoMinutos,
             preparacion: formData.preparacion,
             detalles: formData.detalles.map(d => ({
+                id: d.id ?? undefined,
                 cantidad: d.cantidad,
-                articuloInsumoId: Number(d.articuloInsumoId) // <-- ESTE CAMPO!
+                articuloInsumoId: Number(d.articuloInsumoId)
             }))
         };
 
