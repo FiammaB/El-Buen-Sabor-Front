@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import type { ArticuloInsumo } from "../../models/Articulos/ArticuloInsumo"
 import { ArticuloService } from "../../services/ArticuloService"
 import { Pencil, Trash2, Plus, Check, X, Loader2 } from "lucide-react"
@@ -26,7 +26,10 @@ export default function Ingredientes() {
   })
   const [categoriasList, setCategoriasList] = useState<Categoria[]>([])
 
+  const fileEditInputRef = useRef<HTMLInputElement | null>(null);
+
   const articuloService = new ArticuloService()
+
 
   const fetchIngredientes = async () => {
     try {
@@ -76,13 +79,22 @@ export default function Ingredientes() {
       setIngredientes((prev) =>
         prev.map((i) => (i.id === actualizado.id ? actualizado : i))
       )
+
       setIngredienteEditando(null)
+
+      if (fileEditInputRef.current) {
+        fileEditInputRef.current.value = "";
+      }
     } catch (err) {
       console.error("Error al actualizar:", err)
       alert("Hubo un error al actualizar el ingrediente.")
     }
   }
 
+  const cancelarEdicion = () => {
+    setIngredienteEditando(null);
+    if (fileEditInputRef.current) fileEditInputRef.current.value = "";
+  };
 
   const crearIngrediente = async () => {
     try {
@@ -126,6 +138,25 @@ export default function Ingredientes() {
       const response = await uploadImage(file); // asegúrate de importar uploadImage
       const imagenSubida = response.data;
       setNuevoIngrediente(prev => ({
+        ...prev,
+        imagen: { id: imagenSubida.id, denominacion: imagenSubida.denominacion },
+      }));
+    } catch (error) {
+      alert("Error al subir la imagen");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleImageUploadEditar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const response = await uploadImage(file); // usá tu servicio de imágenes
+      const imagenSubida = response.data;
+      setFormData(prev => ({
         ...prev,
         imagen: { id: imagenSubida.id, denominacion: imagenSubida.denominacion },
       }));
@@ -439,11 +470,12 @@ export default function Ingredientes() {
                     className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                   />
                   <input
-                    type="number"
-                    value={formData.imagen?.id || ""}
-                    onChange={(e) => setFormData({ ...formData, imagen: { id: parseInt(e.target.value), denominacion: formData.imagen?.denominacion || "" } })}
-                    placeholder="ID Imagen"
-                    className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUploadEditar}
+                      disabled={isUploading}
+                      className="w-full border border-gray-200 rounded-lg p-3"
+                      ref={fileEditInputRef}
                   />
                 </div>
                 <div className="flex items-center space-x-3">
