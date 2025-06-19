@@ -133,9 +133,16 @@ export class ArticuloService {
         return response.data;
     }
 
-    async toggleBaja(id: number, baja: boolean): Promise<void> {
-        await axios.patch(`${API_INSUMO_BASE_URL}/${id}/baja?baja=${baja}`);
+    toggleBaja(id: number, baja: boolean): Promise<void> {
+        return fetch(`/api/articuloInsumo/${id}/baja?baja=${baja}`, {
+            method: 'PATCH',
+        }).then(response => {
+            if (!response.ok) {
+            throw new Error('No se pudo actualizar el estado de baja.');
+            }
+        });
     }
+
     /**
      * Obtiene un artículo insumo por su ID.
      * @param id El ID del artículo insumo.

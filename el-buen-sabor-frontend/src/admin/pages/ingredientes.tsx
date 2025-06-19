@@ -53,7 +53,7 @@ export default function Ingredientes() {
   const handleEliminar = async (id: number) => {
     try {
       await articuloService.deleteArticulo(id)
-      // setIngredientes((prev) => prev.filter((ing) => ing.id !== id))
+      fetchIngredientes();
     } catch (error) {
       console.error(error)
       alert("Error al eliminar el ingrediente.")
