@@ -8,6 +8,7 @@ import { CategoriaService } from '../../services/CategoriaService.';
 import { Categoria } from "../../models/Categoria/Categoria"
 import { all } from "axios"
 import SideBar from '../compontents/Sidebar';
+import {uploadImage} from "../../services/imagenService.ts";
 
 export default function Ingredientes() {
   const [ingredientes, setIngredientes] = useState<ArticuloInsumo[]>([])
@@ -93,7 +94,7 @@ export default function Ingredientes() {
       }
       const creado = await articuloService.createArticuloInsumo(payload as ArticuloInsumo)
       setIngredientes((prev) => [...prev, creado])
-      setNuevoIngrediente({})
+      setNuevoIngrediente(ingredienteVacio)
     } catch (err) {
       console.error("Error al crear:", err)
       alert("Hubo un error al crear el ingrediente.")
@@ -112,6 +113,40 @@ export default function Ingredientes() {
     console.log("CATEGORIAS: ", allCategorias)
     setCategoriasList(allCategorias)
   }
+
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleImageUploadNuevo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      // Llama al servicio, igual que en ArticuloManufacturadoForm
+      const response = await uploadImage(file); // asegúrate de importar uploadImage
+      const imagenSubida = response.data;
+      setNuevoIngrediente(prev => ({
+        ...prev,
+        imagen: { id: imagenSubida.id, denominacion: imagenSubida.denominacion },
+      }));
+    } catch (error) {
+      alert("Error al subir la imagen");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const ingredienteVacio: Partial<ArticuloInsumo> = {
+    denominacion: "",
+    precioCompra: 0,
+    stockActual: 0,
+    stockMinimo: 0,
+    categoria: undefined,
+    unidadMedida: undefined,
+    imagen: undefined,
+  };
+
+
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -235,20 +270,20 @@ export default function Ingredientes() {
                   className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                 />
                 <input
-                  type="number"
-                  value={nuevoIngrediente.imagen?.id || ""}
-                  onChange={(e) =>
-                    setNuevoIngrediente({
-                      ...nuevoIngrediente,
-                      imagen: {
-                        id: parseInt(e.target.value),
-                        denominacion: nuevoIngrediente.imagen?.denominacion || "",
-                      },
-                    })
-                  }
-                  placeholder="ID Imagen"
-                  className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUploadNuevo}
+                    disabled={isUploading}
+                    className="w-full border border-gray-200 rounded-lg p-3"
                 />
+                {isUploading && <p>Subiendo imagen...</p>}
+                {nuevoIngrediente.imagen?.denominacion && (
+                    <div className="mt-2">
+                      <img src={nuevoIngrediente.imagen.denominacion} alt="Imagen subida" className="w-32 h-32 object-cover border rounded"/>
+                      <p className="text-xs text-gray-500">URL: {nuevoIngrediente.imagen.denominacion}</p>
+                    </div>
+                )}
+
               </div>
 
               <button
