@@ -6,11 +6,11 @@ import './App.css';
 // Páginas públicas
 import Landing from './components/Landing/Landing';
 import CartPage from './pages/cart/CartPage';
-import Checkout from './pages/checkout/Checkout';
-import OrderConfirmationPage from './pages/order-confirmation/OrderConfirmation';
+import Checkout from './components/checkout/Checkout';
+import OrderConfirmationPage from './components/order-confirmation/OrderConfirmation';
 import LoginPage from './pages/auth/login-page';
 import RegisterPage from './pages/auth/register-page';
-import ExplorarPage from './pages/explore/explore-page';
+import ExplorarPage from './components/explore/explore-page';
 
 // Admin
 import ArticuloManufacturadoList from './admin/ArticuloManufacturado/ArticuloManufacturadoList';
@@ -21,8 +21,8 @@ import ClienteDashboard from './pages/auth/ClienteDashboard';
 import AdminDashboard from './pages/auth/AdminDashboard';
 
 // Contexto y rutas protegidas
-import { AuthProvider } from './Context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './pages/auth/Context/AuthContext';
+import ProtectedRoute from './pages/auth/ProtectedRoute';
 
 function App() {
   return (

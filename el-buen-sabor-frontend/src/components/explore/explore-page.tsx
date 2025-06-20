@@ -12,7 +12,7 @@ import {
   Heart,
   Clock,
 } from "lucide-react";
-import { useCart } from "../../components/Cart/context/cart-context";
+import { useCart } from "../Cart/context/cart-context";
 // import Link from "next/link";
 
 /**
@@ -97,11 +97,10 @@ export default function ExplorarPage() {
       onClick={() =>
         setCategoriaSeleccionada((prev) => (prev === c ? null : c))
       }
-      className={`px-4 py-2 rounded-full border transition text-sm whitespace-nowrap ${
-        categoriaSeleccionada === c
+      className={`px-4 py-2 rounded-full border transition text-sm whitespace-nowrap ${categoriaSeleccionada === c
           ? "bg-orange-500 text-white border-orange-500"
           : "bg-white text-gray-700 hover:bg-orange-50 border-gray-300"
-      }`}
+        }`}
     >
       {c}
     </button>
@@ -204,11 +203,10 @@ export default function ExplorarPage() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => addToCart(a)}
-                          className={`p-2 rounded-full transition ${
-                            isInCart(a.id || 0)
+                          className={`p-2 rounded-full transition ${isInCart(a.id || 0)
                               ? "bg-green-500 text-white"
                               : "bg-orange-500 text-white hover:bg-orange-600"
-                          }`}
+                            }`}
                         >
                           {isInCart(a.id || 0) ? (
                             <span className="text-xs font-bold">{getItemQuantity(a.id || 0)}</span>

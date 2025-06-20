@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "../../Context/AuthContext"; // ✅ contexto de auth
+import { useAuth } from "./Context/AuthContext"; // ✅ contexto de auth
 
 export default function LoginPage() {
   const navigate = useNavigate();
