@@ -5,7 +5,7 @@ import './App.css';
 
 // Páginas públicas
 import Landing from './components/Landing/Landing';
-import CartPage from './pages/cart/CartPage';
+import CartPage from './components/Cart/CartPage/CartPage';
 import Checkout from './components/checkout/Checkout';
 import OrderConfirmationPage from './components/order-confirmation/OrderConfirmation';
 import LoginPage from './pages/auth/login-page';
