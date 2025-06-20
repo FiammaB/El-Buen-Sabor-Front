@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { ArticuloService } from "../../services/ArticuloService";
 import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
-'use client';
+import { useAuth } from "../../Context/AuthContext";
 import { Search, MapPin, Clock, Star, Truck, Smartphone, CreditCard, ShoppingBag, Menu, X, ChevronRight, Heart, Plus } from 'lucide-react';
 import { useCart } from "../Cart/context/cart-context";
 
 export default function Landing() {
 
+	const { role, logout, username } = useAuth();
+
+
+
+	console.log("ROL DETECTADO:", role);
 	const [articulosManufacturados, setArticulosManufacturados] = useState<ArticuloManufacturado[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
@@ -132,16 +137,67 @@ export default function Landing() {
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ofertas</a>
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ayuda</a>
 						</nav>
+						{/* Botones para usuarios no logueados */}
+						{!role && (
+							<div className="hidden md:flex items-center space-x-4">
+								<a
+									href="/login"
+									className="text-gray-700 hover:text-orange-500 transition duration-200 font-medium"
+								>
+									Iniciar Sesión
+								</a>
+								<a
+									href="/register"
+									className="bg-orange-500 text-white px-6 py-2 rounded-full hover:bg-orange-600 transition duration-200 font-medium"
+								>
+									Registrarse
+								</a>
+							</div>
+						)}
+						{/*LOGIN Y REGISTRO*/}
+						{role === "ADMINISTRADOR" && (
+							<div className="flex items-center space-x-4">
+								<span className="text-green-600 font-bold">Administrador</span>
+								<a
+									href="/admin/ingredientes"
+									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+								>
+									Ingredientes
+								</a>
+								<a
+									href="/admin/articulos"
+									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+								>
+									Artículos
+								</a>
+								<a
+									href="/admin/dashboard"
+									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+								>
+									Dashboard
+								</a>
+								<button
+									onClick={logout}
+									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+								>
+									Cerrar Sesión
+								</button>
+							</div>
+						)}
 
-						<div className="hidden md:flex items-center space-x-4">
-							<button className="text-gray-700 hover:text-orange-500 transition duration-200 font-medium">
-								Iniciar Sesión
-							</button>
-							<button className="bg-orange-500 text-white px-6 py-2 rounded-full hover:bg-orange-600 transition duration-200 font-medium">
-								Registrarse
-							</button>
-						</div>
-
+						{role === "CLIENTE" && (
+							<div className="flex items-center space-x-4">
+								<span className="text-blue-600 font-bold">
+									Cliente: {username || "Invitado"}
+								</span>
+								<button
+									onClick={logout}
+									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+								>
+									Cerrar Sesión
+								</button>
+							</div>
+						)}
 						{/* Mobile menu button */}
 						<button
 							className="md:hidden p-2"
@@ -309,8 +365,8 @@ export default function Landing() {
 											<button
 												onClick={() => addToCart(articulo)}
 												className={`p-2 rounded-full transition duration-200 ${isInCart(articulo.id || 1)
-														? "bg-green-500 text-white"
-														: "bg-orange-500 text-white hover:bg-orange-600"
+													? "bg-green-500 text-white"
+													: "bg-orange-500 text-white hover:bg-orange-600"
 													}`}
 											>
 												{isInCart(articulo.id || 1) ? (

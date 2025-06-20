@@ -1,8 +1,8 @@
-"use client"
 
 import { useState } from "react"
 import { ArrowLeft, Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import axios from "axios"
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -35,7 +35,6 @@ export default function RegisterPage() {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }))
-    // Limpiar error cuando el usuario empiece a escribir
     if (errors) {
       setErrors((prev) => ({ ...prev, [name]: "" }))
     }
@@ -53,41 +52,17 @@ export default function RegisterPage() {
       general: "",
     }
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "El nombre es requerido"
-    }
-
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "El apellido es requerido"
-    }
-
-    if (!formData.email) {
-      newErrors.email = "El email es requerido"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "El email no es válido"
-    }
-
-    if (!formData.phone) {
-      newErrors.phone = "El teléfono es requerido"
-    } else if (!/^\+?[\d\s-()]+$/.test(formData.phone)) {
-      newErrors.phone = "El teléfono no es válido"
-    }
-
-    if (!formData.password) {
-      newErrors.password = "La contraseña es requerida"
-    } else if (formData.password.length < 6) {
-      newErrors.password = "La contraseña debe tener al menos 6 caracteres"
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Confirma tu contraseña"
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Las contraseñas no coinciden"
-    }
-
-    if (!formData.acceptTerms) {
-      newErrors.acceptTerms = "Debes aceptar los términos y condiciones"
-    }
+    if (!formData.firstName.trim()) newErrors.firstName = "El nombre es requerido"
+    if (!formData.lastName.trim()) newErrors.lastName = "El apellido es requerido"
+    if (!formData.email) newErrors.email = "El email es requerido"
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "El email no es válido"
+    if (!formData.phone) newErrors.phone = "El teléfono es requerido"
+    else if (!/^\+?[\d\s-()]+$/.test(formData.phone)) newErrors.phone = "El teléfono no es válido"
+    if (!formData.password) newErrors.password = "La contraseña es requerida"
+    else if (formData.password.length < 6) newErrors.password = "Debe tener al menos 6 caracteres"
+    if (!formData.confirmPassword) newErrors.confirmPassword = "Confirma tu contraseña"
+    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "No coinciden"
+    if (!formData.acceptTerms) newErrors.acceptTerms = "Debes aceptar los términos"
 
     setErrors(newErrors)
     return Object.values(newErrors).every((error) => !error)
@@ -95,29 +70,28 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault()
-
-    if (!validateForm()) {
-      return
-    }
+    if (!validateForm()) return
 
     setIsLoading(true)
     setErrors((prev) => ({ ...prev, general: "" }))
 
     try {
-      // Aquí iría la lógica de registro real
-      // Por ahora simularemos una llamada a la API
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const payload = {
+        nombre: formData.firstName,
+        apellido: formData.lastName,
+        username: formData.email,
+        password: formData.password,
+        telefono: formData.phone,
+        fechaNacimiento: "2000-01-01" // Cambiar si querés pedirlo desde el form
+      }
 
-      // Simular registro exitoso
-      console.log("Registro exitoso:", formData)
+      await axios.post("http://localhost:8080/api/auth/register", payload)
 
-      // Guardar datos de usuario
       localStorage.setItem("isAuthenticated", "true")
       localStorage.setItem("userEmail", formData.email)
-      localStorage.setItem("userName", `${formData.firstName} ${formData.lastName}`)
+      localStorage.setItem("userName", ` ${formData.firstName} ${formData.lastName}`)
 
-      // Mostrar mensaje de éxito y redirigir
-      alert("¡Registro exitoso! Bienvenido a El Buen Sabor")
+      alert("¡Registro exitoso!")
       navigate("/")
     } catch (error) {
       console.error("Error en registro:", error)
@@ -129,6 +103,9 @@ export default function RegisterPage() {
       setIsLoading(false)
     }
   }
+
+  // Tu diseño HTML no se modifica — solo actualizamos la lógica JS
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -180,9 +157,8 @@ export default function RegisterPage() {
                     name="firstName"
                     type="text"
                     autoComplete="given-name"
-                    className={`block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${
-                      errors.firstName ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className={`block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.firstName ? "border-red-300" : "border-gray-300"
+                      }`}
                     placeholder="Juan"
                     value={formData.firstName}
                     onChange={handleInputChange}
@@ -199,9 +175,8 @@ export default function RegisterPage() {
                     name="lastName"
                     type="text"
                     autoComplete="family-name"
-                    className={`block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${
-                      errors.lastName ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className={`block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.lastName ? "border-red-300" : "border-gray-300"
+                      }`}
                     placeholder="Pérez"
                     value={formData.lastName}
                     onChange={handleInputChange}
@@ -223,9 +198,8 @@ export default function RegisterPage() {
                     name="email"
                     type="email"
                     autoComplete="email"
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${
-                      errors.email ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.email ? "border-red-300" : "border-gray-300"
+                      }`}
                     placeholder="tu@email.com"
                     value={formData.email}
                     onChange={handleInputChange}
@@ -247,9 +221,8 @@ export default function RegisterPage() {
                     name="phone"
                     type="tel"
                     autoComplete="tel"
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${
-                      errors.phone ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.phone ? "border-red-300" : "border-gray-300"
+                      }`}
                     placeholder="+54 9 123 456 7890"
                     value={formData.phone}
                     onChange={handleInputChange}
@@ -271,9 +244,8 @@ export default function RegisterPage() {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
-                    className={`block w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${
-                      errors.password ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className={`block w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.password ? "border-red-300" : "border-gray-300"
+                      }`}
                     placeholder="Mínimo 6 caracteres"
                     value={formData.password}
                     onChange={handleInputChange}
@@ -306,9 +278,8 @@ export default function RegisterPage() {
                     name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     autoComplete="new-password"
-                    className={`block w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${
-                      errors.confirmPassword ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className={`block w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.confirmPassword ? "border-red-300" : "border-gray-300"
+                      }`}
                     placeholder="Repite tu contraseña"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
