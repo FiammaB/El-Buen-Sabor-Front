@@ -285,7 +285,8 @@ export class ArticuloService {
             imagen,
             categoria,
             data.unidadMedidaId, // Asegúrate de que esta propiedad exista en tu clase ArticuloManufacturado si la pasas
-            unidadMedida // Asegúrate de que esta propiedad exista en tu clase ArticuloManufacturado si la pasas
+            unidadMedida, // Asegúrate de que esta propiedad exista en tu clase ArticuloManufacturado si la pasas
+            data.baja,
         );
     }
 

@@ -5,6 +5,7 @@ import { ArticuloService } from '../../services/ArticuloService';
 import ArticuloManufacturadoForm from './ArticuloManufacturadoForm'; // Importar el formulario
 import SideBar from '../compontents/Sidebar';
 import Header from '../compontents/AdminHeader';
+import axios from "axios";
 
 const ArticuloManufacturadoList: React.FC = () => {
   const [articulosManufacturados, setArticulosManufacturados] = useState<ArticuloManufacturado[]>([]);
@@ -58,14 +59,14 @@ const ArticuloManufacturadoList: React.FC = () => {
     }
   };
 
-  const handleToggleBaja = async (articulo: ArticuloManufacturado) => {
+  const handleToggleBaja = async (id:number, baja: boolean) => {
     try {
-      await articuloService.toggleArticuloManufacturadoBaja(articulo.id!, !articulo.baja);
       setArticulosManufacturados(prev =>
           prev.map(a =>
-              a.id === articulo.id ? { ...a, baja: !a.baja } : a
+              a.id === id ? { ...a, baja: baja } : a
           )
       );
+      await axios.patch(`/api/articuloManufacturado/${id}/baja?baja=${baja}`);
     } catch (err) {
       alert("Error al actualizar el estado de disponibilidad.");
     }
@@ -161,7 +162,7 @@ const ArticuloManufacturadoList: React.FC = () => {
                         <input
                             type="checkbox"
                             checked={!articulo.baja}
-                            onChange={() => handleToggleBaja(articulo)}
+                            onChange={e => handleToggleBaja(articulo.id!, !e.target.checked)}
                         />
                       </td>
                       <td className="px-4 py-2 border space-x-2">
