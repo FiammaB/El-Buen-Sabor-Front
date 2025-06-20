@@ -27,9 +27,10 @@ export class ArticuloManufacturado extends Articulo {
         categoria?: Categoria,
         unidadMedidaId?: number,
         unidadMedida?: UnidadMedida,
+        baja?: boolean,
 
     ) {
-        super(denominacion, precioVenta, categoriaId, id, imagenId, imagen, categoria);
+        super(denominacion, precioVenta, categoriaId, id, imagenId, imagen, categoria, baja);
         this.descripcion = descripcion;
         this.tiempoEstimadoMinutos = tiempoEstimadoMinutos;
         this.preparacion = preparacion;
