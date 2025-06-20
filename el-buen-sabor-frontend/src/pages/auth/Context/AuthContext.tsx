@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 // Roles válidos
-export type UserRole = "ADMINISTRADOR" | "CLIENTE" | null;
+export type UserRole = "ADMINISTRADOR" | "CLIENTE" | "COCINERO" | "CAJERO" |null;
 
 // Interface del contexto
 interface AuthContextType {

@@ -5,7 +5,7 @@ import { Navigate } from "react-router-dom";
 import React, { type ReactNode } from "react";
 
 // Tipos válidos de roles
-type UserRole = "ADMINISTRADOR" | "CLIENTE";
+type UserRole = "ADMINISTRADOR" | "CLIENTE" | "COCINERO" | "CAJERO";
 
 // Props del componente
 interface ProtectedRouteProps {

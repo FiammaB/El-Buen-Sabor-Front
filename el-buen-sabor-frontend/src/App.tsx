@@ -19,10 +19,12 @@ import Ingredientes from './admin/pages/ingredientes';
 // Dashboards
 import ClienteDashboard from './pages/auth/ClienteDashboard';
 import AdminDashboard from './pages/auth/AdminDashboard';
+import CocineroDashboard from "./pages/auth/CocineroDashboard";
 
 // Contexto y rutas protegidas
 import { AuthProvider } from './pages/auth/Context/AuthContext';
 import ProtectedRoute from './pages/auth/ProtectedRoute';
+
 
 function App() {
   return (
@@ -70,6 +72,15 @@ function App() {
             element={
               <ProtectedRoute role="CLIENTE">
                 <ClienteDashboard />
+              </ProtectedRoute>
+            }
+          />
+          {/* Rutas COCINERO */}
+          <Route
+            path="/cocinero/dashboard"
+            element={
+              <ProtectedRoute role="COCINERO">
+                <CocineroDashboard />
               </ProtectedRoute>
             }
           />
