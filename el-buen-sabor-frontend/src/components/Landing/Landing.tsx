@@ -198,6 +198,25 @@ export default function Landing() {
 								</button>
 							</div>
 						)}
+						{role === "COCINERO" && (
+							<div className="flex items-center space-x-4">
+    							<span className="text-orange-600 font-bold">
+      								Cocinero{username ? `: ${username}` : ""}
+    							</span>
+								<a
+									href="/cocinero/dashboard"
+									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+								>
+									Dashboard
+								</a>
+								<button
+									onClick={logout}
+									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+								>
+									Cerrar Sesión
+								</button>
+							</div>
+						)}
 						{/* Mobile menu button */}
 						<button
 							className="md:hidden p-2"

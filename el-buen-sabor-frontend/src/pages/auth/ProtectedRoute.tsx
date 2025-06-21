@@ -1,32 +1,46 @@
 // src/components/ProtectedRoute.tsx
 
-import { useAuth } from "./Context/AuthContext";
 import { Navigate } from "react-router-dom";
+import { useAuth } from "./Context/AuthContext";
 import React, { type ReactNode } from "react";
 
 // Tipos válidos de roles
-type UserRole = "ADMINISTRADOR" | "CLIENTE";
+type UserRole = "ADMINISTRADOR" | "CLIENTE" | "COCINERO" | "CAJERO";
 
 // Props del componente
 interface ProtectedRouteProps {
-    children: ReactNode;
-    role: UserRole;
+  children: ReactNode;
+  role: UserRole | UserRole[]; // ✅ Soporta uno o varios roles
 }
 
 // Componente protegido
 export default function ProtectedRoute({ children, role }: ProtectedRouteProps) {
-    const { isAuthenticated, role: userRole } = useAuth();
+  const { isAuthenticated, role: userRole } = useAuth();
 
-    // Esperar a que se recupere el rol (evita redirección prematura)
-    if (!isAuthenticated || userRole === null) {
-        return null; // Podés mostrar un loader si querés
-    }
+  // Mostrar un mensaje mientras se recupera el rol
+  if (userRole === null) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-gray-600 text-lg">Cargando...</p>
+      </div>
+    );
+  }
 
-    // Redirigir si el usuario no tiene el rol requerido
-    if (userRole !== role) {
-        return <Navigate to="/" replace />;
-    }
+  // Si no está autenticado, redirigir al login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
-    // Mostrar contenido protegido
-    return <>{children}</>;
+  // Verificar si el usuario tiene un rol permitido
+  const isAllowed = Array.isArray(role)
+    ? role.includes(userRole)
+    : userRole === role;
+
+  // Si el usuario no tiene permiso, redirigir al inicio
+  if (!isAllowed) {
+    return <Navigate to="/" replace />;
+  }
+
+  // ✅ Si todo está OK, renderizar el contenido protegido
+  return <>{children}</>;
 }
