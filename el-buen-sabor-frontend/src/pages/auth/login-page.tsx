@@ -1,13 +1,12 @@
-
 import { useState } from "react";
 import { ArrowLeft, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "./Context/AuthContext"; // ✅ contexto de auth
+import { useAuth } from "./Context/AuthContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth(); // ✅ usamos el login del contexto
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -15,18 +14,17 @@ export default function LoginPage() {
     email: "",
     password: "",
   });
+
   const [errors, setErrors] = useState({
     email: "",
     password: "",
     general: "",
   });
 
-  const handleInputChange = (e: any) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const validateForm = () => {
@@ -45,37 +43,32 @@ export default function LoginPage() {
     if (!formData.password) {
       newErrors.password = "La contraseña es requerida";
     } else if (formData.password.length < 6) {
-      newErrors.password = "La contraseña debe tener al menos 6 caracteres";
+      newErrors.password = "Debe tener al menos 6 caracteres";
     }
 
     setErrors(newErrors);
     return !newErrors.email && !newErrors.password;
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsLoading(true);
     setErrors((prev) => ({ ...prev, general: "" }));
 
     try {
       const res = await axios.post("http://localhost:8080/api/auth/login", {
-        username: formData.email,
+        email: formData.email,
         password: formData.password,
       });
 
       const { rol, nombre, apellido } = res.data;
 
-      // ✅ Guardar el rol y el nombre completo en el contexto
       login(rol, `${nombre} ${apellido}`);
 
-      if (rol === "ADMINISTRADOR") navigate("/admin");
-      else if (rol === "CLIENTE") navigate("/cliente");
-      else navigate("/");
+      // Todos los roles redirigen a landing
+      navigate("/landing");
 
     } catch (error) {
       console.error("Error en login:", error);
@@ -90,7 +83,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -101,9 +93,7 @@ export default function LoginPage() {
               >
                 <ArrowLeft className="w-6 h-6" />
               </button>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Iniciar Sesión</h1>
-              </div>
+              <h1 className="text-xl font-bold text-gray-900">Iniciar Sesión</h1>
             </div>
             <div className="text-2xl font-bold text-orange-500">El Buen Sabor</div>
           </div>
@@ -141,8 +131,9 @@ export default function LoginPage() {
                     name="email"
                     type="email"
                     autoComplete="email"
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.email ? "border-red-300" : "border-gray-300"
-                      }`}
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm ${
+                      errors.email ? "border-red-300" : "border-gray-300"
+                    }`}
                     placeholder="tu@email.com"
                     value={formData.email}
                     onChange={handleInputChange}
@@ -164,8 +155,9 @@ export default function LoginPage() {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
-                    className={`block w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.password ? "border-red-300" : "border-gray-300"
-                      }`}
+                    className={`block w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm ${
+                      errors.password ? "border-red-300" : "border-gray-300"
+                    }`}
                     placeholder="Tu contraseña"
                     value={formData.password}
                     onChange={handleInputChange}
@@ -185,34 +177,10 @@ export default function LoginPage() {
                 {errors.password && <p className="text-sm text-red-600">{errors.password}</p>}
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                    Recordarme
-                  </label>
-                </div>
-
-                <div className="text-sm">
-                  <button
-                    type="button"
-                    className="font-medium text-orange-600 hover:text-orange-500"
-                    onClick={() => navigate("/forgot-password")}
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </button>
-                </div>
-              </div>
-
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50"
               >
                 {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
               </button>
@@ -230,28 +198,6 @@ export default function LoginPage() {
                 </p>
               </div>
             </form>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">¿Por qué crear una cuenta?</h3>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li className="flex items-center">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                Realiza pedidos más rápido
-              </li>
-              <li className="flex items-center">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                Guarda tus direcciones favoritas
-              </li>
-              <li className="flex items-center">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                Accede al historial de pedidos
-              </li>
-              <li className="flex items-center">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                Recibe ofertas exclusivas
-              </li>
-            </ul>
           </div>
         </div>
       </div>

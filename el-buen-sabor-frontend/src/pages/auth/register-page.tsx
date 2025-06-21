@@ -1,14 +1,16 @@
-
-import { useState } from "react"
-import { ArrowLeft, Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react"
-import { useNavigate } from "react-router-dom"
-import axios from "axios"
+import { useState } from "react";
+import { ArrowLeft, Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useAuth } from "./Context/AuthContext";
 
 export default function RegisterPage() {
-  const navigate = useNavigate()
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -17,7 +19,8 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     acceptTerms: false,
-  })
+  });
+
   const [errors, setErrors] = useState({
     firstName: "",
     lastName: "",
@@ -27,18 +30,16 @@ export default function RegisterPage() {
     confirmPassword: "",
     acceptTerms: "",
     general: "",
-  })
+  });
 
   const handleInputChange = (e: any) => {
-    const { name, value, type, checked } = e.target
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
-    }))
-    if (errors) {
-      setErrors((prev) => ({ ...prev, [name]: "" }))
-    }
-  }
+    }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
 
   const validateForm = () => {
     const newErrors = {
@@ -50,66 +51,59 @@ export default function RegisterPage() {
       confirmPassword: "",
       acceptTerms: "",
       general: "",
-    }
+    };
 
-    if (!formData.firstName.trim()) newErrors.firstName = "El nombre es requerido"
-    if (!formData.lastName.trim()) newErrors.lastName = "El apellido es requerido"
-    if (!formData.email) newErrors.email = "El email es requerido"
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "El email no es válido"
-    if (!formData.phone) newErrors.phone = "El teléfono es requerido"
-    else if (!/^\+?[\d\s-()]+$/.test(formData.phone)) newErrors.phone = "El teléfono no es válido"
-    if (!formData.password) newErrors.password = "La contraseña es requerida"
-    else if (formData.password.length < 6) newErrors.password = "Debe tener al menos 6 caracteres"
-    if (!formData.confirmPassword) newErrors.confirmPassword = "Confirma tu contraseña"
-    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "No coinciden"
-    if (!formData.acceptTerms) newErrors.acceptTerms = "Debes aceptar los términos"
+    if (!formData.firstName.trim()) newErrors.firstName = "El nombre es requerido";
+    if (!formData.lastName.trim()) newErrors.lastName = "El apellido es requerido";
+    if (!formData.email) newErrors.email = "El email es requerido";
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "El email no es válido";
+    if (!formData.phone) newErrors.phone = "El teléfono es requerido";
+    else if (!/^\+?[\d\s-()]+$/.test(formData.phone)) newErrors.phone = "El teléfono no es válido";
+    if (!formData.password) newErrors.password = "La contraseña es requerida";
+    else if (formData.password.length < 6) newErrors.password = "Debe tener al menos 6 caracteres";
+    if (!formData.confirmPassword) newErrors.confirmPassword = "Confirma tu contraseña";
+    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "No coinciden";
+    if (!formData.acceptTerms) newErrors.acceptTerms = "Debes aceptar los términos";
 
-    setErrors(newErrors)
-    return Object.values(newErrors).every((error) => !error)
-  }
+    setErrors(newErrors);
+    return Object.values(newErrors).every((error) => !error);
+  };
 
   const handleSubmit = async (e: any) => {
-    e.preventDefault()
-    if (!validateForm()) return
+    e.preventDefault();
+    if (!validateForm()) return;
 
-    setIsLoading(true)
-    setErrors((prev) => ({ ...prev, general: "" }))
+    setIsLoading(true);
+    setErrors((prev) => ({ ...prev, general: "" }));
 
     try {
       const payload = {
         nombre: formData.firstName,
         apellido: formData.lastName,
-        username: formData.email,
+        email: formData.email, // ✅ CORREGIDO
         password: formData.password,
         telefono: formData.phone,
-        fechaNacimiento: "2000-01-01" // Cambiar si querés pedirlo desde el form
-      }
+        fechaNacimiento: "2000-01-01", // si tenés este campo opcional
+      };
 
-      await axios.post("http://localhost:8080/api/auth/register", payload)
+      await axios.post("http://localhost:8080/api/auth/register", payload);
 
-      localStorage.setItem("isAuthenticated", "true")
-      localStorage.setItem("userEmail", formData.email)
-      localStorage.setItem("userName", ` ${formData.firstName} ${formData.lastName}`)
-
-      alert("¡Registro exitoso!")
-      navigate("/")
+      login("CLIENTE", `${formData.firstName} ${formData.lastName}`);
+      alert("¡Registro exitoso!");
+      navigate("/cliente");
     } catch (error) {
-      console.error("Error en registro:", error)
+      console.error("Error en registro:", error);
       setErrors((prev) => ({
         ...prev,
         general: "Error al crear la cuenta. Inténtalo de nuevo.",
-      }))
+      }));
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
-
-  // Tu diseño HTML no se modifica — solo actualizamos la lógica JS
-
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -137,7 +131,9 @@ export default function RegisterPage() {
                 <User className="w-10 h-10 text-orange-500" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">¡Únete a nosotros!</h2>
-              <p className="text-gray-600 mt-2">Crea tu cuenta y disfruta de nuestros deliciosos platos</p>
+              <p className="text-gray-600 mt-2">
+                Crea tu cuenta y disfruta de nuestros deliciosos platos
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -147,214 +143,151 @@ export default function RegisterPage() {
                 </div>
               )}
 
+              {/* Nombre y Apellido */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                    Nombre
-                  </label>
+                <div>
+                  <label className="text-sm text-gray-700">Nombre</label>
                   <input
-                    id="firstName"
                     name="firstName"
-                    type="text"
-                    autoComplete="given-name"
-                    className={`block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.firstName ? "border-red-300" : "border-gray-300"
-                      }`}
-                    placeholder="Juan"
                     value={formData.firstName}
                     onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded ${errors.firstName ? "border-red-400" : "border-gray-300"}`}
+                    placeholder="Ej: Gastón"
                   />
                   {errors.firstName && <p className="text-sm text-red-600">{errors.firstName}</p>}
                 </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                    Apellido
-                  </label>
+                <div>
+                  <label className="text-sm text-gray-700">Apellido</label>
                   <input
-                    id="lastName"
                     name="lastName"
-                    type="text"
-                    autoComplete="family-name"
-                    className={`block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.lastName ? "border-red-300" : "border-gray-300"
-                      }`}
-                    placeholder="Pérez"
                     value={formData.lastName}
                     onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded ${errors.lastName ? "border-red-400" : "border-gray-300"}`}
+                    placeholder="Ej: Sisterna"
                   />
                   {errors.lastName && <p className="text-sm text-red-600">{errors.lastName}</p>}
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Correo electrónico
-                </label>
+              {/* Email */}
+              <div>
+                <label className="text-sm text-gray-700">Correo electrónico</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <Mail className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
                   <input
-                    id="email"
                     name="email"
                     type="email"
-                    autoComplete="email"
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.email ? "border-red-300" : "border-gray-300"
-                      }`}
-                    placeholder="tu@email.com"
                     value={formData.email}
                     onChange={handleInputChange}
+                    className={`w-full pl-10 py-2 border rounded ${errors.email ? "border-red-400" : "border-gray-300"}`}
+                    placeholder="tu@email.com"
                   />
                 </div>
                 {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                  Teléfono
-                </label>
+              {/* Teléfono */}
+              <div>
+                <label className="text-sm text-gray-700">Teléfono</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Phone className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <Phone className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
                   <input
-                    id="phone"
                     name="phone"
-                    type="tel"
-                    autoComplete="tel"
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.phone ? "border-red-300" : "border-gray-300"
-                      }`}
-                    placeholder="+54 9 123 456 7890"
                     value={formData.phone}
                     onChange={handleInputChange}
+                    className={`w-full pl-10 py-2 border rounded ${errors.phone ? "border-red-400" : "border-gray-300"}`}
+                    placeholder="+54 9 261..."
                   />
                 </div>
                 {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Contraseña
-                </label>
+              {/* Contraseña */}
+              <div>
+                <label className="text-sm text-gray-700">Contraseña</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <Lock className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
                   <input
-                    id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    autoComplete="new-password"
-                    className={`block w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.password ? "border-red-300" : "border-gray-300"
-                      }`}
-                    placeholder="Mínimo 6 caracteres"
                     value={formData.password}
                     onChange={handleInputChange}
+                    className={`w-full pl-10 py-2 border rounded ${errors.password ? "border-red-400" : "border-gray-300"}`}
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3"
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    ) : (
-                      <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    )}
+                    {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
                   </button>
                 </div>
                 {errors.password && <p className="text-sm text-red-600">{errors.password}</p>}
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                  Confirmar contraseña
-                </label>
+              {/* Confirmar contraseña */}
+              <div>
+                <label className="text-sm text-gray-700">Confirmar contraseña</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <Lock className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
                   <input
-                    id="confirmPassword"
                     name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    autoComplete="new-password"
-                    className={`block w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.confirmPassword ? "border-red-300" : "border-gray-300"
-                      }`}
-                    placeholder="Repite tu contraseña"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
+                    className={`w-full pl-10 py-2 border rounded ${errors.confirmPassword ? "border-red-400" : "border-gray-300"}`}
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-3"
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    ) : (
-                      <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    )}
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
                   </button>
                 </div>
                 {errors.confirmPassword && <p className="text-sm text-red-600">{errors.confirmPassword}</p>}
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <input
-                    id="acceptTerms"
-                    name="acceptTerms"
-                    type="checkbox"
-                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                    checked={formData.acceptTerms}
-                    onChange={handleInputChange}
-                  />
-                  <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-900">
-                    Acepto los{" "}
-                    <button
-                      type="button"
-                      className="text-orange-600 hover:text-orange-500 font-medium"
-                      onClick={() => navigate("/terms")}
-                    >
-                      términos y condiciones
-                    </button>{" "}
-                    y la{" "}
-                    <button
-                      type="button"
-                      className="text-orange-600 hover:text-orange-500 font-medium"
-                      onClick={() => navigate("/privacy")}
-                    >
-                      política de privacidad
-                    </button>
-                  </label>
-                </div>
-                {errors.acceptTerms && <p className="text-sm text-red-600">{errors.acceptTerms}</p>}
+              {/* Aceptar términos */}
+              <div className="flex items-center">
+                <input
+                  name="acceptTerms"
+                  type="checkbox"
+                  checked={formData.acceptTerms}
+                  onChange={handleInputChange}
+                  className="h-4 w-4 text-orange-600"
+                />
+                <label className="ml-2 text-sm text-gray-600">
+                  Acepto los{" "}
+                  <button onClick={() => navigate("/terms")} className="text-orange-600 font-medium">términos</button>{" "}
+                  y la{" "}
+                  <button onClick={() => navigate("/privacy")} className="text-orange-600 font-medium">privacidad</button>
+                </label>
               </div>
+              {errors.acceptTerms && <p className="text-sm text-red-600">{errors.acceptTerms}</p>}
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
+                className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition disabled:opacity-50"
               >
                 {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
               </button>
 
-              <div className="text-center">
-                <p className="text-sm text-gray-600">
-                  ¿Ya tienes una cuenta?{" "}
-                  <button
-                    type="button"
-                    onClick={() => navigate("/login")}
-                    className="font-medium text-orange-600 hover:text-orange-500"
-                  >
-                    Inicia sesión aquí
-                  </button>
-                </p>
-              </div>
+              <p className="text-sm text-center text-gray-600">
+                ¿Ya tenés una cuenta?{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate("/login")}
+                  className="text-orange-600 hover:underline"
+                >
+                  Iniciá sesión
+                </button>
+              </p>
             </form>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
