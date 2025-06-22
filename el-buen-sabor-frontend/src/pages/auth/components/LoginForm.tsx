@@ -46,7 +46,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
     try {
       const res = await axios.post("http://localhost:8080/api/auth/login", {
-        username: formData.email,
+        email: formData.email, // ✅ Corregido
         password: formData.password,
       });
 
@@ -54,7 +54,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       login(rol, `${nombre} ${apellido}`);
 
       if (onSuccess) {
-        onSuccess(); // avanzar en el checkout o acción personalizada
+        onSuccess();
       } else {
         if (rol === "ADMINISTRADOR") navigate("/admin");
         else if (rol === "CLIENTE") navigate("/cliente");
