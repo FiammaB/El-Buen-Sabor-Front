@@ -15,14 +15,19 @@ import ExplorarPage from './components/explore/explore-page';
 // Admin
 import ArticuloManufacturadoList from './admin/ArticuloManufacturado/ArticuloManufacturadoList';
 import Ingredientes from './admin/pages/ingredientes';
+import PromocionPage from "./components/promocion/PromocionPage";
+import PromocionForm from './components/promocion/PromocionForm';
+import RankingProductosPage from "./components/promocion/RankingProductosPage";
 
 // Dashboards
 import ClienteDashboard from './pages/auth/ClienteDashboard';
 import AdminDashboard from './pages/auth/AdminDashboard';
+import CocineroDashboard from "./pages/auth/CocineroDashboard";
 
 // Contexto y rutas protegidas
 import { AuthProvider } from './pages/auth/Context/AuthContext';
 import ProtectedRoute from './pages/auth/ProtectedRoute';
+
 
 function App() {
   return (
@@ -37,6 +42,11 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/explore" element={<ExplorarPage />} />
+
+          <Route path="/promociones" element={<PromocionPage />} />
+          <Route path="/promociones/crear" element={<PromocionForm />} />
+          <Route path="/ranking" element={<RankingProductosPage />} />
+
 
           {/* Rutas ADMINISTRADOR */}
           <Route
@@ -70,6 +80,15 @@ function App() {
             element={
               <ProtectedRoute role="CLIENTE">
                 <ClienteDashboard />
+              </ProtectedRoute>
+            }
+          />
+          {/* Rutas COCINERO */}
+          <Route
+            path="/cocinero/dashboard"
+            element={
+              <ProtectedRoute role="COCINERO">
+                <CocineroDashboard />
               </ProtectedRoute>
             }
           />
