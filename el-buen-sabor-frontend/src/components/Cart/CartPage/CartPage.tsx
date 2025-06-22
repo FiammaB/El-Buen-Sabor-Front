@@ -1,53 +1,55 @@
 "use client"
 
-import { ArrowLeft, Plus, Minus, Trash2, ShoppingBag, CreditCard, Truck, Shield, Heart } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import {
+    ArrowLeft, Plus, Minus, Trash2, ShoppingBag,
+    CreditCard, Truck, Shield
+} from 'lucide-react'
 import { useCart } from "../context/cart-context"
-// import { PedidoService } from '../../../services/PedidoService'
-// import { FormaPago, TipoEnvio } from '../../../models/DTO/IPedidoDTO';
-// import type {IPedidoDTO} from '../../../models/DTO/IPedidoDTO';
+import type { ArticuloManufacturado } from '../../../models/Articulos/ArticuloManufacturado';
 
 export default function CartPage() {
-    const { items, totalItems, totalAmount, updateQuantity, removeFromCart, clearCart } = useCart()
+    const {
+        items,
+        totalItems,
+        totalAmount,
+        updateQuantity,
+        removeFromCart,
+        clearCart,
+        addToCart
+    } = useCart()
+
+    const [relatedProducts, setRelatedProducts] = useState<ArticuloManufacturado[]>([])
 
     const deliveryFee = totalAmount >= 25 ? 0 : 3.99
     const finalTotal = totalAmount + deliveryFee
 
-    // const pedidoService = new PedidoService();
+    useEffect(() => {
+        const fetchRelated = async () => {
+            if (items.length === 0) return;
 
-    // Crear pedido tipo pedido DTO
-    // const crearPedido = async () => {
-    //   // HARDCODEADOOO
-    //   // Si lo retira MP y Efectivo
-    //   // Si no solo MP
-    //   const pedido: IPedidoDTO = {
-    //     clienteId: 1, // Reemplazá con el ID real del cliente logueado
-    //     domicilioEntregaId: 1, // O undefined si es RETIRO
-    //     tipoEnvio: TipoEnvio.DELIVERY,
-    //     formaPago: FormaPago.EFECTIVO,
-    //     sucursalId: 1, // Reemplazá con la sucursal seleccionada
-    //     detallesPedidos: items.map((item) => ({
-    //       cantidad: 3,
-    //       articuloManufacturadoId: 100,
-    //       articuloInsumoId: 1,
-    //     })),
-    //   }
+            const categoriaId = items[0].articulo.categoria?.id;
+            if (!categoriaId) return;
 
-    //   console.log("PEDIDO:", pedido)
+            try {
+                const res = await fetch(`http://localhost:8080/api/articuloManufacturado/filtrar?categoriaId=${categoriaId}&baja=false`);
+                const data = await res.json();
 
-    //   try {
-    //     const response = await pedidoService.sendPedido(pedido)
-    //     console.log("Pedido creado con éxito:", response)
-    //     clearCart()
-    //     // Podés redirigir al usuario o mostrar una confirmación
-    //   } catch (error) {
-    //     console.error("Error al crear el pedido:", error)
-    //     alert("No se pudo crear el pedido. Intentalo de nuevo.")
-    //   }
-    // }
+                const productosFiltrados = data.filter((p: any) =>
+                    !items.some((item) => item.articulo.id === p.id)
+                );
+
+                setRelatedProducts(productosFiltrados);
+            } catch (err) {
+                console.error("Error al cargar productos relacionados:", err);
+            }
+        };
+
+        fetchRelated();
+    }, [items]);
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
             <header className="bg-white shadow-sm sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
@@ -67,14 +69,12 @@ export default function CartPage() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {items.length === 0 ? (
-                    // Carrito vacío
                     <div className="text-center py-16">
                         <div className="max-w-md mx-auto">
                             <ShoppingBag className="w-24 h-24 text-gray-300 mx-auto mb-6" />
                             <h2 className="text-2xl font-bold text-gray-900 mb-4">Tu carrito está vacío</h2>
                             <p className="text-gray-500 mb-8">
-                                Parece que aún no has agregado ningún producto a tu carrito. ¡Explora nuestro menú y encuentra algo
-                                delicioso!
+                                Parece que aún no has agregado ningún producto a tu carrito. ¡Explora nuestro menú y encuentra algo delicioso!
                             </p>
                             <a href='/landing' className="bg-orange-500 text-white px-8 py-3 rounded-full hover:bg-orange-600 transition duration-200 font-medium">
                                 Explorar Productos
@@ -82,7 +82,6 @@ export default function CartPage() {
                         </div>
                     </div>
                 ) : (
-                    // Carrito con productos
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Lista de productos */}
                         <div className="lg:col-span-2 space-y-6">
@@ -102,9 +101,7 @@ export default function CartPage() {
                                         <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-100 rounded-xl">
                                             <img
                                                 src={
-                                                    item.articulo.imagen && item.articulo.imagen.denominacion.length > 0
-                                                        ? item.articulo.imagen.denominacion
-                                                        : "/placeholder.svg?height=80&width=80"
+                                                    item.articulo.imagen?.denominacion || "/placeholder.svg?height=80&width=80"
                                                 }
                                                 alt={item.articulo.denominacion}
                                                 className="w-20 h-20 object-cover rounded-lg"
@@ -150,28 +147,33 @@ export default function CartPage() {
                                 </div>
                             </div>
 
-                            {/* Productos recomendados */}
-                            <div className="bg-white rounded-2xl shadow-sm p-6">
-                                <h3 className="text-lg font-bold text-gray-900 mb-4">Te podría interesar</h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {[1, 2].map((item) => (
-                                        <div key={item} className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg">
-                                            <img
-                                                src={`/placeholder.svg?height=60&width=60`}
-                                                alt="Producto recomendado"
-                                                className="w-15 h-15 object-cover rounded-lg"
-                                            />
-                                            <div className="flex-1">
-                                                <h4 className="font-medium text-gray-900 text-sm">Pizza Margherita</h4>
-                                                <p className="text-orange-500 font-bold text-sm">$12.99</p>
+                            {/* Productos relacionados */}
+                            {relatedProducts.length > 0 && (
+                                <div className="bg-white rounded-2xl shadow-sm p-6">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4">Te podría interesar</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {relatedProducts.map((item) => (
+                                            <div key={item.id} className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg">
+                                                <img
+                                                    src={item.imagen?.denominacion || '/placeholder.svg?height=60&width=60'}
+                                                    alt={item.denominacion}
+                                                    className="w-15 h-15 object-cover rounded-lg"
+                                                />
+                                                <div className="flex-1">
+                                                    <h4 className="font-medium text-gray-900 text-sm">{item.denominacion}</h4>
+                                                    <p className="text-orange-500 font-bold text-sm">${item.precioVenta}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => addToCart(item)}
+                                                    className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition duration-200"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                </button>
                                             </div>
-                                            <button className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition duration-200">
-                                                <Plus className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Resumen del pedido */}
@@ -188,12 +190,12 @@ export default function CartPage() {
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600">Costo de envío</span>
                                         <span className="font-semibold">
-                      {deliveryFee === 0 ? (
-                          <span className="text-green-500">Gratis</span>
-                      ) : (
-                          `$${deliveryFee.toFixed(2)}`
-                      )}
-                    </span>
+                                            {deliveryFee === 0 ? (
+                                                <span className="text-green-500">Gratis</span>
+                                            ) : (
+                                                `$${deliveryFee.toFixed(2)}`
+                                            )}
+                                        </span>
                                     </div>
 
                                     {totalAmount < 25 && (

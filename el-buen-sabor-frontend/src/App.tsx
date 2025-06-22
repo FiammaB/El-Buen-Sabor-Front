@@ -15,9 +15,9 @@ import ExplorarPage from './components/explore/explore-page';
 // Admin
 import ArticuloManufacturadoList from './admin/ArticuloManufacturado/ArticuloManufacturadoList';
 import Ingredientes from './admin/pages/ingredientes';
-import PromocionPage from "./components/promocion/PromocionPage";
-import PromocionForm from './components/promocion/PromocionForm';
-import RankingProductosPage from "./components/promocion/RankingProductosPage";
+// import PromocionPage from "./components/promocion/PromocionPage";
+// import PromocionForm from './components/promocion/PromocionForm';
+// import RankingProductosPage from "./components/promocion/RankingProductosPage";
 
 // Dashboards
 import ClienteDashboard from './pages/auth/ClienteDashboard';
@@ -43,9 +43,9 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/explore" element={<ExplorarPage />} />
 
-          <Route path="/promociones" element={<PromocionPage />} />
+          {/* <Route path="/promociones" element={<PromocionPage />} />
           <Route path="/promociones/crear" element={<PromocionForm />} />
-          <Route path="/ranking" element={<RankingProductosPage />} />
+          <Route path="/ranking" element={<RankingProductosPage />} /> */}
 
 
           {/* Rutas ADMINISTRADOR */}
