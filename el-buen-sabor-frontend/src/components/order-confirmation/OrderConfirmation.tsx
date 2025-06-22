@@ -2,13 +2,18 @@
 
 import { useEffect, useState } from "react"
 import { CheckCircle, ArrowLeft, MapPin, Clock, Receipt } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
+
 
 export default function OrderConfirmationPage() {
   const navigate = useNavigate()
-  const [orderNumber, setOrderNumber] = useState("12345")
   const [estimatedTime, setEstimatedTime] = useState(30)
   const [remainingTime, setRemainingTime] = useState(30)
+
+  const [searchParams] = useSearchParams()
+  const pedido = searchParams.get("pedido")
+
+  console.log("PEDIDO ID: ", pedido)
 
   // Simulate countdown timer
   useEffect(() => {
@@ -24,6 +29,33 @@ export default function OrderConfirmationPage() {
 
     return () => clearInterval(timer)
   }, [])
+
+  const cancelOrder = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/pedidos/${pedido}/anular`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          motivoAnulacion: "Cancelado por el cliente desde la pantalla de confirmación",
+          usuarioAnuladorId: 1, // Reemplazar con el ID real del usuario logueado o fijo para testing
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Error al cancelar el pedido.")
+      }
+
+      alert("Pedido cancelado exitosamente.")
+      navigate("/") // Redirige al inicio u otra ruta
+    } catch (err) {
+      alert("Hubo un problema al cancelar el pedido.")
+      console.error(err)
+    }
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -59,7 +91,7 @@ export default function OrderConfirmationPage() {
           <div className="bg-gray-50 rounded-lg p-6 mb-8">
             <div className="flex justify-between items-center mb-4">
               <span className="text-gray-600">Número de pedido:</span>
-              <span className="font-bold text-gray-900">#{orderNumber}</span>
+              <span className="font-bold text-gray-900">#{pedido}</span>
             </div>
 
             <div className="space-y-6">
@@ -112,6 +144,13 @@ export default function OrderConfirmationPage() {
             >
               Volver al inicio
             </button>
+            <button
+              onClick={cancelOrder}
+              className="w-full bg-red-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-red-600 transition duration-200"
+            >
+              Cancelar pedido
+            </button>
+
           </div>
         </div>
       </div>

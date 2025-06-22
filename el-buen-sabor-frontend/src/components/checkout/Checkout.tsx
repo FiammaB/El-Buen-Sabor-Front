@@ -10,6 +10,8 @@ import { MercadoPagoService } from "../../services/MercadoPagoService"
 import { FormaPago, TipoEnvio } from "../../models/DTO/IPedidoDTO"
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO"
 import { useNavigate } from "react-router-dom"
+import LoginForm from "../../pages/auth/components/LoginForm"
+import { useAuth } from "../../pages/auth/Context/AuthContext"
 
 // MercadoPago SDK script loader
 const loadMercadoPagoScript = () => {
@@ -47,6 +49,8 @@ export default function CheckoutPage() {
     city: "",
     zipCode: "",
   })
+
+  const { username } = useAuth();
 
   // Load MercadoPago SDK when component mounts
   useEffect(() => {
@@ -131,6 +135,8 @@ export default function CheckoutPage() {
       setIsProcessing(false)
     }
   }
+
+  if (currentStep === "information" && username) setCurrentStep("delivery");
 
   const goToNextStep = () => {
     if (currentStep === "information") setCurrentStep("delivery")
@@ -248,62 +254,9 @@ export default function CheckoutPage() {
               </div>
 
               {/* Step Content */}
-              {currentStep === "information" && (
-                <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-gray-900">Información Personal</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                        Nombre completo
-                      </label>
-                      <input
-                        id="name"
-                        name="name"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="Juan Pérez"
-                        value={customerInfo.name}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                        Correo electrónico
-                      </label>
-                      <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="juan@ejemplo.com"
-                        value={customerInfo.email}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                        Teléfono
-                      </label>
-                      <input
-                        id="phone"
-                        name="phone"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                        placeholder="+54 9 123 456 7890"
-                        value={customerInfo.phone}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="pt-4">
-                    <button
-                      onClick={goToNextStep}
-                      className="w-full bg-orange-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-orange-600 transition duration-200"
-                    >
-                      Continuar a Entrega
-                    </button>
-                  </div>
+              {(currentStep === "information" && !username) && (
+                <div>
+                  <LoginForm onSuccess={() => setCurrentStep("delivery")} />
                 </div>
               )}
 
@@ -515,13 +468,16 @@ export default function CheckoutPage() {
                       <h3 className="font-semibold">Información Personal</h3>
                       <div className="bg-gray-50 p-4 rounded-md">
                         <p>
-                          <span className="font-medium">Nombre:</span> {customerInfo.name || "No especificado"}
+                          <span className="font-medium">Nombre:</span>{" "}
+                          {username || "No especificado"}
                         </p>
                         <p>
-                          <span className="font-medium">Email:</span> {customerInfo.email || "No especificado"}
+                          <span className="font-medium">Email:</span>{" "}
+                          No especificado
                         </p>
                         <p>
-                          <span className="font-medium">Teléfono:</span> {customerInfo.phone || "No especificado"}
+                          <span className="font-medium">Teléfono:</span>{" "}
+                          No especificado
                         </p>
                       </div>
                     </div>
