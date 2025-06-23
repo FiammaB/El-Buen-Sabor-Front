@@ -5,7 +5,6 @@ import type { IPedidoDTO } from '../models/DTO/IPedidoDTO';
 const API_BASE_URL = 'http://localhost:8080/api/pedidos';
 
 export class PedidoService {
-  // Enviar un nuevo pedido
   async sendPedido(pedido: IPedidoDTO): Promise<IPedidoDTO> {
     try {
       console.log("PEDIDO: ", pedido);
@@ -19,7 +18,7 @@ export class PedidoService {
   }
 
   // Obtener pedidos en estado EN_PREPARACION (para cocinero)
-  async getPedidosEnPreparacion(): Promise<any[]> {
+  async getPedidosEnCocina(): Promise<any[]> {
     try {
       const response = await axios.get(`${API_BASE_URL}/cocinero`);
       return response.data;
@@ -31,13 +30,11 @@ export class PedidoService {
 
   // Cambiar estado del pedido (por ejemplo: a EN_COCINA)
   async actualizarEstadoPedido(id: number, nuevoEstado: string): Promise<void> {
-    try {
-      await axios.put(`${API_BASE_URL}/${id}`, {
-        estado: nuevoEstado
-      });
-    } catch (error: any) {
-      console.error('Error al actualizar estado del pedido:', error.response?.data || error.message);
-      throw error;
-    }
+    await axios.patch(`${API_BASE_URL}/${id}/estado`, {
+      estado: nuevoEstado
+    });
   }
+
+
+
 }
