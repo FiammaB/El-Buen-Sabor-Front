@@ -4,12 +4,14 @@ import { useAuth } from "./Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { PedidoService } from "../../services/PedidoService";
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO";
+import React from "react";
 
 export default function CocineroDashboard() {
   const { role, logout } = useAuth();
   const navigate = useNavigate();
   const pedidoService = new PedidoService();
   const [pedidos, setPedidos] = useState<IPedidoDTO[]>([]);
+  const [openSlide, setOpenSlide] = useState<number | null>(null);
 
   useEffect(() => {
     if (role === "COCINERO") {
@@ -75,70 +77,79 @@ export default function CocineroDashboard() {
         </div>
       </div>
 
-      <h3 className="text-xl font-semibold mb-4">📋 Pedidos en Preparación:</h3>
-      <table className="min-w-full border border-gray-300 shadow-sm">
-        <thead>
+      <div className="p-8">
+        {/* ...Cabecera y acciones... */}
+        <h3 className="text-xl font-semibold mb-4">📋 Pedidos en Preparación:</h3>
+        <table className="min-w-full border border-gray-300 shadow-sm">
+          <thead>
           <tr className="bg-gray-100">
             <th className="p-2">ID</th>
             <th className="p-2">Fecha</th>
             <th className="p-2">Total</th>
             <th className="p-2">Acción</th>
           </tr>
-        </thead>
-        <tbody>
-        {pedidos.length > 0 ? (
-            pedidos.map((pedido) => {
-              let nuevoEstado = "";
-              let botonTexto = "";
-              let buttonColor = "";
-
-              if (pedido.estado === "EN_COCINA") {
-                nuevoEstado = "EN_PREPARACION";
-                botonTexto = "Marcar en Preparación";
-                buttonColor = "bg-blue-500 hover:bg-blue-600";
-              } else if (pedido.estado === "EN_PREPARACION") {
-                nuevoEstado = "LISTO";
-                botonTexto = "Marcar como Listo";
-                buttonColor = "bg-green-600 hover:bg-green-700";
-              } else {
-                // No mostrar botón para otros estados
-                return (
-                    <tr key={pedido.id} className="border-t">
+          </thead>
+          <tbody>
+          {pedidos.length > 0 ? (
+              pedidos.map((pedido) => (
+                  <React.Fragment key={pedido.id}>
+                    <tr className="border-t">
                       <td className="p-2 text-center">{pedido.id}</td>
                       <td className="p-2 text-center">{pedido.fechaPedido}</td>
                       <td className="p-2 text-center">${pedido.total?.toFixed(2)}</td>
                       <td className="p-2 text-center">
-                        <span className="text-gray-400">No disponible</span>
+                        <button
+                            onClick={() => cambiarEstado(pedido.id!, "LISTO")}
+                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                        >
+                          Marcar como Listo
+                        </button>
                       </td>
                     </tr>
-                );
-              }
-
-              return (
-                  <tr key={pedido.id} className="border-t">
-                    <td className="p-2 text-center">{pedido.id}</td>
-                    <td className="p-2 text-center">{pedido.fechaPedido}</td>
-                    <td className="p-2 text-center">${pedido.total?.toFixed(2)}</td>
-                    <td className="p-2 text-center">
-                      <button
-                          onClick={() => cambiarEstado(pedido.id!, nuevoEstado)}
-                          className={`text-white px-3 py-1 rounded ${buttonColor}`}
+                    {/* Subfila con artículos manufacturados */}
+                    {pedido.detalles.filter(det => det.articuloManufacturado).map((det, idx) => (
+                        <tr key={idx} className="bg-gray-50">
+                          <td colSpan={4} className="pl-8 py-2">
+                      <span
+                          onClick={() => setOpenSlide(openSlide === det.articuloManufacturado!.id ? null : det.articuloManufacturado!.id)}
+                          className="cursor-pointer font-semibold text-blue-700 hover:underline"
                       >
-                        {botonTexto}
-                      </button>
-                    </td>
-                  </tr>
-              );
-            })
-        ) : (
-            <tr>
-              <td colSpan={4} className="text-center p-4">
-                No hay pedidos en preparación.
-              </td>
-            </tr>
-        )}
-        </tbody>
-      </table>
+                        ▶ {det.articuloManufacturado?.denominacion} (x{det.cantidad})
+                      </span>
+                            {/* Slide visible solo si está abierto */}
+                            {openSlide === det.articuloManufacturado!.id && (
+                                <div className="mt-2 ml-4 border-l-4 border-blue-400 pl-4 py-2 bg-white rounded shadow">
+                                  <div>
+                                    <strong>Preparación:</strong>{" "}
+                                    <span>{det.articuloManufacturado?.preparacion || "Sin descripción"}</span>
+                                  </div>
+                                  <div className="mt-2">
+                                    <strong>Insumos:</strong>
+                                    <ul className="list-disc ml-5">
+                                      {det.articuloManufacturado?.detalles?.map((d, i) => (
+                                          <li key={i}>
+                                            {d.articuloInsumo.denominacion} <span className="text-gray-500">(x{d.cantidad})</span>
+                                          </li>
+                                      )) || <li>Sin insumos</li>}
+                                    </ul>
+                                  </div>
+                                </div>
+                            )}
+                          </td>
+                        </tr>
+                    ))}
+                  </React.Fragment>
+              ))
+          ) : (
+              <tr>
+                <td colSpan={4} className="text-center p-4">
+                  No hay pedidos en preparación.
+                </td>
+              </tr>
+          )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

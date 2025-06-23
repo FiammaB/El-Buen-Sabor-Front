@@ -34,7 +34,4 @@ export class PedidoService {
       estado: nuevoEstado
     });
   }
-
-
-
 }
