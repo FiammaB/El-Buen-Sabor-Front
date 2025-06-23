@@ -17,7 +17,7 @@ export default function Landing() {
 	const [error, setError] = useState<string | null>(null);
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [search, setSearch] = useState<string>("");
-	const [showSuggestions, setShowSuggestions] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
 
 	// Cart functions
 	const { addToCart, isInCart, getItemQuantity, totalItems, removeFromCart } = useCart()
@@ -137,14 +137,60 @@ export default function Landing() {
 							</div>
 						</div>
 						<nav className="hidden md:flex items-center space-x-8">
-							<div className="hidden md:block ml-6">
+							<div className="relative w-64">
 								<input
 									type="text"
 									value={search}
+									onFocus={() => setShowSuggestions(true)}
+									onBlur={() => setTimeout(() => setShowSuggestions(false), 150)} // Permite clickear sugerencias antes de cerrar
 									onChange={e => setSearch(e.target.value)}
 									placeholder="Buscar productos..."
-									className="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 transition w-64"
+									className="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 transition w-full"
 								/>
+								{/* Dropdown de sugerencias */}
+								{showSuggestions && search && articulosFiltrados.length > 0 && (
+									<div className="absolute left-0 top-12 w-full bg-white border rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+										{articulosFiltrados.slice(0, 6).map(a => (
+											<div
+												key={a.id}
+												className="px-4 py-2 cursor-pointer hover:bg-orange-100 flex items-center"
+												onMouseDown={() => {
+													// Redireccionar o mostrar el detalle (adaptá a tu caso)
+													window.location.href = `/producto/${a.id}`;
+													setShowSuggestions(false);
+													setSearch('');
+												}}
+											>
+												<img
+													src={a.imagen?.denominacion || "/placeholder.svg"}
+													alt={a.denominacion}
+													className="w-8 h-8 rounded mr-3 object-cover"
+												/>
+												<div>
+													<div className="font-medium">{a.denominacion}</div>
+													<div className="text-xs text-gray-500">${a.precioVenta?.toFixed(2)}</div>
+												</div>
+											</div>
+										))}
+										{articulosFiltrados.length > 6 && (
+											<div className="px-4 py-2 text-sm text-gray-600 cursor-pointer hover:bg-orange-50"
+												 onMouseDown={() => {
+													 // Ir a una página de búsqueda completa (opcional)
+													 window.location.href = `/explore?search=${encodeURIComponent(search)}`;
+													 setShowSuggestions(false);
+													 setSearch('');
+												 }}>
+												Ver todos los resultados...
+											</div>
+										)}
+									</div>
+								)}
+								{/* Si no hay resultados */}
+								{showSuggestions && search && articulosFiltrados.length === 0 && (
+									<div className="absolute left-0 top-12 w-full bg-white border rounded-xl shadow-lg z-50 p-4 text-gray-500">
+										No se encontraron productos.
+									</div>
+								)}
 							</div>
 						</nav>
 						{/* Desktop Navigation */}
