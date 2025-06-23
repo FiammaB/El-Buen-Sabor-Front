@@ -1,5 +1,0 @@
-export interface ICreateDetallePedidoDTO {
-  cantidad: number
-  articuloManufacturadoId?: number | null
-  articuloInsumoId?: number | null
-}

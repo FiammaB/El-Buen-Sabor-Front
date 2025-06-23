@@ -17,6 +17,7 @@ export default function Landing() {
 	const [error, setError] = useState<string | null>(null);
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [search, setSearch] = useState<string>("");
+	const [showSuggestions, setShowSuggestions] = useState(false);
 
 	// Cart functions
 	const { addToCart, isInCart, getItemQuantity, totalItems, removeFromCart } = useCart()
@@ -135,7 +136,17 @@ export default function Landing() {
 								El Buen Sabor
 							</div>
 						</div>
-
+						<nav className="hidden md:flex items-center space-x-8">
+							<div className="hidden md:block ml-6">
+								<input
+									type="text"
+									value={search}
+									onChange={e => setSearch(e.target.value)}
+									placeholder="Buscar productos..."
+									className="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 transition w-64"
+								/>
+							</div>
+						</nav>
 						{/* Desktop Navigation */}
 						<nav className="hidden md:flex items-center space-x-8">
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Inicio</a>
