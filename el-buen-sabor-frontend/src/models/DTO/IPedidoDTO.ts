@@ -11,6 +11,7 @@ export interface IPedidoDTO {
   domicilioId?: number;
   tipoEnvio: TipoEnvio;
   formaPago: FormaPago;
+  horaEstimadaFinalizacion: string;
   detalles: IDetallePedidoDTO[];
 }
 

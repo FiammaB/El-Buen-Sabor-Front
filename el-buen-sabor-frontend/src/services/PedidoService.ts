@@ -34,4 +34,10 @@ export class PedidoService {
       estado: nuevoEstado
     });
   }
+
+  async actualizarHoraEstimada(id: number, nuevaHora: string): Promise<void> {
+    await axios.patch(`${API_BASE_URL}/${id}/hora-estimada`, {
+      horaEstimadaFinalizacion: nuevaHora,
+    });
+  }
 }

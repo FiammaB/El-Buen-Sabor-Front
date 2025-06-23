@@ -12,6 +12,7 @@ export default function CocineroDashboard() {
   const pedidoService = new PedidoService();
   const [pedidos, setPedidos] = useState<IPedidoDTO[]>([]);
   const [openSlide, setOpenSlide] = useState<number | null>(null);
+  const [delayMinutes, setDelayMinutes] = useState<{[key: number]: number}>({});
 
   useEffect(() => {
     if (role === "COCINERO") {
@@ -38,6 +39,28 @@ export default function CocineroDashboard() {
     }
   };
 
+  const agregarRetraso = async (pedido: IPedidoDTO, minutos: number) => {
+    if (!pedido.id) return;
+    // Calculá la nueva hora
+    const original = pedido.horaEstimadaFinalizacion || "";
+    // parse original ("18:35:22" o "18:35")
+    const [h, m] = original.split(":");
+    const fecha = new Date();
+    fecha.setHours(Number(h), Number(m));
+    fecha.setMinutes(fecha.getMinutes() + minutos);
+
+    // armá string nueva hora
+    const nuevaHora = fecha
+        .toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", hour12: false });
+
+    // Hacé un update al pedido (PUT) enviando la nueva hora
+    try {
+      await pedidoService.actualizarHoraEstimada(pedido.id, nuevaHora); // te paso cómo abajo
+      fetchPedidos();
+    } catch (err) {
+      alert("No se pudo actualizar la hora");
+    }
+  };
 
   if (role !== "COCINERO") {
     return (
@@ -86,6 +109,8 @@ export default function CocineroDashboard() {
             <th className="p-2">ID</th>
             <th className="p-2">Fecha</th>
             <th className="p-2">Total</th>
+            <th className="p-2">Hora Estimada</th>
+            <th className="p-2 text-center">+Tiempo</th>
             <th className="p-2">Acción</th>
           </tr>
           </thead>
@@ -98,6 +123,32 @@ export default function CocineroDashboard() {
                       <td className="p-2 text-center">{pedido.fechaPedido}</td>
                       <td className="p-2 text-center">${pedido.total?.toFixed(2)}</td>
                       <td className="p-2 text-center">
+                        {pedido.horaEstimadaFinalizacion
+                            ? pedido.horaEstimadaFinalizacion.slice(0, 5)
+                            : "Sin asignar"}
+                      </td>
+                      <td className="p-2 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <input
+                              type="number"
+                              min={1}
+                              placeholder="Min"
+                              className="border rounded p-1 w-14 text-center"
+                              value={delayMinutes[pedido.id!] || ""}
+                              onChange={e => setDelayMinutes({
+                                ...delayMinutes,
+                                [pedido.id!]: Number(e.target.value)
+                              })}
+                          />
+                          <button
+                              className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                              onClick={() => agregarRetraso(pedido, delayMinutes[pedido.id!] || 0)}
+                          >
+                            +Min
+                          </button>
+                        </div>
+                      </td>
+                      <td className="p-2 text-center">
                         <button
                             onClick={() => cambiarEstado(pedido.id!, "LISTO")}
                             className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
@@ -106,17 +157,16 @@ export default function CocineroDashboard() {
                         </button>
                       </td>
                     </tr>
-                    {/* Subfila con artículos manufacturados */}
+                    {/* Subfila para manufacturados */}
                     {pedido.detalles.filter(det => det.articuloManufacturado).map((det, idx) => (
                         <tr key={idx} className="bg-gray-50">
-                          <td colSpan={4} className="pl-8 py-2">
-                      <span
-                          onClick={() => setOpenSlide(openSlide === det.articuloManufacturado!.id ? null : det.articuloManufacturado!.id)}
-                          className="cursor-pointer font-semibold text-blue-700 hover:underline"
-                      >
-                        ▶ {det.articuloManufacturado?.denominacion} (x{det.cantidad})
-                      </span>
-                            {/* Slide visible solo si está abierto */}
+                          <td colSpan={6} className="pl-8 py-2">
+              <span
+                  onClick={() => setOpenSlide(openSlide === det.articuloManufacturado!.id ? null : det.articuloManufacturado!.id)}
+                  className="cursor-pointer font-semibold text-blue-700 hover:underline"
+              >
+                ▶ {det.articuloManufacturado?.denominacion} (x{det.cantidad})
+              </span>
                             {openSlide === det.articuloManufacturado!.id && (
                                 <div className="mt-2 ml-4 border-l-4 border-blue-400 pl-4 py-2 bg-white rounded shadow">
                                   <div>
@@ -142,7 +192,7 @@ export default function CocineroDashboard() {
               ))
           ) : (
               <tr>
-                <td colSpan={4} className="text-center p-4">
+                <td colSpan={6} className="text-center p-4">
                   No hay pedidos en preparación.
                 </td>
               </tr>
