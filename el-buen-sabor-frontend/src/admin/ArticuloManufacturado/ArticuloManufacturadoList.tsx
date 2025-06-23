@@ -172,12 +172,7 @@ const ArticuloManufacturadoList: React.FC = () => {
                         >
                           Editar
                         </button>
-                        <button
-                          onClick={() => handleDeleteClick(articulo.id!, articulo.denominacion)}
-                          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                        >
-                          Eliminar
-                        </button>
+
                       </td>
                     </tr>
                   ))}

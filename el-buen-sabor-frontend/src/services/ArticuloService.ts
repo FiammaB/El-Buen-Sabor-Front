@@ -77,6 +77,7 @@ export class ArticuloService {
      * @returns Promesa que resuelve al ArticuloManufacturado actualizado.
      */
     async updateArticuloManufacturado(id: number, articulo: ArticuloManufacturado): Promise<ArticuloManufacturado> {
+        console.log("Articulo a actualizar: ", articulo)
         const response = await axios.put<IArticuloManufacturadoResponseDTO>(`${API_BASE_URL}/${id}`, articulo);
         return this.mapToArticuloManufacturado(response.data);
     }
