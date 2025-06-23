@@ -116,80 +116,103 @@ export default function CocineroDashboard() {
           </thead>
           <tbody>
           {pedidos.length > 0 ? (
-              pedidos.map((pedido) => (
-                  <React.Fragment key={pedido.id}>
-                    <tr className="border-t">
-                      <td className="p-2 text-center">{pedido.id}</td>
-                      <td className="p-2 text-center">{pedido.fechaPedido}</td>
-                      <td className="p-2 text-center">${pedido.total?.toFixed(2)}</td>
-                      <td className="p-2 text-center">
-                        {pedido.horaEstimadaFinalizacion
-                            ? pedido.horaEstimadaFinalizacion.slice(0, 5)
-                            : "Sin asignar"}
-                      </td>
-                      <td className="p-2 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <input
-                              type="number"
-                              min={1}
-                              placeholder="Min"
-                              className="border rounded p-1 w-14 text-center"
-                              value={delayMinutes[pedido.id!] || ""}
-                              onChange={e => setDelayMinutes({
-                                ...delayMinutes,
-                                [pedido.id!]: Number(e.target.value)
-                              })}
-                          />
-                          <button
-                              className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                              onClick={() => agregarRetraso(pedido, delayMinutes[pedido.id!] || 0)}
-                          >
-                            +Min
-                          </button>
-                        </div>
-                      </td>
-                      <td className="p-2 text-center">
-                        <button
-                            onClick={() => cambiarEstado(pedido.id!, "LISTO")}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
-                        >
-                          Marcar como Listo
-                        </button>
-                      </td>
-                    </tr>
-                    {/* Subfila para manufacturados */}
-                    {pedido.detalles.filter(det => det.articuloManufacturado).map((det, idx) => (
-                        <tr key={idx} className="bg-gray-50">
-                          <td colSpan={6} className="pl-8 py-2">
-              <span
-                  onClick={() => setOpenSlide(openSlide === det.articuloManufacturado!.id ? null : det.articuloManufacturado!.id)}
-                  className="cursor-pointer font-semibold text-blue-700 hover:underline"
-              >
-                ▶ {det.articuloManufacturado?.denominacion} (x{det.cantidad})
-              </span>
-                            {openSlide === det.articuloManufacturado!.id && (
-                                <div className="mt-2 ml-4 border-l-4 border-blue-400 pl-4 py-2 bg-white rounded shadow">
-                                  <div>
-                                    <strong>Preparación:</strong>{" "}
-                                    <span>{det.articuloManufacturado?.preparacion || "Sin descripción"}</span>
+              pedidos.map((pedido) => {
+                let nuevoEstado = "";
+                let botonTexto = "";
+                let buttonColor = "";
+
+                if (pedido.estado === "EN_COCINA") {
+                  nuevoEstado = "EN_PREPARACION";
+                  botonTexto = "Marcar en Preparación";
+                  buttonColor = "bg-blue-500 hover:bg-blue-600";
+                } else if (pedido.estado === "EN_PREPARACION") {
+                  nuevoEstado = "LISTO";
+                  botonTexto = "Marcar como Listo";
+                  buttonColor = "bg-green-600 hover:bg-green-700";
+                } else {
+                  // No mostrar botón para otros estados
+                  nuevoEstado = "";
+                  botonTexto = "";
+                  buttonColor = "";
+                }
+
+                return (
+                    <React.Fragment key={pedido.id}>
+                      <tr className="border-t">
+                        <td className="p-2 text-center">{pedido.id}</td>
+                        <td className="p-2 text-center">{pedido.fechaPedido}</td>
+                        <td className="p-2 text-center">${pedido.total?.toFixed(2)}</td>
+                        <td className="p-2 text-center">
+                          {pedido.horaEstimadaFinalizacion
+                              ? pedido.horaEstimadaFinalizacion.slice(0, 5)
+                              : "Sin asignar"}
+                        </td>
+                        <td className="p-2 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <input
+                                type="number"
+                                min={1}
+                                placeholder="Min"
+                                className="border rounded p-1 w-14 text-center"
+                                value={delayMinutes[pedido.id!] || ""}
+                                onChange={e => setDelayMinutes({
+                                  ...delayMinutes,
+                                  [pedido.id!]: Number(e.target.value)
+                                })}
+                            />
+                            <button
+                                className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                                onClick={() => agregarRetraso(pedido, delayMinutes[pedido.id!] || 0)}
+                            >
+                              +Min
+                            </button>
+                          </div>
+                        </td>
+                        <td className="p-2 text-center">
+                          {nuevoEstado && (
+                              <button
+                                  onClick={() => cambiarEstado(pedido.id!, nuevoEstado)}
+                                  className={`text-white px-3 py-1 rounded ${buttonColor}`}
+                              >
+                                {botonTexto}
+                              </button>
+                          )}
+                        </td>
+                      </tr>
+                      {/* Subfila para manufacturados */}
+                      {pedido.detalles.filter(det => det.articuloManufacturado).map((det, idx) => (
+                          <tr key={idx} className="bg-gray-50">
+                            <td colSpan={6} className="pl-8 py-2">
+                <span
+                    onClick={() => setOpenSlide(openSlide === det.articuloManufacturado!.id ? null : det.articuloManufacturado!.id)}
+                    className="cursor-pointer font-semibold text-blue-700 hover:underline"
+                >
+                  ▶ {det.articuloManufacturado?.denominacion} (x{det.cantidad})
+                </span>
+                              {openSlide === det.articuloManufacturado!.id && (
+                                  <div className="mt-2 ml-4 border-l-4 border-blue-400 pl-4 py-2 bg-white rounded shadow">
+                                    <div>
+                                      <strong>Preparación:</strong>{" "}
+                                      <span>{det.articuloManufacturado?.preparacion || "Sin descripción"}</span>
+                                    </div>
+                                    <div className="mt-2">
+                                      <strong>Insumos:</strong>
+                                      <ul className="list-disc ml-5">
+                                        {det.articuloManufacturado?.detalles?.map((d, i) => (
+                                            <li key={i}>
+                                              {d.articuloInsumo.denominacion} <span className="text-gray-500">(x{d.cantidad})</span>
+                                            </li>
+                                        )) || <li>Sin insumos</li>}
+                                      </ul>
+                                    </div>
                                   </div>
-                                  <div className="mt-2">
-                                    <strong>Insumos:</strong>
-                                    <ul className="list-disc ml-5">
-                                      {det.articuloManufacturado?.detalles?.map((d, i) => (
-                                          <li key={i}>
-                                            {d.articuloInsumo.denominacion} <span className="text-gray-500">(x{d.cantidad})</span>
-                                          </li>
-                                      )) || <li>Sin insumos</li>}
-                                    </ul>
-                                  </div>
-                                </div>
-                            )}
-                          </td>
-                        </tr>
-                    ))}
-                  </React.Fragment>
-              ))
+                              )}
+                            </td>
+                          </tr>
+                      ))}
+                    </React.Fragment>
+                );
+              })
           ) : (
               <tr>
                 <td colSpan={6} className="text-center p-4">
