@@ -50,8 +50,9 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         password: formData.password,
       });
 
-      const { rol, nombre, apellido } = res.data;
-      login(rol, `${nombre} ${apellido}`);
+      const { rol, nombre, apellido, email, telefono } = res.data;
+      console.log("RESPUESTA DEL BACK:", res.data)
+      login(rol, `${nombre} ${apellido}`, email, telefono);
 
       if (onSuccess) {
         onSuccess();
