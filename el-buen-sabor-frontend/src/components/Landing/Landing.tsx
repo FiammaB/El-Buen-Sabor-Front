@@ -16,6 +16,7 @@ export default function Landing() {
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [search, setSearch] = useState<string>("");
 
 	// Cart functions
 	const { addToCart, isInCart, getItemQuantity, totalItems, removeFromCart } = useCart()
@@ -105,6 +106,11 @@ export default function Landing() {
 			description: 'Rápida entrega directo a tu puerta en el tiempo estimado'
 		}
 	];
+	const articulosFiltrados = articulosManufacturados.filter(a =>
+		a.denominacion?.toLowerCase().includes(search.toLowerCase()) ||
+		a.descripcion?.toLowerCase().includes(search.toLowerCase())
+	);
+
 
 	return (
 		<div className="min-h-screen bg-white ebs-landing">
@@ -318,6 +324,15 @@ export default function Landing() {
 						<h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Nuestros Productos Especiales</h2>
 						<p className="text-xl text-gray-600">Artículos manufacturados con la mejor calidad</p>
 					</div>
+					<div className="mb-8 max-w-xl mx-auto">
+						<input
+							type="text"
+							value={search}
+							onChange={e => setSearch(e.target.value)}
+							className="w-full p-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-orange-400 outline-none text-lg"
+							placeholder="Buscar productos por nombre o descripción..."
+						/>
+					</div>
 
 					{loading ? (
 						<div className="flex justify-center items-center py-12">
@@ -339,7 +354,7 @@ export default function Landing() {
 						</div>
 					) : (
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-							{articulosManufacturados.map((articulo) => (
+							{articulosFiltrados.map((articulo) => (
 								<div
 									key={articulo.id}
 									className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200"
