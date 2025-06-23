@@ -1,18 +1,43 @@
-import axios from 'axios'
-import type { IPedidoDTO } from '../models/DTO/IPedidoDTO'
+// src/services/PedidoService.ts
+import axios from "axios"; 
+import type { IPedidoDTO } from '../models/DTO/IPedidoDTO';
 
-const API_BASE_URL = 'http://localhost:8080/api/pedidos'
+const API_BASE_URL = 'http://localhost:8080/api/pedidos';
 
 export class PedidoService {
+  // Enviar un nuevo pedido
   async sendPedido(pedido: IPedidoDTO): Promise<IPedidoDTO> {
     try {
-	 console.log("PEDIDO: ", pedido)
-      const response = await axios.post<IPedidoDTO>(API_BASE_URL, pedido)
-      console.log('RESPUESTA:', response.data)
-      return response.data
+      console.log("PEDIDO: ", pedido);
+      const response = await axios.post<IPedidoDTO>(API_BASE_URL, pedido);
+      console.log('RESPUESTA:', response.data);
+      return response.data;
     } catch (error: any) {
-      console.error('Error al enviar el pedido:', error.response?.data || error.message)
-      throw error
+      console.error('Error al enviar el pedido:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  // Obtener pedidos en estado EN_PREPARACION (para cocinero)
+  async getPedidosEnPreparacion(): Promise<any[]> {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/cocinero`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error al obtener pedidos en preparación:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  // Cambiar estado del pedido (por ejemplo: a EN_COCINA)
+  async actualizarEstadoPedido(id: number, nuevoEstado: string): Promise<void> {
+    try {
+      await axios.put(`${API_BASE_URL}/${id}`, {
+        estado: nuevoEstado
+      });
+    } catch (error: any) {
+      console.error('Error al actualizar estado del pedido:', error.response?.data || error.message);
+      throw error;
     }
   }
 }

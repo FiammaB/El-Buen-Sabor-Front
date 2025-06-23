@@ -1,13 +1,15 @@
+// src/models/DTO/IPedidoDTO.ts
+
 export interface IPedidoDTO {
-  fechaPedido: string
-  total: number
-  estado: string
-  clienteId: number
-  domicilioId?: number // Optional, solo requerido si tipoEnvio === 'DELIVERY'
-  tipoEnvio: TipoEnvio
-  formaPago: FormaPago
-  // sucursalId: number
-  detalles: ICreateDetallePedidoDTO[]
+  id: number; // ✅ Necesario para listar/modificar pedidos existentes
+  fechaPedido: string;
+  total: number;
+  estado: string;
+  clienteId: number;
+  domicilioId?: number; // Optional, solo requerido si tipoEnvio === 'DELIVERY'
+  tipoEnvio: TipoEnvio;
+  formaPago: FormaPago;
+  detalles: ICreateDetallePedidoDTO[];
 }
 
 export enum TipoEnvio {
@@ -19,11 +21,11 @@ export enum FormaPago {
   EFECTIVO = "EFECTIVO",
   TARJETA = "TARJETA",
   TRANSFERENCIA = "TRANSFERENCIA",
-  MERCADO_PAGO = "MERCADO_PAGO"
+  MERCADO_PAGO = "MERCADO_PAGO",
 }
 
 export interface ICreateDetallePedidoDTO {
-  cantidad: number
-  articuloManufacturadoId?: number | null
-  subtotal?: number | null
+  cantidad: number;
+  articuloManufacturadoId?: number | null;
+  subtotal?: number | null;
 }
