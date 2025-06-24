@@ -1,15 +1,18 @@
 // src/models/DTO/IPedidoDTO.ts
 
+import type {IArticuloManufacturadoResponseDTO} from "./IAArticuloManufacturadoResponseDTO.ts";
+
 export interface IPedidoDTO {
-  id: number; // ✅ Necesario para listar/modificar pedidos existentes
+  id: number;
   fechaPedido: string;
   total: number;
   estado: string;
-  clienteId: number;
-  domicilioId?: number; // Optional, solo requerido si tipoEnvio === 'DELIVERY'
+  clienteId?: number;
+  domicilioId?: number;
   tipoEnvio: TipoEnvio;
   formaPago: FormaPago;
-  detalles: ICreateDetallePedidoDTO[];
+  horaEstimadaFinalizacion: string;
+  detalles: IDetallePedidoDTO[];
 }
 
 export enum TipoEnvio {
@@ -24,8 +27,9 @@ export enum FormaPago {
   MERCADO_PAGO = "MERCADO_PAGO",
 }
 
-export interface ICreateDetallePedidoDTO {
+export interface IDetallePedidoDTO {
   cantidad: number;
-  articuloManufacturadoId?: number | null;
-  subtotal?: number | null;
+  subTotal: number;
+  articuloManufacturado?: IArticuloManufacturadoDTO | null;
+  articuloInsumo?: IArticuloInsumoDTO | null;
 }

@@ -45,7 +45,7 @@ const ArticuloManufacturadoList: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleDeleteClick = async (id: number, denominacion: string) => {
+  /*const handleDeleteClick = async (id: number, denominacion: string) => {
     if (window.confirm(`¿Estás seguro de eliminar (lógicamente) el artículo "${denominacion}"? Este no se mostrará en la lista.`)) {
       try {
         // Ahora llama al método de borrado lógico
@@ -57,7 +57,7 @@ const ArticuloManufacturadoList: React.FC = () => {
         console.error(err);
       }
     }
-  };
+  };*/
 
   const handleToggleBaja = async (id:number, baja: boolean) => {
     try {
