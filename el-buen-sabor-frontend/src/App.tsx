@@ -27,6 +27,7 @@ import CocineroDashboard from "./pages/auth/CocineroDashboard";
 // Contexto y rutas protegidas
 import { AuthProvider } from './pages/auth/Context/AuthContext';
 import ProtectedRoute from './pages/auth/ProtectedRoute';
+import OrderFailed from './components/order-failed/OrderFailed';
 
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+          <Route path="/order-failed" element={<OrderFailed />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/explore" element={<ExplorarPage />} />
