@@ -119,19 +119,20 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         {errors.password && <p className="text-sm text-red-600">{errors.password}</p>}
       </div>
 
-      <div className="flex items-center justify-between">
-        <label className="flex items-center text-sm text-gray-900">
-          <input type="checkbox" className="mr-2 h-4 w-4 text-orange-600 border-gray-300 rounded" />
-          Recordarme
-        </label>
-        <button
-          type="button"
-          onClick={() => navigate("/forgot-password")}
-          className="text-sm font-medium text-orange-600 hover:text-orange-500"
-        >
-          ¿Olvidaste tu contraseña?
-        </button>
-      </div>
+<div className="flex items-center justify-between">
+  <label className="flex items-center text-sm text-gray-900">
+    <input type="checkbox" className="mr-2 h-4 w-4 text-orange-600 border-gray-300 rounded" />
+    Recordarme
+  </label>
+  <button
+    type="button"
+    onClick={() => navigate("/recuperar")} // ✅ Ruta corregida
+    className="text-sm font-medium text-orange-600 hover:text-orange-500"
+  >
+    ¿Olvidaste tu contraseña?
+  </button>
+</div>
+
 
       <button
         type="submit"

@@ -16,9 +16,6 @@ import CategoriaPage from './components/Categoria/CategoriaPage.tsx';
 // Admin
 import ArticuloManufacturadoList from './admin/ArticuloManufacturado/ArticuloManufacturadoList';
 import Ingredientes from './admin/pages/ingredientes';
-// import PromocionPage from "./components/promocion/PromocionPage";
-// import PromocionForm from './components/promocion/PromocionForm';
-// import RankingProductosPage from "./components/promocion/RankingProductosPage";
 
 // Dashboards
 import ClienteDashboard from './pages/auth/ClienteDashboard';
@@ -31,6 +28,10 @@ import ProtectedRoute from './pages/auth/ProtectedRoute';
 import OrderFailed from './components/order-failed/OrderFailed';
 import CompraIngredientesPage from "./components/CompraIngrediente/CompraIngredientesPage.tsx";
 
+// Recuperación de contraseña
+import RecoverPasswordForm from './pages/auth/RecoverPasswordForm';
+import VerifyCodeForm from './pages/auth/VerifyCodeForm';
+import ChangePasswordForm from './pages/auth/ChangePasswordForm';
 
 function App() {
   return (
@@ -49,10 +50,10 @@ function App() {
           <Route path="/compra-ingredientes" element={<CompraIngredientesPage />} />
           <Route path="/categoriaInsumo" element={<CategoriaPage />} />
 
-          {/* <Route path="/promociones" element={<PromocionPage />} />
-          <Route path="/promociones/crear" element={<PromocionForm />} />
-          <Route path="/ranking" element={<RankingProductosPage />} /> */}
-
+          {/* Recuperación de contraseña */}
+          <Route path="/recuperar" element={<RecoverPasswordForm />} />
+          <Route path="/verificar-codigo" element={<VerifyCodeForm />} />
+          <Route path="/cambiar-password" element={<ChangePasswordForm />} />
 
           {/* Rutas ADMINISTRADOR */}
           <Route
@@ -89,6 +90,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           {/* Rutas COCINERO */}
           <Route
             path="/cocinero/dashboard"
