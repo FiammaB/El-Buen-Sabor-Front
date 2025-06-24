@@ -8,4 +8,15 @@ export class CategoriaService {
     const response = await axios.get<Categoria[]>(API_BASE_URL)
     return response.data
   }
+
+  toggleBaja(id: number, baja: boolean): Promise<void> {
+    return fetch(`${API_BASE_URL}/${id}/baja?baja=${baja}`, {
+      method: 'PATCH',
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error('No se pudo actualizar el estado de baja.');
+      }
+    });
+  }
+
 }

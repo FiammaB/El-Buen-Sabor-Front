@@ -11,6 +11,7 @@ import OrderConfirmationPage from './components/order-confirmation/OrderConfirma
 import LoginPage from './pages/auth/login-page';
 import RegisterPage from './pages/auth/register-page';
 import ExplorarPage from './components/explore/explore-page';
+import CategoriaPage from './components/Categoria/CategoriaPage.tsx';
 
 // Admin
 import ArticuloManufacturadoList from './admin/ArticuloManufacturado/ArticuloManufacturadoList';
@@ -28,6 +29,7 @@ import CocineroDashboard from "./pages/auth/CocineroDashboard";
 import { AuthProvider } from './pages/auth/Context/AuthContext';
 import ProtectedRoute from './pages/auth/ProtectedRoute';
 import OrderFailed from './components/order-failed/OrderFailed';
+import CompraIngredientesPage from "./components/CompraIngrediente/CompraIngredientesPage.tsx";
 
 
 function App() {
@@ -44,6 +46,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/explore" element={<ExplorarPage />} />
+          <Route path="/compra-ingredientes" element={<CompraIngredientesPage />} />
+          <Route path="/categoriaInsumo" element={<CategoriaPage />} />
 
           {/* <Route path="/promociones" element={<PromocionPage />} />
           <Route path="/promociones/crear" element={<PromocionForm />} />
