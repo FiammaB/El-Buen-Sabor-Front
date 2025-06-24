@@ -50,8 +50,13 @@ export default function CheckoutPage() {
     zipCode: "",
   })
 
-  console.log(useAuth)
+  console.log(useAuth())
   const { username, email, telefono } = useAuth();
+
+  const auth = useAuth();
+  console.log("CONTEXT EN CHECKOUT", auth);
+
+  console.log(email, telefono)
 
   // Load MercadoPago SDK when component mounts
   useEffect(() => {

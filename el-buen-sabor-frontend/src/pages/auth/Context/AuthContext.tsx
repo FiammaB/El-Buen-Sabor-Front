@@ -25,6 +25,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [email, setEmail] = useState<string | null>(null);
   const [telefono, setTelefono] = useState<string | null>(null);
 
+  console.log("ENTRA")
+  console.log(email)
 
   // Al montar: recuperar sesión desde localStorage
   useEffect(() => {
@@ -46,8 +48,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-
-
   // Función para login
   const login = (userRole: UserRole, userName: string, userEmail: string, userTelefono: string) => {
     if (!userRole || !userName) return;
@@ -60,6 +60,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("username", userName);
     localStorage.setItem("email", userEmail);
     localStorage.setItem("telefono", userTelefono);
+    console.log("LOGIN()", {userRole, userName, userEmail, userTelefono});
   };
 
 
