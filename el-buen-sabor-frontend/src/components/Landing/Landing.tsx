@@ -4,6 +4,7 @@ import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManuf
 import { useAuth } from "../../pages/auth/Context/AuthContext";
 import { Search, MapPin, Clock, Star, Truck, Smartphone, CreditCard, ShoppingBag, Menu, X, ChevronRight, Heart, Plus } from 'lucide-react';
 import { useCart } from "../Cart/context/cart-context";
+import type {Categoria} from "../../models/Categoria/Categoria.ts";
 
 export default function Landing() {
 
@@ -18,6 +19,8 @@ export default function Landing() {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [search, setSearch] = useState<string>("");
 	const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+	const [categorias, setCategorias] = useState<Categoria[]>([]);
+	const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(null);
 
 	// Cart functions
 	const { addToCart, isInCart, getItemQuantity, totalItems, removeFromCart } = useCart()
@@ -37,6 +40,24 @@ export default function Landing() {
 			setLoading(false);
 		}
 	};
+
+	const categoriasVisibles = [
+		"Pizza",
+		"Empanada",
+		"Hamburguesa",
+		"Sanguche",
+		"Lomito",
+
+	];
+
+	useEffect(() => {
+		articuloService.getAllCategorias()
+			.then((todas) => {
+				const filtradas = todas.filter(cat => categoriasVisibles.includes(cat.denominacion));
+				setCategorias(filtradas);
+			})
+			.catch(() => setCategorias([]));
+	}, []);
 
 	useEffect(() => {
 		fetchArticulos();
@@ -107,11 +128,12 @@ export default function Landing() {
 			description: 'Rápida entrega directo a tu puerta en el tiempo estimado'
 		}
 	];
-	const articulosFiltrados = articulosManufacturados.filter(a =>
-		a.denominacion?.toLowerCase().includes(search.toLowerCase()) ||
-		a.descripcion?.toLowerCase().includes(search.toLowerCase())
-	);
-
+	const articulosFiltrados = articulosManufacturados.filter(a => {
+		const coincideBusqueda = a.denominacion?.toLowerCase().includes(search.toLowerCase()) ||
+			a.descripcion?.toLowerCase().includes(search.toLowerCase());
+		const coincideCategoria = categoriaSeleccionada === null || a.categoria?.id === categoriaSeleccionada;
+		return coincideBusqueda && coincideCategoria;
+	});
 
 	return (
 		<div className="min-h-screen bg-white ebs-landing">
@@ -367,6 +389,25 @@ export default function Landing() {
 					<div className="text-center mb-12">
 						<h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Nuestros Productos Especiales</h2>
 						<p className="text-xl text-gray-600">Artículos manufacturados con la mejor calidad</p>
+					</div>
+					<div className="mb-8">
+						<div className="flex gap-2 overflow-x-auto pb-2">
+							<button
+								className={`px-4 py-2 rounded-full border ${categoriaSeleccionada === null ? "bg-orange-500 text-white" : "bg-white text-gray-800 hover:bg-orange-100"}`}
+								onClick={() => setCategoriaSeleccionada(null)}
+							>
+								Todos
+							</button>
+							{categorias.map(cat => (
+								<button
+									key={cat.id}
+									className={`px-4 py-2 rounded-full border whitespace-nowrap ${categoriaSeleccionada === cat.id ? "bg-orange-500 text-white" : "bg-white text-gray-800 hover:bg-orange-100"}`}
+									onClick={() => setCategoriaSeleccionada(cat.id!)}
+								>
+									{cat.denominacion}
+								</button>
+							))}
+						</div>
 					</div>
 					<div className="mb-8 max-w-xl mx-auto">
 						<input

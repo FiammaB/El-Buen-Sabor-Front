@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { ArticuloService } from '../../services/ArticuloService';
 import { ArticuloInsumo } from '../../models/Articulos/ArticuloInsumo';
 import { Plus } from 'lucide-react';
-// Importa el modal/form de alta rápida:
-import Ingredientes from '../../admin/pages/ingredientes';
 import IngredienteForm from "./IngredieteForm.tsx";
 
 const articuloService = new ArticuloService();
@@ -97,11 +95,15 @@ const CompraIngredientesPage: React.FC = () => {
                                 onChange={e => setSelectedInsumoId(Number(e.target.value))}
                             >
                                 <option value="">Seleccione un ingrediente</option>
-                                {insumosActivos.map(ins => (
-                                    <option key={ins.id} value={ins.id}>
-                                        {ins.denominacion}
-                                    </option>
-                                ))}
+                                {insumosActivos
+                                    .slice()
+                                    .sort((a, b) => a.denominacion.localeCompare(b.denominacion))
+                                    .map(ins => (
+                                        <option key={ins.id} value={ins.id}>
+                                            {ins.denominacion}
+                                        </option>
+                                    ))
+                                }
                             </select>
                             <button
                                 type="button"

@@ -24,11 +24,7 @@ export default function CategoriaInsumoPage() {
                 if (insumosCat?.id) {
                     setCategorias(
                         res
-                            .filter((c) => c.categoriaPadre && c.categoriaPadre.id === insumosCat.id)
-                            .map((c) => ({
-                                ...c,
-                                categoriaPadreId: c.categoriaPadre?.id,
-                            }))
+                            .filter((c) => c.categoriaPadreId === insumosCat.id)
                     );
                 } else {
                     setCategorias([]);
@@ -50,12 +46,7 @@ export default function CategoriaInsumoPage() {
         try {
             const res = await categoriaService.getAll();console.log("Categorías crudas:", res);
             setCategorias(
-                res
-                    .filter((c) => c.categoriaPadre && c.categoriaPadre.id === idInsumos)
-                    .map((c) => ({
-                        ...c,
-                        categoriaPadreId: c.categoriaPadre?.id,
-                    }))
+                res.filter((c) => c.categoriaPadreId === idInsumos)
             );
         } catch {
             alert("Error al cargar categorías");

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArticuloManufacturado } from '../../models/Articulos/ArticuloManufacturado';
 import { ArticuloService } from '../../services/ArticuloService';
-import ArticuloManufacturadoForm from './ArticuloManufacturadoForm'; // Importar el formulario
+import ArticuloManufacturadoForm from './ArticuloManufacturadoForm';
 import SideBar from '../compontents/Sidebar';
 import Header from '../compontents/AdminHeader';
 import axios from "axios";

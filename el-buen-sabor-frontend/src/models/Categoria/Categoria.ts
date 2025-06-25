@@ -5,6 +5,7 @@ export class Categoria {
     categoriaPadre?: Categoria | null;
     categoriaPadreId?: number;
     sucursalIds?: number[];
+    baja?: boolean;
 
     constructor(
         denominacion: string,

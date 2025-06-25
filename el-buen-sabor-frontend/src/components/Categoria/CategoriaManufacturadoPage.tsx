@@ -24,11 +24,7 @@ export default function CategoriaManufacturadoPage() {
                 if (manufacturadosCat?.id) {
                     setCategorias(
                         res
-                            .filter((c) => c.categoriaPadre && c.categoriaPadre.id === manufacturadosCat.id)
-                            .map((c) => ({
-                                ...c,
-                                categoriaPadreId: c.categoriaPadre?.id,
-                            }))
+                            .filter((c) => c.categoriaPadreId === manufacturadosCat.id)
                     );
                 } else {
                     setCategorias([]);
@@ -48,12 +44,7 @@ export default function CategoriaManufacturadoPage() {
         try {
             const res = await categoriaService.getAll();
             setCategorias(
-                res
-                    .filter((c) => c.categoriaPadre && c.categoriaPadre.id === idManufacturados)
-                    .map((c) => ({
-                        ...c,
-                        categoriaPadreId: c.categoriaPadre?.id,
-                    }))
+                res.filter((c) => c.categoriaPadreId === idManufacturados)
             );
         } catch {
             alert("Error al cargar categorías");

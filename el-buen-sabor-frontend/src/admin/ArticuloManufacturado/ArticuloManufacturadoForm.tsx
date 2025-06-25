@@ -7,7 +7,7 @@ import { Imagen } from '../../models/Categoria/Imagen';
 import { ArticuloService } from '../../services/ArticuloService';
 import { uploadImage } from '../../services/imagenService';
 import axios from 'axios';
-import { CategoriaForm } from '../../components/Categoria/CategoriaForm.tsx';
+import {CategoriaService} from "../../services/CategoriaService..ts";
 
 interface ArticuloManufacturadoFormProps {
     articulo?: ArticuloManufacturado | null;
@@ -26,6 +26,8 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [loadingMasterData, setLoadingMasterData] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const categoriaService = useMemo(() => new CategoriaService(), []);
+
 
     const articuloService = useMemo(() => new ArticuloService(), []);
 
@@ -33,12 +35,16 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
         const fetchMasterData = async () => {
             try {
                 setLoadingMasterData(true);
-                const categoriasData = await articuloService.getAllCategorias();
-                const insumosData = await articuloService.getAllArticulosInsumo();
+
+                // Cargar categorías con el service nuevo
+                const categoriasData = await categoriaService.getAll();
                 setCategorias(categoriasData);
+
+                // Cargar insumos igual que antes
+                const insumosData = await articuloService.getAllArticulosInsumo();
                 setInsumos(insumosData);
 
-                // MAPEAR SOLO AL EDITAR
+                // Mapear data si es edición
                 if (articulo) {
                     setFormData({
                         ...articulo,
@@ -47,7 +53,6 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                             id: d.id,
                             cantidad: d.cantidad,
                             articuloInsumoId: d.articuloInsumo?.id ?? d.articuloInsumoId ?? 0,
-                            // *** Usar insumosData en vez de insumos ***
                             articuloInsumo: d.articuloInsumo ?? insumosData.find(i => i.id === (d.articuloInsumo?.id ?? d.articuloInsumoId))
                         }))
                     });
@@ -62,8 +67,7 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             }
         };
         fetchMasterData();
-        // SOLO depende de articulo (NO de insumos ni insumos.length)
-    }, [articulo, articuloService]);
+    }, [articulo, articuloService, categoriaService]);
 
     const [nombreDuplicado, setNombreDuplicado] = useState(false);
 
@@ -273,16 +277,31 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                 {/* Selector de Categoría */}
                 <div style={{ marginBottom: '15px' }}>
                     <label>Categoría:</label>
-                    <select name="categoriaId" value={formData.categoriaId} onChange={handleChange} required style={{ width: '100%', padding: '8px' }}>
+                    <select
+                        name="categoriaId"
+                        value={formData.categoriaId}
+                        onChange={handleChange}
+                        required
+                        style={{ width: '100%', padding: '8px' }}
+                    >
                         <option value="">Seleccione una categoría</option>
-                        {categorias.map(cat => (
-                            <option key={cat.id} value={cat.id}>
-                                {cat.denominacion}
-                            </option>
-                        ))}
+                        {categorias
+                            .filter(cat => cat.categoriaPadreId === 1)
+                            .map(cat => (
+                                <option
+                                    key={cat.id}
+                                    value={cat.id}
+                                    disabled={cat.baja === true}
+                                    style={cat.baja ? { color: '#aaa' } : {}}
+                                >
+                                    {cat.denominacion}
+                                    {cat.baja ? ' (Dada de baja)' : ''}
+                                </option>
+                            ))}
                     </select>
-                    <p id='createCategory' className='create-category-btn'>Crear categoria +</p>
+
                 </div>
+
 
                 {/* Campo para URL de Imagen (ahora es un input de texto) */}
                 <div style={{marginBottom: '15px'}}>
@@ -316,21 +335,38 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                         <hr style={{margin: '20px 0'}} />
                 <h4>Ingredientes:</h4>
                 {formData.detalles.map((detalle, index) => (
-                    <div key={detalle.id ?? `tmp-${index}`} style={{border: '1px dashed #ccc', padding: '10px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <label>Insumo:</label>
-                    <select
-                        value={detalle.articuloInsumoId ? String(detalle.articuloInsumoId) : ""}
-                        onChange={e => handleDetalleInsumoChange(index, e.target.value)}
-                        required
-                        style={{ flex: 1, padding: '8px' }}
+                    <div
+                        key={detalle.id ?? `tmp-${index}`}
+                        style={{
+                            border: '1px dashed #ccc',
+                            padding: '10px',
+                            marginBottom: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px'
+                        }}
                     >
-                        <option value="">Seleccione un insumo</option>
-                        {insumos.map((ins) => (
-                            <option key={ins.id ?? `tmp-${ins.denominacion}`} value={ins.id ?? ""}>
-                                {ins.denominacion} ({ins.unidadMedida?.denominacion})
-                            </option>
-                        ))}
-                    </select>
+                        <label>Insumo:</label>
+                        <select
+                            value={detalle.articuloInsumoId ? String(detalle.articuloInsumoId) : ""}
+                            onChange={e => handleDetalleInsumoChange(index, e.target.value)}
+                            required
+                            style={{ flex: 1, padding: '8px' }}
+                        >
+                            <option value="">Seleccione un insumo</option>
+                            {insumos.map((ins) => (
+                                <option
+                                    key={ins.id ?? `tmp-${ins.denominacion}`}
+                                    value={ins.id ?? ""}
+                                    disabled={ins.baja === true}
+                                    style={ins.baja ? { color: '#aaa' } : {}}
+                                >
+                                    {ins.denominacion}
+                                    {ins.unidadMedida?.denominacion ? ` (${ins.unidadMedida.denominacion})` : ""}
+                                    {ins.baja ? " (Dado de baja)" : ""}
+                                </option>
+                            ))}
+                        </select>
                         <label>Cantidad:</label>
                         <input
                             type="number"
@@ -341,7 +377,18 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                             step="0.01"
                             style={{ width: '80px', padding: '8px' }}
                         />
-                        <button type="button" onClick={() => handleRemoveDetalle(index)} style={{ padding: '8px 12px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                        <button
+                            type="button"
+                            onClick={() => handleRemoveDetalle(index)}
+                            style={{
+                                padding: '8px 12px',
+                                backgroundColor: '#dc3545',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}
+                        >
                             Eliminar
                         </button>
                     </div>
@@ -372,13 +419,6 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                     </button>
                 </div>
             </form>
-            <CategoriaForm
-                categorias={categorias}
-                reloadCategorias={async () => {
-                    const updated = await articuloService.getAllCategorias();
-                    setCategorias(updated);
-                }}
-            />
         </div>
     );
 };
