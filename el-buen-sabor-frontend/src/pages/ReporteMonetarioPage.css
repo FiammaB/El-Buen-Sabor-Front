@@ -1,0 +1,62 @@
+.formulario-reporte {
+    max-width: 500px;
+    margin: 20px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.formulario-reporte h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.formulario-reporte label {
+    font-weight: bold;
+    display: block;
+    margin: 10px 0 5px;
+}
+
+.formulario-reporte input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.botones {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.botones button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.botones button:hover {
+    background-color: #0056b3;
+}
+
+.tabla-resultados {
+    margin-top: 25px;
+}
+
+.tabla-resultados table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabla-resultados th,
+.tabla-resultados td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: center;
+}

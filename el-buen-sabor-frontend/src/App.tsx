@@ -1,5 +1,4 @@
 // src/App.tsx
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
 
@@ -15,9 +14,6 @@ import ExplorarPage from './components/explore/explore-page';
 // Admin
 import ArticuloManufacturadoList from './admin/ArticuloManufacturado/ArticuloManufacturadoList';
 import Ingredientes from './admin/pages/ingredientes';
-// import PromocionPage from "./components/promocion/PromocionPage";
-// import PromocionForm from './components/promocion/PromocionForm';
-// import RankingProductosPage from "./components/promocion/RankingProductosPage";
 
 // Dashboards
 import ClienteDashboard from './pages/auth/ClienteDashboard';
@@ -27,6 +23,13 @@ import CocineroDashboard from "./pages/auth/CocineroDashboard";
 // Contexto y rutas protegidas
 import { AuthProvider } from './pages/auth/Context/AuthContext';
 import ProtectedRoute from './pages/auth/ProtectedRoute';
+
+//Reportes y promociones
+import ReporteClientesPage from "./pages/ReporteClientesPage";
+import RankingProductosPage from "./components/RankingProductos/RankingProductosPage";
+import PromocionPage from "./components/promocion/PromocionPage";
+import PromocionForm from './components/promocion/PromocionForm';
+import ReporteMonetarioPage from "./pages/ReporteMonetarioPage";
 
 
 function App() {
@@ -42,10 +45,13 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/explore" element={<ExplorarPage />} />
-
-          {/* <Route path="/promociones" element={<PromocionPage />} />
+          <Route path="/promociones" element={<PromocionPage />} />
+          
+          {/* Rutas reportes y promos */}
           <Route path="/promociones/crear" element={<PromocionForm />} />
-          <Route path="/ranking" element={<RankingProductosPage />} /> */}
+          <Route path="/ranking" element={<RankingProductosPage />} />
+          <Route path="/reporte-clientes" element={<ReporteClientesPage />} />
+          <Route path="/reporte-monetario" element={<ReporteMonetarioPage />} />
 
 
           {/* Rutas ADMINISTRADOR */}
