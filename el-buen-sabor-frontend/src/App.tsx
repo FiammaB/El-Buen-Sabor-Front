@@ -11,7 +11,8 @@ import OrderConfirmationPage from './components/order-confirmation/OrderConfirma
 import LoginPage from './pages/auth/login-page';
 import RegisterPage from './pages/auth/register-page';
 import ExplorarPage from './components/explore/explore-page';
-import CategoriaPage from './components/Categoria/CategoriaPage.tsx';
+import CategoriaInsumoPage from './components/Categoria/CategoriaInsumoPage.tsx';
+import CategoriaManufacturadoPage from './components/Categoria/CategoriaManufacturadoPage.tsx';
 
 // Admin
 import ArticuloManufacturadoList from './admin/ArticuloManufacturado/ArticuloManufacturadoList';
@@ -48,7 +49,8 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/explore" element={<ExplorarPage />} />
           <Route path="/compra-ingredientes" element={<CompraIngredientesPage />} />
-          <Route path="/categoriaInsumo" element={<CategoriaPage />} />
+          <Route path="/categoriaInsumo" element={<CategoriaInsumoPage />} />
+          <Route path="/categoriaManufacturado" element={<CategoriaManufacturadoPage />} />
 
           {/* Recuperación de contraseña */}
           <Route path="/recuperar" element={<RecoverPasswordForm />} />

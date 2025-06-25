@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import type { ICategoriaResponseDTO } from "../../models/DTO/ICategoriaResponseDTO";
-import { CategoriaForm } from "./CategoriaForm";
+
 import { Pencil, Trash2, Check } from "lucide-react";
-import {CategoriaService} from "../../services/CategoriaService..ts";
+import { CategoriaService } from "../../services/CategoriaService..ts";
+import {CategoriaForm} from "./CategoriaForm.tsx";
 
-
-export default function CategoriaPage() {
+export default function CategoriaManufacturadoPage() {
     const [categorias, setCategorias] = useState<ICategoriaResponseDTO[]>([]);
-    const [idInsumos, setIdInsumos] = useState<number | null>(null);
+    const [idManufacturados, setIdManufacturados] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editCategoria, setEditCategoria] = useState<ICategoriaResponseDTO | null>(null);
@@ -15,16 +15,16 @@ export default function CategoriaPage() {
     const [search, setSearch] = useState('');
 
     useEffect(() => {
-        const fetchIdInsumos = async () => {
+        const fetchIdManufacturados = async () => {
             setLoading(true);
             try {
                 const res = await categoriaService.getAll();
-                const insumosCat = res.find((cat) => (cat.denominacion ?? "").toLowerCase() === "insumos");
-                setIdInsumos(insumosCat?.id || null);
-                if (insumosCat?.id) {
+                const manufacturadosCat = res.find((cat) => (cat.denominacion ?? "").toLowerCase() === "manufacturados");
+                setIdManufacturados(manufacturadosCat?.id || null);
+                if (manufacturadosCat?.id) {
                     setCategorias(
                         res
-                            .filter((c) => c.categoriaPadre && c.categoriaPadre.id === insumosCat.id)
+                            .filter((c) => c.categoriaPadre && c.categoriaPadre.id === manufacturadosCat.id)
                             .map((c) => ({
                                 ...c,
                                 categoriaPadreId: c.categoriaPadre?.id,
@@ -39,19 +39,17 @@ export default function CategoriaPage() {
                 setLoading(false);
             }
         };
-        fetchIdInsumos();
-        // eslint-disable-next-line
+        fetchIdManufacturados();
     }, []);
 
-    // Refrescar solo las hijas de Insumos
     const fetchCategorias = async () => {
-        if (!idInsumos) return;
+        if (!idManufacturados) return;
         setLoading(true);
         try {
-            const res = await categoriaService.getAll();console.log("Categorías crudas:", res);
+            const res = await categoriaService.getAll();
             setCategorias(
                 res
-                    .filter((c) => c.categoriaPadre && c.categoriaPadre.id === idInsumos)
+                    .filter((c) => c.categoriaPadre && c.categoriaPadre.id === idManufacturados)
                     .map((c) => ({
                         ...c,
                         categoriaPadreId: c.categoriaPadre?.id,
@@ -71,7 +69,7 @@ export default function CategoriaPage() {
     const handleBaja = async (id: number, baja: boolean) => {
         try {
             await categoriaService.toggleBaja(id, baja);
-            await fetchCategorias(); // refresca el listado
+            await fetchCategorias();
         } catch {
             alert("Error al cambiar estado de la categoría");
         }
@@ -80,12 +78,12 @@ export default function CategoriaPage() {
     return (
         <div className="p-8">
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-blue-800">Categorías de Ingredientes</h2>
+                <h2 className="text-2xl font-bold text-blue-800">Categorías de Manufacturados</h2>
                 <button
                     onClick={() => { setEditCategoria(null); setShowForm(true); }}
                     className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
                     id="createCategory"
-                    disabled={!idInsumos}
+                    disabled={!idManufacturados}
                 >
                     + Nueva Categoría
                 </button>
@@ -100,9 +98,9 @@ export default function CategoriaPage() {
                 />
             </div>
 
-            {showForm && idInsumos && (
+            {showForm && idManufacturados && (
                 <CategoriaForm
-                    idCategoriaPadre={idInsumos}
+                    idCategoriaPadre={idManufacturados}
                     reloadCategorias={fetchCategorias}
                     onClose={() => setShowForm(false)}
                     editCategoria={editCategoria}
