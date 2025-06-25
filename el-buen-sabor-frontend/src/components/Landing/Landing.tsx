@@ -17,7 +17,7 @@ export default function Landing() {
 	const [error, setError] = useState<string | null>(null);
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [search, setSearch] = useState<string>("");
-    const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+	const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
 
 	// Cart functions
 	const { addToCart, isInCart, getItemQuantity, totalItems, removeFromCart } = useCart()
@@ -174,12 +174,12 @@ export default function Landing() {
 										))}
 										{articulosFiltrados.length > 6 && (
 											<div className="px-4 py-2 text-sm text-gray-600 cursor-pointer hover:bg-orange-50"
-												 onMouseDown={() => {
-													 // Ir a una página de búsqueda completa (opcional)
-													 window.location.href = `/explore?search=${encodeURIComponent(search)}`;
-													 setShowSuggestions(false);
-													 setSearch('');
-												 }}>
+												onMouseDown={() => {
+													// Ir a una página de búsqueda completa (opcional)
+													window.location.href = `/explore?search=${encodeURIComponent(search)}`;
+													setShowSuggestions(false);
+													setSearch('');
+												}}>
 												Ver todos los resultados...
 											</div>
 										)}
@@ -248,29 +248,14 @@ export default function Landing() {
 							</div>
 						)}
 
-						{role === "CLIENTE" && (
+						{role === "CAJERO" && (
 							<div className="flex items-center space-x-4">
-								<span className="text-blue-600 font-bold">
-									Cliente: {username || "Invitado"}
-								</span>
-								<button
-									onClick={logout}
-									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-								>
-									Cerrar Sesión
-								</button>
-							</div>
-						)}
-						{role === "COCINERO" && (
-							<div className="flex items-center space-x-4">
-    							<span className="text-orange-600 font-bold">
-      								Cocinero{username ? `: ${username}` : ""}
-    							</span>
+								<span className="text-purple-700 font-bold">Cajero: {username}</span>
 								<a
-									href="/cocinero/dashboard"
-									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+									href="/cajero/dashboard"
+									className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition"
 								>
-									Dashboard
+									Caja
 								</a>
 								<button
 									onClick={logout}
@@ -280,6 +265,8 @@ export default function Landing() {
 								</button>
 							</div>
 						)}
+
+
 						{/* Mobile menu button */}
 						<button
 							className="md:hidden p-2"

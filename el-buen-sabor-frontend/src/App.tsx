@@ -21,6 +21,7 @@ import Ingredientes from './admin/pages/ingredientes';
 import ClienteDashboard from './pages/auth/ClienteDashboard';
 import AdminDashboard from './pages/auth/AdminDashboard';
 import CocineroDashboard from "./pages/auth/CocineroDashboard";
+import CajeroDashboard from "./pages/auth/CajeroDashboard";
 
 // Contexto y rutas protegidas
 import { AuthProvider } from './pages/auth/Context/AuthContext';
@@ -28,7 +29,7 @@ import ProtectedRoute from './pages/auth/ProtectedRoute';
 import OrderFailed from './components/order-failed/OrderFailed';
 import CompraIngredientesPage from "./components/CompraIngrediente/CompraIngredientesPage.tsx";
 
-//Reportes y promociones
+// Reportes y promociones
 import ReporteClientesPage from "./pages/ReporteClientesPage";
 import RankingProductosPage from "./components/RankingProductos/RankingProductosPage";
 import PromocionPage from "./components/promocion/PromocionPage";
@@ -113,6 +114,16 @@ function App() {
             element={
               <ProtectedRoute role="COCINERO">
                 <CocineroDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ✅ Rutas CAJERO (nuevo) */}
+          <Route
+            path="/cajero/dashboard"
+            element={
+              <ProtectedRoute role="CAJERO">
+                <CajeroDashboard />
               </ProtectedRoute>
             }
           />
