@@ -134,6 +134,15 @@ export class ArticuloService {
         return response.data;
     }
 
+    async restarStock(id: number, cantidad: number): Promise<void> {
+        await axios.put(`/api/articuloInsumo/${id}/restar-stock?cantidad=${cantidad}`);
+    }
+
+
+    async actualizarPrecioCompra(id: number, precioCompra: number): Promise<void> {
+        await axios.put(`${API_INSUMO_BASE_URL}/${id}/actualizar-precio?precioCompra=${precioCompra}`);
+    }
+
     toggleBaja(id: number, baja: boolean): Promise<void> {
         return fetch(`/api/articuloInsumo/${id}/baja?baja=${baja}`, {
             method: 'PATCH',

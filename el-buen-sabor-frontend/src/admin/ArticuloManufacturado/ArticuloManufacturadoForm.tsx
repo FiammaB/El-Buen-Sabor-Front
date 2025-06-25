@@ -7,7 +7,7 @@ import { Imagen } from '../../models/Categoria/Imagen';
 import { ArticuloService } from '../../services/ArticuloService';
 import { uploadImage } from '../../services/imagenService';
 import axios from 'axios';
-import CategoriaForm from '../../components/Categoria/CategoriaForm';
+import { CategoriaForm } from '../../components/Categoria/CategoriaForm.tsx';
 
 interface ArticuloManufacturadoFormProps {
     articulo?: ArticuloManufacturado | null;

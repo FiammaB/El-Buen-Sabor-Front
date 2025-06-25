@@ -50,7 +50,13 @@ export default function CheckoutPage() {
     zipCode: "",
   })
 
-  const { username } = useAuth();
+  console.log(useAuth())
+  const { username, email, telefono } = useAuth();
+
+  const auth = useAuth();
+  console.log("CONTEXT EN CHECKOUT", auth);
+
+  console.log(email, telefono)
 
   // Load MercadoPago SDK when component mounts
   useEffect(() => {
@@ -93,6 +99,7 @@ export default function CheckoutPage() {
           subTotal: Number((item.articulo.precioVenta * item.quantity).toFixed(2)),
           articuloId: item.articulo.id,
         })),
+        id: 0
       };
 
       console.log("PEDIDO:", pedido)
@@ -467,18 +474,9 @@ export default function CheckoutPage() {
                     <div className="space-y-2">
                       <h3 className="font-semibold">Información Personal</h3>
                       <div className="bg-gray-50 p-4 rounded-md">
-                        <p>
-                          <span className="font-medium">Nombre:</span>{" "}
-                          {username || "No especificado"}
-                        </p>
-                        <p>
-                          <span className="font-medium">Email:</span>{" "}
-                          No especificado
-                        </p>
-                        <p>
-                          <span className="font-medium">Teléfono:</span>{" "}
-                          No especificado
-                        </p>
+                        <p><span className="font-medium">Nombre:</span> {username || "No especificado"}</p>
+                        <p><span className="font-medium">Email:</span> {email || "No especificado"}</p>
+                        <p><span className="font-medium">Teléfono:</span> {telefono || "No especificado"}</p>
                       </div>
                     </div>
 

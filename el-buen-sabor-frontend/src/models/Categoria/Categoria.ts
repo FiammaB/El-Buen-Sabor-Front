@@ -2,6 +2,7 @@
 export class Categoria {
     id?: number;
     denominacion: string;
+    categoriaPadre?: Categoria | null;
     categoriaPadreId?: number;
     sucursalIds?: number[];
 

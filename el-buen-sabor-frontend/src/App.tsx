@@ -10,6 +10,8 @@ import OrderConfirmationPage from './components/order-confirmation/OrderConfirma
 import LoginPage from './pages/auth/login-page';
 import RegisterPage from './pages/auth/register-page';
 import ExplorarPage from './components/explore/explore-page';
+import CategoriaInsumoPage from './components/Categoria/CategoriaInsumoPage.tsx';
+import CategoriaManufacturadoPage from './components/Categoria/CategoriaManufacturadoPage.tsx';
 
 // Admin
 import ArticuloManufacturadoList from './admin/ArticuloManufacturado/ArticuloManufacturadoList';
@@ -23,6 +25,8 @@ import CocineroDashboard from "./pages/auth/CocineroDashboard";
 // Contexto y rutas protegidas
 import { AuthProvider } from './pages/auth/Context/AuthContext';
 import ProtectedRoute from './pages/auth/ProtectedRoute';
+import OrderFailed from './components/order-failed/OrderFailed';
+import CompraIngredientesPage from "./components/CompraIngrediente/CompraIngredientesPage.tsx";
 
 //Reportes y promociones
 import ReporteClientesPage from "./pages/ReporteClientesPage";
@@ -31,6 +35,10 @@ import PromocionPage from "./components/promocion/PromocionPage";
 import PromocionForm from './components/promocion/PromocionForm';
 import ReporteMonetarioPage from "./pages/ReporteMonetarioPage";
 
+// Recuperación de contraseña
+import RecoverPasswordForm from './pages/auth/RecoverPasswordForm';
+import VerifyCodeForm from './pages/auth/VerifyCodeForm';
+import ChangePasswordForm from './pages/auth/ChangePasswordForm';
 
 function App() {
   return (
@@ -42,6 +50,7 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+          <Route path="/order-failed" element={<OrderFailed />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/explore" element={<ExplorarPage />} />
@@ -53,6 +62,14 @@ function App() {
           <Route path="/reporte-clientes" element={<ReporteClientesPage />} />
           <Route path="/reporte-monetario" element={<ReporteMonetarioPage />} />
 
+          <Route path="/compra-ingredientes" element={<CompraIngredientesPage />} />
+          <Route path="/categoriaInsumo" element={<CategoriaInsumoPage />} />
+          <Route path="/categoriaManufacturado" element={<CategoriaManufacturadoPage />} />
+
+          {/* Recuperación de contraseña */}
+          <Route path="/recuperar" element={<RecoverPasswordForm />} />
+          <Route path="/verificar-codigo" element={<VerifyCodeForm />} />
+          <Route path="/cambiar-password" element={<ChangePasswordForm />} />
 
           {/* Rutas ADMINISTRADOR */}
           <Route
@@ -89,6 +106,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           {/* Rutas COCINERO */}
           <Route
             path="/cocinero/dashboard"
