@@ -20,7 +20,7 @@ import Ingredientes from './admin/pages/ingredientes';
 // Dashboards
 import ClienteDashboard from './pages/auth/ClienteDashboard';
 import AdminDashboard from './pages/auth/AdminDashboard';
-import CocineroDashboard from "./pages/auth/CocineroDashboard";
+import PedidosPage from "./components/Pedidos/PedidosPage.tsx";
 import CajeroDashboard from "./pages/auth/CajeroDashboard";
 
 // Contexto y rutas protegidas
@@ -40,6 +40,7 @@ import ReporteMonetarioPage from "./pages/ReporteMonetarioPage";
 import RecoverPasswordForm from './pages/auth/RecoverPasswordForm';
 import VerifyCodeForm from './pages/auth/VerifyCodeForm';
 import ChangePasswordForm from './pages/auth/ChangePasswordForm';
+import CocineroAdminLayout from "./components/Cocinero/CocineroAdminLayout.tsx";
 
 function App() {
   return (
@@ -63,10 +64,6 @@ function App() {
           <Route path="/reporte-clientes" element={<ReporteClientesPage />} />
           <Route path="/reporte-monetario" element={<ReporteMonetarioPage />} />
 
-          <Route path="/compra-ingredientes" element={<CompraIngredientesPage />} />
-          <Route path="/categoriaInsumo" element={<CategoriaInsumoPage />} />
-          <Route path="/categoriaManufacturado" element={<CategoriaManufacturadoPage />} />
-
           {/* Recuperación de contraseña */}
           <Route path="/recuperar" element={<RecoverPasswordForm />} />
           <Route path="/verificar-codigo" element={<VerifyCodeForm />} />
@@ -76,7 +73,7 @@ function App() {
           <Route
             path="/admin/articulos"
             element={
-              <ProtectedRoute role="ADMINISTRADOR">
+              <ProtectedRoute role={["ADMINISTRADOR", "COCINERO"]}>
                 <ArticuloManufacturadoList />
               </ProtectedRoute>
             }
@@ -84,7 +81,7 @@ function App() {
           <Route
             path="/admin/ingredientes"
             element={
-              <ProtectedRoute role="ADMINISTRADOR">
+              <ProtectedRoute role={["ADMINISTRADOR", "COCINERO"]}>
                 <Ingredientes />
               </ProtectedRoute>
             }
@@ -110,10 +107,10 @@ function App() {
 
           {/* Rutas COCINERO */}
           <Route
-            path="/cocinero/dashboard"
+            path="/pedidosPage"
             element={
               <ProtectedRoute role="COCINERO">
-                <CocineroDashboard />
+                <PedidosPage />
               </ProtectedRoute>
             }
           />
@@ -128,7 +125,51 @@ function App() {
             }
           />
 
-          {/* Ruta por defecto */}
+          {/* Rutas MIXTAS */}
+          <Route
+              path="/compraIngredientes"
+              element={
+                  <ProtectedRoute role={["ADMINISTRADOR", "COCINERO"]}>
+                      <CompraIngredientesPage/>
+                  </ProtectedRoute>
+              }
+          />
+
+            <Route
+              path="/categoriaInsumo"
+              element={
+                  <ProtectedRoute role={["ADMINISTRADOR", "COCINERO"]}>
+                      <CategoriaInsumoPage/>
+                  </ProtectedRoute>
+              }
+            />
+
+            <Route
+                path="/categoriaManufacturado"
+                element={
+                    <ProtectedRoute role={["ADMINISTRADOR", "COCINERO"]}>
+                        <CategoriaManufacturadoPage/>
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/cocinero"
+                element={
+                    <ProtectedRoute role="COCINERO">
+                        <CocineroAdminLayout />
+                    </ProtectedRoute>
+                }
+            >
+                <Route path="pedidos" element={<PedidosPage />} />
+                <Route path="Productos" element={<ArticuloManufacturadoList />} />
+                <Route path="Ingredientes" element={<Ingredientes/>} />
+                <Route path="compra-ingredientes" element={<CompraIngredientesPage />} />
+                <Route path="categorias-insumo" element={<CategoriaInsumoPage />} />
+                <Route path="categorias-manufacturado" element={<CategoriaManufacturadoPage />} />
+            </Route>
+
+            {/* Ruta por defecto */}
           <Route path="*" element={<Landing />} />
         </Routes>
       </Router>

@@ -1,12 +1,12 @@
-// src/pages/auth/CocineroDashboard.tsx
+// src/pages/auth/PedidosPage.tsx
 import { useEffect, useState } from "react";
-import { useAuth } from "./Context/AuthContext";
+import { useAuth } from "../../pages/auth/Context/AuthContext.tsx";
 import { useNavigate } from "react-router-dom";
-import { PedidoService } from "../../services/PedidoService";
-import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO";
+import { PedidoService } from "../../services/PedidoService.ts";
+import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO.ts";
 import React from "react";
 
-export default function CocineroDashboard() {
+export default function PedidosPage() {
   const { role, logout } = useAuth();
   const navigate = useNavigate();
   const pedidoService = new PedidoService();
@@ -73,33 +73,7 @@ export default function CocineroDashboard() {
 
   return (
     <div className="p-8">
-      <h2 className="text-3xl font-bold text-green-700 mb-6">Panel del Cocinero 👨‍🍳</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-md p-6 border hover:border-green-300">
-          <h3 className="text-lg font-bold mb-2">🍳 Ver Pedidos para Preparar</h3>
-          <p className="text-sm text-gray-600 mb-4">Visualizá y gestioná los pedidos asignados.</p>
-          <button
-            onClick={fetchPedidos}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
-            Actualizar Pedidos
-          </button>
-        </div>
-        <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
-          <h3 className="text-lg font-bold mb-2">🚪 Cerrar Sesión</h3>
-          <button
-            onClick={() => {
-              logout();
-              navigate("/");
-            }}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Cerrar Sesión
-          </button>
-        </div>
-      </div>
-
+      <h2 className="text-3xl font-bold text-green-700 mb-6">Panel de Pedidos 👨‍🍳</h2>
       <div className="p-8">
         {/* ...Cabecera y acciones... */}
         <h3 className="text-xl font-semibold mb-4">📋 Pedidos en Preparación:</h3>

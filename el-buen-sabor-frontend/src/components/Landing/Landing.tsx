@@ -288,6 +288,42 @@ export default function Landing() {
 							</div>
 						)}
 
+						{role === "COCINERO" && (
+							<div className="flex items-center space-x-4">
+								<span className="text-green-700 font-bold">Cocinero: {username}</span>
+								<a
+									href="/cocinero/pedidos"
+									className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+								>
+									Cocina
+								</a>
+								<button
+									onClick={logout}
+									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+								>
+									Cerrar Sesión
+								</button>
+							</div>
+						)}
+
+						{role === "CLIENTE" && (
+							<div className="flex items-center space-x-4">
+								<span className="text-orange-700 font-bold">{username}</span>
+								<a
+									href="/cliente/dashboard"
+									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+								>
+									Mi Cuenta
+								</a>
+								<button
+									onClick={logout}
+									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+								>
+									Cerrar Sesión
+								</button>
+							</div>
+						)}
+
 
 						{/* Mobile menu button */}
 						<button
