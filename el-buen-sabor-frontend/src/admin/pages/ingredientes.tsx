@@ -208,7 +208,7 @@ export default function Ingredientes() {
         <div className="max-w-7xl mx-auto space-y-8">
 
           <div className="flex gap-8">
-            <SideBar />
+            {/* <SideBar /> */}
             <div>
               <h1 className="text-2xl mb-8 font-bold text-gray-900">
                 Administración de Ingredientes
