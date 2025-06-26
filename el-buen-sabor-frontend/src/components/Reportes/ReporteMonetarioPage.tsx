@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { getReporteMonetario } from "../services/ReporteMonetarioService";
-import type { ReporteMonetarioDTO } from "../models/DTO/ReporteMonetarioDTO";
+import { getReporteMonetario } from "../../services/ReporteMonetarioService";
+import type { ReporteMonetarioDTO } from "../../models/DTO/ReporteMonetarioDTO";
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -22,8 +22,12 @@ const ReporteMonetarioPage: React.FC = () => {
         try {
             const datos = await getReporteMonetario(desde, hasta);
             setReporte(datos);
-        } catch (error) {
-            MySwal.fire("Error", "No se pudo obtener el reporte", "error");
+        } catch {
+            MySwal.fire({
+                icon: "error",
+                title: "Error",
+                text: "No se pudo obtener el reporte",
+            });
         }
     };
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "../Context/AuthContext";
+import { useAuth } from "../../Auth/Context/AuthContext";
 
 type LoginFormProps = {
   onSuccess?: () => void;
@@ -52,7 +52,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
       const { rol, nombre, apellido, email, telefono } = res.data;
       console.log("RESPUESTA DEL BACK:", res.data)
-      login(rol, `${nombre} ${apellido}`, email, telefono);
+      login(rol, ${nombre} ${apellido}, email, telefono);
 
       if (onSuccess) {
         onSuccess();
@@ -89,7 +89,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
             id="email"
             name="email"
             type="email"
-            className={`w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.email ? "border-red-300" : "border-gray-300"}`}
+            className={w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.email ? "border-red-300" : "border-gray-300"}}
             placeholder="tu@email.com"
             value={formData.email}
             onChange={handleInputChange}
@@ -107,7 +107,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
-            className={`w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.password ? "border-red-300" : "border-gray-300"}`}
+            className={w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.password ? "border-red-300" : "border-gray-300"}}
             placeholder="Tu contraseña"
             value={formData.password}
             onChange={handleInputChange}

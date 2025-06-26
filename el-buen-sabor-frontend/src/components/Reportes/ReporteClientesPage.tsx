@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { getReporteClientes } from "../services/ClienteReporteService";
-import type { ClienteReporteDTO } from "../models/DTO/ClienteReporteDTO";
+import { getReporteClientes } from "../../services/ClienteReporteService";
+import type { ClienteReporteDTO } from "../../models/DTO/ClienteReporteDTO";
 import * as XLSX from "xlsx";
 import "./ReporteClientesPage.css";
 import Swal from 'sweetalert2';
