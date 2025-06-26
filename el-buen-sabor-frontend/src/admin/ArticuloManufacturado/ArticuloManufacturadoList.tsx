@@ -95,7 +95,7 @@ const ArticuloManufacturadoList: React.FC = () => {
     <div>
       <Header/>
       <div className='flex gap-8 px-4 py-[80px] max-w-7xl mx-auto'>
-        <SideBar />
+        {/* <SideBar /> */}
         <div className="articulo-manufacturado-list">
           <h2 className="text-2xl font-semibold mb-4">Gestión de Artículos Manufacturados</h2>
 

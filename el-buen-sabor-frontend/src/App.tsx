@@ -41,12 +41,14 @@ import RecoverPasswordForm from './components/Auth/components/RecoverPaswordForm
 import VerifyCodeForm from './components/Auth/components/VerifyCodeForm.tsx';
 import ChangePasswordForm from './components/Auth/components/ChangePasswordForm.tsx';
 import CocineroAdminLayout from "./components/Cocinero/CocineroAdminLayout.tsx";
+import ProductDetailPage from "./pages/producto/Producto.tsx";
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
+          <Route path="/producto/:id" element={<ProductDetailPage />} />
           {/* Rutas públicas */}
           <Route path="/landing" element={<Landing />} />
           <Route path="/cart" element={<CartPage />} />
