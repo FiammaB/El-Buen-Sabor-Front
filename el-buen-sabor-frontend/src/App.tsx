@@ -42,6 +42,7 @@ import VerifyCodeForm from './components/Auth/components/VerifyCodeForm.tsx';
 import ChangePasswordForm from './components/Auth/components/ChangePasswordForm.tsx';
 import CocineroAdminLayout from "./components/Cocinero/CocineroAdminLayout.tsx";
 import ProductDetailPage from "./pages/producto/Producto.tsx";
+import ControlStockPage from "./components/ControlStock/ControlStockPage.tsx";
 
 function App() {
   return (
@@ -169,6 +170,7 @@ function App() {
             <Route path="compra-ingredientes" element={<CompraIngredientesPage />} />
             <Route path="categorias-insumo" element={<CategoriaInsumoPage />} />
             <Route path="categorias-manufacturado" element={<CategoriaManufacturadoPage />} />
+              <Route path="control-stock" element={<ControlStockPage />} />
           </Route>
 
           {/* Ruta por defecto */}

@@ -8,7 +8,7 @@ const navItems = [
     { href: "/cocinero/compra-ingredientes", label: "Compra de Ingredientes" },
     { href: "/cocinero/categorias-insumo", label: "Rubros de Igredientes" },
     { href: "/cocinero/categorias-manufacturado", label: "Rubros de Productos" },
-    { href: "/cocinero", label: "Control de Stock(NO HECHA)" },
+    { href: "/cocinero/control-stock", label: "Control de Stock" },
 ];
 
 export default function CocineroSidebar() {
