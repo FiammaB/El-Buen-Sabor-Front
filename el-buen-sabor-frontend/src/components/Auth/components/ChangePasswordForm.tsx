@@ -20,7 +20,7 @@ export default function ChangePasswordForm() {
 
         try {
             const res = await fetch(
-                http://localhost:8080/api/auth/cambiar-password?email=${email}&codigo=${codigo}&nuevaPassword=${password},
+                'http://localhost:8080/api/auth/cambiar-password?email=${email}&codigo=${codigo}&nuevaPassword=${password}',
                 { method: "POST" }
             );
 

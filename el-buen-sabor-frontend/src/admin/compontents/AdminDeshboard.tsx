@@ -1,4 +1,4 @@
-import { useAuth } from "./Context/AuthContext";
+import { useAuth } from "../../components/Auth/Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {

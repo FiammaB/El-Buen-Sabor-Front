@@ -10,8 +10,8 @@ import { MercadoPagoService } from "../../services/MercadoPagoService"
 import { FormaPago, TipoEnvio } from "../../models/DTO/IPedidoDTO"
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO"
 import { useNavigate } from "react-router-dom"
-import LoginForm from "../../pages/auth/components/LoginForm"
-import { useAuth } from "../../pages/auth/Context/AuthContext"
+import LoginForm from "../../components/Auth/components/LoginForm"
+import { useAuth } from "../Auth/Context/AuthContext";
 
 // MercadoPago SDK script loader
 const loadMercadoPagoScript = () => {

@@ -1,5 +1,5 @@
 // src/components/Header/CocineroPanelHeader.tsx
-import { useAuth } from "../../pages/auth/Context/AuthContext";
+import { useAuth } from "../Auth/Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";

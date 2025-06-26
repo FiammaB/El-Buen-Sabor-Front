@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArticuloService } from "../../services/ArticuloService";
 import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
-import { useAuth } from "../../pages/auth/Context/AuthContext";
+import { useAuth } from "../Auth/Context/AuthContext";
 import { Search, MapPin, Clock, Star, Truck, Smartphone, CreditCard, ShoppingBag, Menu, X, ChevronRight, Heart, Plus } from 'lucide-react';
 import { useCart } from "../Cart/context/cart-context";
 import type {Categoria} from "../../models/Categoria/Categoria.ts";
