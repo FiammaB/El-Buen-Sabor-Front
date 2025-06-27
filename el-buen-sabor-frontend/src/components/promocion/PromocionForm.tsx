@@ -18,8 +18,6 @@ interface FormularioPromocion {
     denominacion: string;
     fechaDesde: string;
     fechaHasta: string;
-    horaDesde: string;
-    horaHasta: string;
     precioPromocional: number;
     tipoPromocion: string;
     articulos: ArticuloSeleccionado[];
@@ -86,12 +84,6 @@ const PromocionForm: React.FC = () => {
             <label>Fecha Hasta</label>
             <input type="date" {...register("fechaHasta")} required />
 
-            <label>Hora Desde</label>
-            <input type="time" {...register("horaDesde")} required />
-
-            <label>Hora Hasta</label>
-            <input type="time" {...register("horaHasta")} required />
-
             <label>Precio Promocional</label>
             <input type="number" step="0.01" {...register("precioPromocional")} required />
 
@@ -106,36 +98,48 @@ const PromocionForm: React.FC = () => {
             </select>
 
             <h3>Artículos Manufacturados</h3>
-            {articulosDisponibles.map((art) => (
-                <div key={art.id} className="articulo-entry">
-                    <input
-                        type="checkbox"
-                        id={`art-${art.id}`}
-                        checked={seleccionados[art.id] !== undefined}
-                        onChange={(e) => handleCheckboxChange(art.id, e.target.checked)}
-                    />
-                    <label htmlFor={`art-${art.id}`} style={{ marginRight: "10px" }}>
-                        {art.denominacion}
-                    </label>
-
-                    {art.imagen?.denominacion && (
-                        <img
-                            src={art.imagen.denominacion}
-                            alt={art.denominacion}
-                            style={{ width: "120px", height: "auto", marginTop: "5px", borderRadius: "8px" }}
-                        />
-                    )}
-
-                    {seleccionados[art.id] !== undefined && (
-                        <input
-                            type="number"
-                            min={1}
-                            value={seleccionados[art.id]}
-                            onChange={(e) => handleCantidadChange(art.id, Number(e.target.value))}
-                            style={{ width: "80px" }}
-                        />
-                    )}
-                </div>
+            {Object.entries(
+                articulosDisponibles.reduce((acc, art) => {
+                    const categoria = art.categoria?.denominacion || "Sin categoría";
+                    if (!acc[categoria]) acc[categoria] = [];
+                    acc[categoria].push(art);
+                    return acc;
+                }, {} as Record<string, any[]>)
+            ).map(([categoria, articulos]) => (
+                <details key={categoria} style={{ marginBottom: "1rem" }}>
+                    <summary style={{ fontWeight: "bold", fontSize: "1.1rem" }}>{categoria}</summary>
+                    <div className="articulos-grid">
+                        {articulos.map((art) => (
+                            <div key={art.id} className="articulo-card">
+                                <input
+                                    type="checkbox"
+                                    id={`art-${art.id}`}
+                                    checked={seleccionados[art.id] !== undefined}
+                                    onChange={(e) => handleCheckboxChange(art.id, e.target.checked)}
+                                />
+                                <label htmlFor={`art-${art.id}`}>
+                                    <p><strong>{art.denominacion}</strong></p>
+                                    {art.imagen?.denominacion && (
+                                        <img
+                                            src={art.imagen.denominacion}
+                                            alt={art.denominacion}
+                                            className="articulo-img"
+                                        />
+                                    )}
+                                </label>
+                                {seleccionados[art.id] !== undefined && (
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        value={seleccionados[art.id]}
+                                        onChange={(e) => handleCantidadChange(art.id, Number(e.target.value))}
+                                        className="articulo-cantidad"
+                                    />
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </details>
             ))}
 
             <button type="submit" className="btn-submit">
