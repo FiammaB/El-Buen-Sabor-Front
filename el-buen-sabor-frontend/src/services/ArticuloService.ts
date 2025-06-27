@@ -252,6 +252,18 @@ export class ArticuloService {
         });
     }
 
+    async getIngredientesBajoStock(
+        insumos: ArticuloInsumo[],
+        porcentajeAlerta: number = 20
+    ) {
+        return insumos.filter(i => {
+            if (i.baja) return false; // Solo activos
+            if (i.stockActual < i.stockMinimo) return true;
+            // Zona de alerta: stockActual <= porcentaje de stockMinimo
+            return i.stockActual <= i.stockMinimo * (porcentajeAlerta / 100);
+        });
+    }
+
 
     // --- Métodos de Mapeo Internos (para convertir Response DTO a instancias de clase) ---
     // Estos métodos toman una interfaz de respuesta (el JSON plano) y construyen una instancia de tu clase de modelo.

@@ -17,6 +17,33 @@ export class PedidoService {
     }
   }
 
+  async getAllPedidos(): Promise<IPedidoDTO[]> {
+    try {
+      const response = await axios.get<IPedidoDTO[]>(API_BASE_URL);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error al obtener todos los pedidos:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  async getPedidosByEstado(estado: string): Promise<IPedidoDTO[]> {
+    const response = await axios.get(`${API_BASE_URL}/estado/${encodeURIComponent(estado)}`);
+    return response.data;
+  }
+
+  async getPedidoById(id: number): Promise<IPedidoDTO | null> {
+    try {
+      const response = await axios.get<IPedidoDTO>(`${API_BASE_URL}/${id}`);
+      return response.data;
+    } catch (error: any) {
+      // Si no existe, devolver null (manejo de error 404)
+      if (error.response && error.response.status === 404) return null;
+      console.error('Error al buscar pedido por ID:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
   // Cocinero: Obtener pedidos en preparación o cocina
   async getPedidosEnCocina(): Promise<IPedidoDTO[]> {
     try {

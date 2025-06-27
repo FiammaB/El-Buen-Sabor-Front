@@ -4,7 +4,7 @@ import { ArticuloManufacturado } from '../../models/Articulos/ArticuloManufactur
 import { ArticuloService } from '../../services/ArticuloService';
 import ArticuloManufacturadoForm from './ArticuloManufacturadoForm';
 import SideBar from '../compontents/Sidebar';
-import Header from '../compontents/AdminHeader';
+
 import axios from "axios";
 
 const ArticuloManufacturadoList: React.FC = () => {
@@ -93,7 +93,6 @@ const ArticuloManufacturadoList: React.FC = () => {
 
   return (
     <div>
-      <Header/>
       <div className='flex gap-8 px-4 py-[80px] max-w-7xl mx-auto'>
         {/* <SideBar /> */}
         <div className="articulo-manufacturado-list">

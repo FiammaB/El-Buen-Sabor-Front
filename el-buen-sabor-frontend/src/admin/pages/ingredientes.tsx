@@ -8,7 +8,6 @@ import { CategoriaService } from '../../services/CategoriaService.';
 import { Categoria } from "../../models/Categoria/Categoria"
 // import { all } from "axios"
 import SideBar from '../compontents/Sidebar';
-import Header from '../compontents/AdminHeader';
 import { UnidadMedidaService } from '../../services/UnidadMedidaService';
 import { UnidadMedida } from "../../models/Categoria/UnidadMedida";
 import {uploadImage} from "../../services/imagenService.ts";
@@ -203,7 +202,6 @@ export default function Ingredientes() {
 
   return (
     <div>
-      <Header />
       <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-8">
 

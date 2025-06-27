@@ -1,7 +1,8 @@
+// src/pages/Landing/Landing.tsx
 import { useEffect, useState } from "react";
 import { ArticuloService } from "../../services/ArticuloService";
 import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
-import { useAuth } from "../../pages/auth/Context/AuthContext";
+import { useAuth } from "../Auth/Context/AuthContext";
 import { Search, MapPin, Clock, Star, Truck, Smartphone, CreditCard, ShoppingBag, Menu, X, ChevronRight, Heart, Plus } from 'lucide-react';
 import { useCart } from "../Cart/context/cart-context";
 import type {Categoria} from "../../models/Categoria/Categoria.ts";
@@ -274,7 +275,7 @@ export default function Landing() {
 							<div className="flex items-center space-x-4">
 								<span className="text-purple-700 font-bold">Cajero: {username}</span>
 								<a
-									href="/cajero/dashboard"
+									href="/cajero/caja"
 									className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition"
 								>
 									Caja

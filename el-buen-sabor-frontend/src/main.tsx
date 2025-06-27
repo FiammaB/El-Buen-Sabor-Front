@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
 import { CartProvider } from "./components/Cart/context/cart-context";
-import { AuthProvider } from "./pages/auth/Context/AuthContext.tsx";
+import { AuthProvider } from "./components/Auth/Context/AuthContext";
 import axios from "axios"; // 👈 agregalo
 
 axios.defaults.withCredentials = true; // 👈 habilitá envío de cookies/credenciales

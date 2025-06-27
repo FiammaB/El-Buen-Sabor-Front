@@ -1,7 +1,5 @@
 // src/models/DTO/IPedidoDTO.ts
 
-import type {IArticuloManufacturadoResponseDTO} from "./IAArticuloManufacturadoResponseDTO.ts";
-
 export interface IPedidoDTO {
   id: number;
   fechaPedido: string;

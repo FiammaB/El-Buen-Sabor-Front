@@ -1,10 +1,10 @@
-// src/components/Header/CocineroPanelHeader.tsx
+// src/pages/cajero/CajeroPanelHeader.tsx
 import { useAuth } from "../Auth/Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
-export default function CocineroPanelHeader() {
+export default function CajeroPanelHeader() {
     const { username, logout } = useAuth();
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,7 +13,6 @@ export default function CocineroPanelHeader() {
         <header className="bg-white shadow-sm sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
-                    {/* Logo y Botón Inicio */}
                     <div className="flex items-center space-x-4">
                         <div
                             className="text-2xl font-bold text-orange-500 cursor-pointer"
@@ -28,10 +27,8 @@ export default function CocineroPanelHeader() {
                             Inicio
                         </button>
                     </div>
-
-                    {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center space-x-8">
-                        <span className="text-green-700 font-bold">Cocinero: {username}</span>
+                        <span className="text-purple-700 font-bold">Cajero: {username}</span>
                         <button
                             onClick={() => {
                                 logout();
@@ -42,8 +39,6 @@ export default function CocineroPanelHeader() {
                             Cerrar Sesión
                         </button>
                     </nav>
-
-                    {/* Mobile menu button */}
                     <button
                         className="md:hidden p-2"
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -51,8 +46,6 @@ export default function CocineroPanelHeader() {
                         {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </button>
                 </div>
-
-                {/* Mobile Navigation */}
                 {isMenuOpen && (
                     <div className="md:hidden py-4 border-t">
                         <div className="flex flex-col space-y-4">
@@ -65,11 +58,12 @@ export default function CocineroPanelHeader() {
                             >
                                 Inicio
                             </button>
-                            <span className="text-green-700 font-bold">{username}</span>
+                            <span className="text-purple-700 font-bold">{username}</span>
                             <button
                                 onClick={() => {
                                     logout();
                                     setIsMenuOpen(false);
+                                    navigate("/landing");
                                 }}
                                 className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
                             >

@@ -1,6 +1,6 @@
 // src/pages/auth/PedidosPage.tsx
 import { useEffect, useState } from "react";
-import { useAuth } from "../../pages/auth/Context/AuthContext.tsx";
+import { useAuth } from "../Auth/Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { PedidoService } from "../../services/PedidoService.ts";
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO.ts";

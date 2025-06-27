@@ -1,4 +1,4 @@
-import { useAuth } from "./Context/AuthContext";
+import { useAuth } from "../../components/Auth/Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
@@ -54,40 +54,6 @@ export default function AdminDashboard() {
                         Cerrar Sesión
                     </button>
                 </div>
-
-                <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
-                    <h3 className="text-lg font-bold mb-2">🏷️ Categorías de Insumos</h3>
-                    <p className="text-sm text-gray-600 mb-4">Crear o modificar categorías para insumos.</p>
-                    <button
-                        onClick={() => navigate("/categoriaInsumo")}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                        Ir a Categorías de Insumos
-                    </button>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
-                    <h3 className="text-lg font-bold mb-2">🏷️ Categorías de Manufacturados</h3>
-                    <p className="text-sm text-gray-600 mb-4">Crear o modificar categorías para productos manufacturados.</p>
-                    <button
-                        onClick={() => navigate("/categoriaManufacturado")}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                        Ir a Categorías de Manufacturados
-                    </button>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
-                    <h3 className="text-lg font-bold mb-2">🛒 Compra de Ingredientes</h3>
-                    <p className="text-sm text-gray-600 mb-4">Gestionar compras de insumos e ingredientes.</p>
-                    <button
-                        onClick={() => navigate("/compraIngredientes")}
-                        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                    >
-                        Ir a Compras de Ingredientes
-                    </button>
-                </div>
-
             </div>
         </div>
     );
