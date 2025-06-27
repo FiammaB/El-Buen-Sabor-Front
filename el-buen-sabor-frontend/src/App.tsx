@@ -1,4 +1,3 @@
-// src/App.tsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
 
@@ -21,7 +20,6 @@ import Ingredientes from './admin/pages/ingredientes';
 import ClienteDashboard from './components/Cliente/ClienteDashboard';
 import AdminDashboard from './admin/compontents/AdminDeshboard.tsx';
 import PedidosPage from "./components/Pedidos/PedidosPage.tsx";
-//import CajeroDashboard from "./components/";
 
 // Contexto y rutas protegidas
 import { AuthProvider } from './components/Auth/Context/AuthContext.tsx';
@@ -46,12 +44,16 @@ import ControlStockPage from "./components/ControlStock/ControlStockPage.tsx";
 import CajeroAdminLayout from "./components/Cajero/CajeroAdminLayout.tsx";
 import CajeroPedidosPage from "./components/Cajero/CajeroPedidosPage.tsx";
 
+// ✅ Página de perfil
+import PerfilPage from "./components/Auth/components/PerfilPage.tsx";
+
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
           <Route path="/producto/:id" element={<ProductDetailPage />} />
+
           {/* Rutas públicas */}
           <Route path="/landing" element={<Landing />} />
           <Route path="/cart" element={<CartPage />} />
@@ -63,7 +65,7 @@ function App() {
           <Route path="/explore" element={<ExplorarPage />} />
           <Route path="/promociones" element={<PromocionPage />} />
 
-          {/* Rutas reportes y promos */}
+          {/* Reportes y promociones */}
           <Route path="/promociones/crear" element={<PromocionForm />} />
           <Route path="/ranking" element={<RankingProductosPage />} />
           <Route path="/reporte-clientes" element={<ReporteClientesPage />} />
@@ -73,6 +75,16 @@ function App() {
           <Route path="/recuperar" element={<RecoverPasswordForm />} />
           <Route path="/verificar-codigo" element={<VerifyCodeForm />} />
           <Route path="/cambiar-password" element={<ChangePasswordForm />} />
+
+          {/* ✅ Ruta protegida para perfil */}
+          <Route
+            path="/perfil"
+            element={
+              <ProtectedRoute role={["ADMINISTRADOR", "CLIENTE", "COCINERO", "CAJERO"]}>
+                <PerfilPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Rutas ADMINISTRADOR */}
           <Route
@@ -120,16 +132,6 @@ function App() {
             }
           />
 
-          {/* ✅ Rutas CAJERO (nuevo) */}
-          { /* <Route
-            path="/cajero/dashboard"
-            element={
-              <ProtectedRoute role="CAJERO">
-                <CajeroDashboard />
-              </ProtectedRoute>
-            }
-          />*/}
-
           {/* Rutas MIXTAS */}
           <Route
             path="/compraIngredientes"
@@ -139,7 +141,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/categoriaInsumo"
             element={
@@ -148,7 +149,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/categoriaManufacturado"
             element={
@@ -158,6 +158,7 @@ function App() {
             }
           />
 
+          {/* Layout COCINERO */}
           <Route
             path="/cocinero"
             element={
@@ -172,22 +173,22 @@ function App() {
             <Route path="compra-ingredientes" element={<CompraIngredientesPage />} />
             <Route path="categorias-insumo" element={<CategoriaInsumoPage />} />
             <Route path="categorias-manufacturado" element={<CategoriaManufacturadoPage />} />
-              <Route path="control-stock" element={<ControlStockPage />} />
+            <Route path="control-stock" element={<ControlStockPage />} />
           </Route>
 
-            <Route
-                path="/cajero"
-                element={
-                    <ProtectedRoute role="CAJERO">
-                        <CajeroAdminLayout />
-                    </ProtectedRoute>
-                }
-            >
-                <Route path="caja" element={<CajeroPedidosPage />} />
-            </Route>
+          {/* Layout CAJERO */}
+          <Route
+            path="/cajero"
+            element={
+              <ProtectedRoute role="CAJERO">
+                <CajeroAdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="caja" element={<CajeroPedidosPage />} />
+          </Route>
 
-
-            {/* Ruta por defecto */}
+          {/* Ruta por defecto */}
           <Route path="*" element={<Landing />} />
         </Routes>
       </Router>

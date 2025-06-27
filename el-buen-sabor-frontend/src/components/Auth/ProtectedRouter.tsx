@@ -4,13 +4,13 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "./Context/AuthContext";
 import React, { type ReactNode } from "react";
 
-// Tipos válidos de roles
-type UserRole = "ADMINISTRADOR" | "CLIENTE" | "COCINERO" | "CAJERO";
+// Importa el tipo UserRole desde el contexto
+import type { UserRole as ContextUserRole } from "./Context/AuthContext";
 
 // Props del componente
 interface ProtectedRouteProps {
     children: ReactNode;
-    role: UserRole | UserRole[]; // ✅ Soporta uno o varios roles
+    role: Exclude<ContextUserRole, null> | Exclude<ContextUserRole, null>[]; // ✅ Evita null
 }
 
 // Componente protegido
@@ -33,7 +33,7 @@ export default function ProtectedRoute({ children, role }: ProtectedRouteProps) 
 
     // Verificar si el usuario tiene un rol permitido
     const isAllowed = Array.isArray(role)
-        ? role.includes(userRole)
+        ? (role as ContextUserRole[]).includes(userRole)
         : userRole === role;
 
     // Si el usuario no tiene permiso, redirigir al inicio
