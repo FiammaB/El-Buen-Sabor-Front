@@ -3,16 +3,16 @@ import { useEffect, useState } from "react";
 import { ArticuloService } from "../../services/ArticuloService";
 import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
 import { useAuth } from "../Auth/Context/AuthContext";
-import { Search, MapPin, Clock, Star, Truck, Smartphone, CreditCard, ShoppingBag, Menu, X, ChevronRight, Heart, Plus } from 'lucide-react';
+import { Search, MapPin, Clock, Star, Truck, CreditCard, ShoppingBag, Menu, X, Heart, Plus } from 'lucide-react';
 import { useCart } from "../Cart/context/cart-context";
-import type {Categoria} from "../../models/Categoria/Categoria.ts";
+import type { Categoria } from "../../models/Categoria/Categoria.ts";
 import { useNavigate } from "react-router-dom";
 
 
 export default function Landing() {
 
 	const { role, logout, username } = useAuth();
-	const navigate = useNavigate(); 
+	const navigate = useNavigate();
 
 
 
@@ -67,54 +67,7 @@ export default function Landing() {
 		fetchArticulos();
 	}, []);
 
-	// DATOS
-	const categories = [
-		{ name: 'Pizza', image: 'https://images.pexels.com/photos/315755/pexels-photo-315755.jpeg?auto=compress&cs=tinysrgb&w=300', count: '120+ restaurants' },
-		{ name: 'Burgers', image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg?auto=compress&cs=tinysrgb&w=300', count: '85+ restaurants' },
-		{ name: 'Sushi', image: 'https://images.pexels.com/photos/357756/pexels-photo-357756.jpeg?auto=compress&cs=tinysrgb&w=300', count: '45+ restaurants' },
-		{ name: 'Mexican', image: 'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=300', count: '95+ restaurants' },
-		{ name: 'Italian', image: 'https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg?auto=compress&cs=tinysrgb&w=300', count: '70+ restaurants' },
-		{ name: 'Chinese', image: 'https://images.pexels.com/photos/2456435/pexels-photo-2456435.jpeg?auto=compress&cs=tinysrgb&w=300', count: '60+ restaurants' },
-	];
-	const featuredRestaurants = [
-		{
-			name: 'La Cocina Perfecta',
-			image: 'https://images.pexels.com/photos/1639562/pexels-photo-1639562.jpeg?auto=compress&cs=tinysrgb&w=500',
-			rating: 4.8,
-			reviews: 250,
-			deliveryTime: '25-35 min',
-			deliveryFee: '$2.99',
-			cuisine: 'Mexican • Authentic',
-			promoted: true
-		},
-		{
-			name: 'Burger Palace',
-			image: 'https://images.pexels.com/photos/1552241/pexels-photo-1552241.jpeg?auto=compress&cs=tinysrgb&w=500',
-			rating: 4.6,
-			reviews: 180,
-			deliveryTime: '20-30 min',
-			deliveryFee: '$1.99',
-			cuisine: 'American • Burgers'
-		},
-		{
-			name: 'Sushi Master',
-			image: 'https://images.pexels.com/photos/248537/pexels-photo-248537.jpeg?auto=compress&cs=tinysrgb&w=500',
-			rating: 4.9,
-			reviews: 320,
-			deliveryTime: '30-40 min',
-			deliveryFee: '$3.99',
-			cuisine: 'Japanese • Sushi'
-		},
-		{
-			name: 'Pizza Corner',
-			image: 'https://images.pexels.com/photos/708587/pexels-photo-708587.jpeg?auto=compress&cs=tinysrgb&w=500',
-			rating: 4.7,
-			reviews: 195,
-			deliveryTime: '20-25 min',
-			deliveryFee: '$2.49',
-			cuisine: 'Italian • Pizza'
-		}
-	];
+
 	const steps = [
 		{
 			icon: <Search className="w-8 h-8" />,
@@ -222,9 +175,9 @@ export default function Landing() {
 						{/* Desktop Navigation */}
 						<nav className="hidden md:flex items-center space-x-8">
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Inicio</a>
-							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Restaurantes</a>
+
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ofertas</a>
-							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ayuda</a>
+
 						</nav>
 						{/* Botones para usuarios no logueados */}
 						{!role && (
@@ -247,18 +200,7 @@ export default function Landing() {
 						{role === "ADMINISTRADOR" && (
 							<div className="flex items-center space-x-4">
 								<span className="text-green-600 font-bold">Administrador</span>
-								<a
-									href="/admin/ingredientes"
-									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
-								>
-									Ingredientes
-								</a>
-								<a
-									href="/admin/articulos"
-									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
-								>
-									Artículos
-								</a>
+
 								<a
 									href="/admin/dashboard"
 									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
@@ -310,23 +252,23 @@ export default function Landing() {
 							</div>
 						)}
 
-{role === "CLIENTE" && (
-  <div className="flex items-center space-x-4">
-    <span className="text-orange-700 font-bold">{username}</span>
-    <button
-      onClick={() => navigate("/perfil")}
-      className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
-    >
-      Mi Cuenta
-    </button>
-    <button
-      onClick={logout}
-      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-    >
-      Cerrar Sesión
-    </button>
-  </div>
-)}
+						{role === "CLIENTE" && (
+							<div className="flex items-center space-x-4">
+								<span className="text-orange-700 font-bold">{username}</span>
+								<button
+									onClick={() => navigate("/perfil")}
+									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+								>
+									Mi Cuenta
+								</button>
+								<button
+									onClick={logout}
+									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+								>
+									Cerrar Sesión
+								</button>
+							</div>
+						)}
 
 
 
@@ -344,9 +286,9 @@ export default function Landing() {
 						<div className="md:hidden py-4 border-t">
 							<div className="flex flex-col space-y-4">
 								<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Inicio</a>
-								<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Restaurantes</a>
+
 								<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ofertas</a>
-								<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ayuda</a>
+
 								<div className="flex flex-col space-y-2 pt-4 border-t">
 									<button className="text-gray-700 hover:text-orange-500 transition duration-200 font-medium text-left">
 										Iniciar Sesión
@@ -362,7 +304,7 @@ export default function Landing() {
 			</header>
 
 			{/* Hero Section */}
-			<section className="relative bg-gradient-to-br from-orange-50 to-orange-100 py-16 lg:py-24">
+			<section className="relative bg-gradient-to-br from-orange-50 to-orange-100 py-16 lg:py-24  items-center">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 						<div className="space-y-8">
@@ -375,23 +317,7 @@ export default function Landing() {
 								</p>
 							</div>
 
-							{/* Search Bar */}
-							<div className="bg-white p-2 rounded-2xl shadow-lg border">
-								<div className="flex items-center space-x-4">
-									<div className="flex items-center space-x-2 flex-1 px-4">
-										<MapPin className="w-5 h-5 text-gray-400" />
-										<input
-											type="text"
-											placeholder="Ingresa tu dirección"
-											className="flex-1 py-3 bg-transparent outline-none text-gray-700 placeholder-gray-400"
-										/>
-									</div>
-									<button className="bg-orange-500 text-white px-8 py-3 rounded-xl hover:bg-orange-600 transition duration-200 font-medium flex items-center space-x-2">
-										<Search className="w-5 h-5" />
-										<span>Buscar</span>
-									</button>
-								</div>
-							</div>
+
 
 							<div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
 								<div className="flex items-center space-x-2">
@@ -409,17 +335,7 @@ export default function Landing() {
 							</div>
 						</div>
 
-						<div className="relative">
-							<div className="relative z-10">
-								<img
-									src="https://images.pexels.com/photos/1640774/pexels-photo-1640774.jpeg?auto=compress&cs=tinysrgb&w=800"
-									alt="Delicious food delivery"
-									className="w-full h-96 lg:h-[500px] object-cover rounded-3xl shadow-2xl"
-								/>
-							</div>
-							<div className="absolute -top-4 -right-4 w-72 h-72 bg-orange-200 rounded-full opacity-20 z-0"></div>
-							<div className="absolute -bottom-4 -left-4 w-48 h-48 bg-yellow-200 rounded-full opacity-20 z-0"></div>
-						</div>
+
 					</div>
 				</div>
 			</section>
@@ -432,7 +348,7 @@ export default function Landing() {
 						<p className="text-xl text-gray-600">Artículos manufacturados con la mejor calidad</p>
 					</div>
 					<div className="mb-8">
-						<div className="flex gap-2 overflow-x-auto pb-2">
+						<div className="flex gap-2 overflow-x-auto pb-2 items-center">
 							<button
 								className={`px-4 py-2 rounded-full border ${categoriaSeleccionada === null ? "bg-orange-500 text-white" : "bg-white text-gray-800 hover:bg-orange-100"}`}
 								onClick={() => setCategoriaSeleccionada(null)}
@@ -570,115 +486,9 @@ export default function Landing() {
 			</section>
 
 			{/* Categories Section */}
-			<section className="py-16 bg-white">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="text-center mb-12">
-						<h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-							¿Qué se te antoja hoy?
-						</h2>
-						<p className="text-xl text-gray-600">
-							Explora nuestras categorías más populares
-						</p>
-					</div>
 
-					<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-						{categories.map((category, index) => (
-							<div
-								key={index}
-								className="group cursor-pointer"
-							>
-								<div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition duration-300 border hover:border-orange-200">
-									<div className="relative overflow-hidden rounded-xl mb-4">
-										<img
-											src={category.image}
-											alt={category.name}
-											className="w-full h-20 object-cover group-hover:scale-110 transition duration-300"
-										/>
-									</div>
-									<h3 className="font-semibold text-gray-900 text-center mb-2">
-										{category.name}
-									</h3>
-									<p className="text-sm text-gray-500 text-center">
-										{category.count}
-									</p>
-								</div>
-							</div>
-						))}
-					</div>
-				</div>
-			</section>
 
-			{/* Featured Restaurants */}
-			<section className="py-16 bg-gray-50">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex justify-between items-center mb-12">
-						<div>
-							<h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-								Restaurantes destacados
-							</h2>
-							<p className="text-xl text-gray-600">
-								Los favoritos de tu ciudad
-							</p>
-						</div>
-						<button className="hidden md:flex items-center space-x-2 text-orange-500 hover:text-orange-600 font-medium">
-							<span>Ver todos</span>
-							<ChevronRight className="w-5 h-5" />
-						</button>
-					</div>
 
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-						{featuredRestaurants.map((restaurant, index) => (
-							<div
-								key={index}
-								className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer"
-							>
-								<div className="relative">
-									<img
-										src={restaurant.image}
-										alt={restaurant.name}
-										className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
-									/>
-									{restaurant.promoted && (
-										<div className="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-											Promocionado
-										</div>
-									)}
-									<button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition duration-200">
-										<Heart className="w-4 h-4 text-gray-400" />
-									</button>
-								</div>
-
-								<div className="p-6">
-									<div className="flex justify-between items-start mb-2">
-										<h3 className="font-bold text-gray-900 text-lg">
-											{restaurant.name}
-										</h3>
-										<div className="flex items-center space-x-1">
-											<Star className="w-4 h-4 text-yellow-400 fill-current" />
-											<span className="text-sm font-medium text-gray-700">
-												{restaurant.rating}
-											</span>
-										</div>
-									</div>
-
-									<p className="text-gray-600 mb-4">{restaurant.cuisine}</p>
-
-									<div className="flex justify-between items-center text-sm text-gray-500">
-										<div className="flex items-center space-x-1">
-											<Clock className="w-4 h-4" />
-											<span>{restaurant.deliveryTime}</span>
-										</div>
-										<div className="flex items-center space-x-1">
-											<Truck className="w-4 h-4" />
-											<span>{restaurant.deliveryFee}</span>
-										</div>
-									</div>
-								</div>
-							</div>
-						))}
-					</div>
-				</div>
-			</section>
 
 			{/* How it Works */}
 			<section className="py-16 bg-white">
@@ -717,29 +527,6 @@ export default function Landing() {
 				</div>
 			</section>
 
-			{/* CTA Section */}
-			<section className="py-16 bg-gradient-to-r from-orange-500 to-red-500">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-					<div className="max-w-3xl mx-auto">
-						<h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
-							¡Descarga nuestra app y obtén 20% de descuento!
-						</h2>
-						<p className="text-xl text-orange-100 mb-8">
-							Disfruta de ofertas exclusivas, seguimiento en tiempo real y mucho más
-						</p>
-						<div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
-							<button className="bg-white text-gray-900 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition duration-200 flex items-center space-x-3">
-								<Smartphone className="w-6 h-6" />
-								<span>Descargar para iOS</span>
-							</button>
-							<button className="bg-white text-gray-900 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition duration-200 flex items-center space-x-3">
-								<Smartphone className="w-6 h-6" />
-								<span>Descargar para Android</span>
-							</button>
-						</div>
-					</div>
-				</div>
-			</section>
 
 			{/* Footer */}
 			<footer className="bg-gray-900 text-white py-16">
