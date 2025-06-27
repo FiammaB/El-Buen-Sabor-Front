@@ -453,6 +453,7 @@ export default function Landing() {
 												</div>
 											) : ''}
 										</div>
+										<a className="text-center bg-orange-400 text-white py-2 block mx-auto mt-4" href={`/producto/${articulo.id}`}>Ver detalle</a>
 									</div>
 								</div>
 							))}
