@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ShoppingCart, Plus, Minus, ArrowLeft, Clock, Star, ChevronRight } from "lucide-react"
+import { ShoppingCart, Plus, Minus, ArrowLeft, Clock, Star, ChevronRight, Heart, X } from "lucide-react"
 import { useCart } from "../../components/Cart/context/cart-context"
 import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado"
 
@@ -10,7 +10,7 @@ export default function ProductDetailPage() {
   // ───────────────────────────── hooks ─────────────────────────────
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { addToCart, isInCart, getItemQuantity } = useCart()
+	const { addToCart, isInCart, getItemQuantity, totalItems, removeFromCart } = useCart()
 
   // ──────────────────────────── state ──────────────────────────────
   const [producto, setProducto] = useState<ArticuloManufacturado | null>(null)
@@ -164,41 +164,80 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {related.map((item) => (
                 <div
-                  key={item.id}
-                  className="bg-white border rounded-2xl overflow-hidden shadow hover:shadow-lg transition cursor-pointer group"
-                  onClick={() => navigate(`/producto/${item.id}`)}
-                >
-                  <div className="relative h-36 bg-gray-100">
-                    <img
-                      src={item.imagen?.denominacion || "/placeholder.svg"}
-                      alt={item.denominacion}
-                      className="w-full h-full object-cover group-hover:scale-105 transition"
-                    />
-                  </div>
-                  <div className="p-4 flex flex-col gap-1">
-                    <h3 className="font-semibold text-gray-900 line-clamp-2">
-                      {item.denominacion}
-                    </h3>
-                    <p className="text-sm text-gray-500 line-clamp-2 flex-1">
-                      {item.descripcion || "Producto artesanal"}
-                    </p>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="font-bold text-orange-500">
-                        ${item.precioVenta?.toFixed(2)}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          addToCart(item)
-                        }}
-                        className="bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-full transition"
-                        title="Agregar al carrito"
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+									key={item.id}
+									className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200"
+								>
+									<div className="relative">
+										<img
+											src={
+												item.imagen
+													? item.imagen.denominacion
+													: "/placeholder.svg?height=200&width=300"
+											}
+											alt={item.denominacion}
+											className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+										/>
+										<button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition duration-200">
+											<Heart className="w-4 h-4 text-gray-400" />
+										</button>
+										{item.tiempoEstimadoMinutos && (
+											<div className="absolute bottom-3 left-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-sm">
+												<Clock className="w-3 h-3 inline mr-1" />
+												{item.tiempoEstimadoMinutos} min
+											</div>
+										)}
+									</div>
+
+									<div className="p-6">
+										<div className="flex justify-between items-start mb-2">
+											<h3 className="font-bold text-gray-900 text-lg line-clamp-2">{item.denominacion}</h3>
+											<div className="flex items-center space-x-1 ml-2">
+												<span className="text-lg font-bold text-orange-500">${item.precioVenta}</span>
+											</div>
+										</div>
+
+										<p className="text-gray-600 text-sm mb-4 line-clamp-2">
+											{item.descripcion || "Delicioso producto artesanal"}
+										</p>
+
+										<div className="flex justify-between items-center">
+											<div className="text-sm text-gray-500">
+												{item.categoria?.denominacion || "Producto especial"}
+											</div>
+											<button
+												onClick={() => addToCart(item)}
+												className={`p-2 rounded-full transition duration-200 ${isInCart(item.id || 1)
+													? "bg-green-500 text-white"
+													: "bg-orange-500 text-white hover:bg-orange-600"
+													}`}
+											>
+												{isInCart(item.id || 1) ? (
+													<div className="flex gap-2">
+														<span className="text-xs font-bold">{getItemQuantity(item.id || 0)}</span>
+														<Plus className="w-4 h-4" />
+													</div>
+												) : (
+													<Plus className="w-4 h-4" />
+												)}
+											</button>
+											{isInCart(item.id || 1) ? (
+												<div className="flex gap-2">
+													<button
+														onClick={(e) => {
+															e.stopPropagation()
+															removeFromCart(item.id || 0)
+														}}
+														className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-200"
+														title="Eliminar del carrito"
+													>
+														<X className="w-3 h-3" />
+													</button>
+												</div>
+											) : ''}
+										</div>
+										<a className="text-center bg-orange-400 text-white py-2 block mx-auto mt-4" href={`/producto/${item.id}`}>Ver detalle</a>
+									</div>
+								</div>
               ))}
             </div>
           </div>
