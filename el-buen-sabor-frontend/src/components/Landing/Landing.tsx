@@ -304,38 +304,22 @@ export default function Landing() {
 			</header>
 
 			{/* Hero Section */}
-			<section className="relative bg-gradient-to-br from-orange-50 to-orange-100 py-16 lg:py-24  items-center">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<section className="relative bg-gradient-to-br from-orange-50 to-orange-100 py-16 lg:py-24 
+                             items-center justify-center">
+				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 text-center">
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-						<div className="space-y-8">
+
+						<div className="lg:col-span-2 space-y-8">
 							<div className="space-y-4">
 								<h1 className="text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">
 									La comida que <span className="text-orange-500">amas</span>, entregada rápido
 								</h1>
 								<p className="text-xl text-gray-600 leading-relaxed">
-									Descubre miles de restaurantes locales y disfruta de tus platillos favoritos desde la comodidad de tu hogar.
+									Disfruta de tus platillos favoritos desde la comodidad de tu hogar.
 								</p>
 							</div>
-
-
-
-							<div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-								<div className="flex items-center space-x-2">
-									<Clock className="w-4 h-4" />
-									<span>Entrega en 30 min</span>
-								</div>
-								<div className="flex items-center space-x-2">
-									<Truck className="w-4 h-4" />
-									<span>Envío gratis desde $25</span>
-								</div>
-								<div className="flex items-center space-x-2">
-									<Star className="w-4 h-4 text-yellow-400" />
-									<span>5000+ restaurantes</span>
-								</div>
-							</div>
+							{/* Puedes añadir aquí el formulario o botones que tenías */}
 						</div>
-
-
 					</div>
 				</div>
 			</section>
@@ -347,10 +331,10 @@ export default function Landing() {
 						<h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Nuestros Productos Especiales</h2>
 						<p className="text-xl text-gray-600">Artículos manufacturados con la mejor calidad</p>
 					</div>
-					<div className="mb-8">
-						<div className="flex gap-2 overflow-x-auto pb-2 items-center">
+					<div className="mb-8 items-center justify-center">
+						<div className="flex gap-2 overflow-x-auto pb-2  items-center justify-center">
 							<button
-								className={`px-4 py-2 rounded-full border ${categoriaSeleccionada === null ? "bg-orange-500 text-white" : "bg-white text-gray-800 hover:bg-orange-100"}`}
+								className={`px-4 py-2 rounded-full border  items-center justify-center${categoriaSeleccionada === null ? "bg-orange-500 text-white" : "bg-white text-gray-800 hover:bg-orange-100"}`}
 								onClick={() => setCategoriaSeleccionada(null)}
 							>
 								Todos
