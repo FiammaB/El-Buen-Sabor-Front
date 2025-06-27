@@ -41,8 +41,10 @@ import RecoverPasswordForm from './components/Auth/components/RecoverPaswordForm
 import VerifyCodeForm from './components/Auth/components/VerifyCodeForm.tsx';
 import ChangePasswordForm from './components/Auth/components/ChangePasswordForm.tsx';
 import CocineroAdminLayout from "./components/Cocinero/CocineroAdminLayout.tsx";
-import ProductDetailPage from "./pages/producto/Producto.tsx";
+import ProductDetailPage from "./components/Producto/Producto.tsx";
 import ControlStockPage from "./components/ControlStock/ControlStockPage.tsx";
+import CajeroAdminLayout from "./components/Cajero/CajeroAdminLayout.tsx";
+import CajeroPedidosPage from "./components/Cajero/CajeroPedidosPage.tsx";
 
 function App() {
   return (
@@ -173,7 +175,19 @@ function App() {
               <Route path="control-stock" element={<ControlStockPage />} />
           </Route>
 
-          {/* Ruta por defecto */}
+            <Route
+                path="/cajero"
+                element={
+                    <ProtectedRoute role="CAJERO">
+                        <CajeroAdminLayout />
+                    </ProtectedRoute>
+                }
+            >
+                <Route path="caja" element={<CajeroPedidosPage />} />
+            </Route>
+
+
+            {/* Ruta por defecto */}
           <Route path="*" element={<Landing />} />
         </Routes>
       </Router>
