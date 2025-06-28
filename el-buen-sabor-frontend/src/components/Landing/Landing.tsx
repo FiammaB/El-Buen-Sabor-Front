@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ArticuloService } from "../../services/ArticuloService";
 import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
 import { useAuth } from "../Auth/Context/AuthContext";
-import { Search, MapPin, Clock, Star, Truck, CreditCard, ShoppingBag, Menu, X, Heart, Plus } from 'lucide-react';
+import { Search, Clock, Truck, CreditCard, ShoppingBag, Menu, X, Heart, Plus } from 'lucide-react';
 import { useCart } from "../Cart/context/cart-context";
 import type { Categoria } from "../../models/Categoria/Categoria.ts";
 import { useNavigate } from "react-router-dom";
@@ -14,15 +14,19 @@ export default function Landing() {
 	const { role, logout, username } = useAuth();
 	const navigate = useNavigate();
 
-
-
 	console.log("ROL DETECTADO:", role);
 	const [articulosManufacturados, setArticulosManufacturados] = useState<ArticuloManufacturado[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
-	const [search, setSearch] = useState<string>("");
-	const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+
+	// NUEVO ESTADO para la barra de búsqueda del Header
+	const [headerSearch, setHeaderSearch] = useState<string>("");
+	const [showHeaderSuggestions, setShowHeaderSuggestions] = useState<boolean>(false);
+
+	// MANTENEMOS ESTE ESTADO para la barra de búsqueda de la sección de artículos
+	const [mainSearch, setMainSearch] = useState<string>("");
+
 	const [categorias, setCategorias] = useState<Categoria[]>([]);
 	const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(null);
 
@@ -31,11 +35,10 @@ export default function Landing() {
 
 	const articuloService = new ArticuloService();
 
-	// Función para cargar los artículos (ahora puede ser reutilizada)
 	const fetchArticulos = async () => {
 		try {
 			setLoading(true);
-			const data = await articuloService.findAllArticulosManufacturadosActivos();//me falta esa función en el servicio
+			const data = await articuloService.findAllArticulosManufacturadosActivos();
 			setArticulosManufacturados(data);
 		} catch (err) {
 			setError('Error al cargar los artículos manufacturados.');
@@ -51,7 +54,6 @@ export default function Landing() {
 		"Hamburguesa",
 		"Sanguche",
 		"Lomito",
-
 	];
 
 	useEffect(() => {
@@ -66,7 +68,6 @@ export default function Landing() {
 	useEffect(() => {
 		fetchArticulos();
 	}, []);
-
 
 	const steps = [
 		{
@@ -85,12 +86,26 @@ export default function Landing() {
 			description: 'Rápida entrega directo a tu puerta en el tiempo estimado'
 		}
 	];
-	const articulosFiltrados = articulosManufacturados.filter(a => {
-		const coincideBusqueda = a.denominacion?.toLowerCase().includes(search.toLowerCase()) ||
-			a.descripcion?.toLowerCase().includes(search.toLowerCase());
+
+	// Lógica de filtrado para los artículos mostrados en la sección principal
+	const articulosFiltradosPrincipal = articulosManufacturados.filter(a => {
+		const coincideBusqueda = mainSearch
+			? (a.denominacion?.toLowerCase().includes(mainSearch.toLowerCase()) ||
+				a.descripcion?.toLowerCase().includes(mainSearch.toLowerCase()))
+			: true;
+
 		const coincideCategoria = categoriaSeleccionada === null || a.categoria?.id === categoriaSeleccionada;
 		return coincideBusqueda && coincideCategoria;
 	});
+
+	// Lógica de filtrado para las sugerencias de la barra del header
+	const articulosFiltradosHeader = articulosManufacturados.filter(a => {
+		return headerSearch
+			? (a.denominacion?.toLowerCase().includes(headerSearch.toLowerCase()) ||
+				a.descripcion?.toLowerCase().includes(headerSearch.toLowerCase()))
+			: false; // Si no hay búsqueda en el header, no mostramos sugerencias
+	});
+
 
 	return (
 		<div className="min-h-screen bg-white ebs-landing">
@@ -115,29 +130,29 @@ export default function Landing() {
 								El Buen Sabor
 							</div>
 						</div>
+						{/* Desktop Search Bar (Header) */}
 						<nav className="hidden md:flex items-center space-x-8">
 							<div className="relative w-64">
 								<input
 									type="text"
-									value={search}
-									onFocus={() => setShowSuggestions(true)}
-									onBlur={() => setTimeout(() => setShowSuggestions(false), 150)} // Permite clickear sugerencias antes de cerrar
-									onChange={e => setSearch(e.target.value)}
+									value={headerSearch} // Usa el nuevo estado
+									onFocus={() => setShowHeaderSuggestions(true)}
+									onBlur={() => setTimeout(() => setShowHeaderSuggestions(false), 150)} // Permite clickear sugerencias antes de cerrar
+									onChange={e => setHeaderSearch(e.target.value)} // Actualiza el nuevo estado
 									placeholder="Buscar productos..."
 									className="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 transition w-full"
 								/>
 								{/* Dropdown de sugerencias */}
-								{showSuggestions && search && articulosFiltrados.length > 0 && (
+								{showHeaderSuggestions && headerSearch && articulosFiltradosHeader.length > 0 && (
 									<div className="absolute left-0 top-12 w-full bg-white border rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
-										{articulosFiltrados.slice(0, 6).map(a => (
+										{articulosFiltradosHeader.slice(0, 6).map(a => (
 											<div
 												key={a.id}
 												className="px-4 py-2 cursor-pointer hover:bg-orange-100 flex items-center"
 												onMouseDown={() => {
-													// Redireccionar o mostrar el detalle (adaptá a tu caso)
 													window.location.href = `/producto/${a.id}`;
-													setShowSuggestions(false);
-													setSearch('');
+													setShowHeaderSuggestions(false);
+													setHeaderSearch(''); // Limpiar la búsqueda del header
 												}}
 											>
 												<img
@@ -151,13 +166,12 @@ export default function Landing() {
 												</div>
 											</div>
 										))}
-										{articulosFiltrados.length > 6 && (
+										{articulosFiltradosHeader.length > 6 && (
 											<div className="px-4 py-2 text-sm text-gray-600 cursor-pointer hover:bg-orange-50"
 												onMouseDown={() => {
-													// Ir a una página de búsqueda completa (opcional)
-													window.location.href = `/explore?search=${encodeURIComponent(search)}`;
-													setShowSuggestions(false);
-													setSearch('');
+													window.location.href = `/explore?search=${encodeURIComponent(headerSearch)}`;
+													setShowHeaderSuggestions(false);
+													setHeaderSearch('');
 												}}>
 												Ver todos los resultados...
 											</div>
@@ -165,7 +179,7 @@ export default function Landing() {
 									</div>
 								)}
 								{/* Si no hay resultados */}
-								{showSuggestions && search && articulosFiltrados.length === 0 && (
+								{showHeaderSuggestions && headerSearch && articulosFiltradosHeader.length === 0 && (
 									<div className="absolute left-0 top-12 w-full bg-white border rounded-xl shadow-lg z-50 p-4 text-gray-500">
 										No se encontraron productos.
 									</div>
@@ -175,9 +189,7 @@ export default function Landing() {
 						{/* Desktop Navigation */}
 						<nav className="hidden md:flex items-center space-x-8">
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Inicio</a>
-
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ofertas</a>
-
 						</nav>
 						{/* Botones para usuarios no logueados */}
 						{!role && (
@@ -303,9 +315,7 @@ export default function Landing() {
 						<div className="md:hidden py-4 border-t">
 							<div className="flex flex-col space-y-4">
 								<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Inicio</a>
-
-								<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ofertas</a>
-
+								<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Promociones</a>
 								<div className="flex flex-col space-y-2 pt-4 border-t">
 									<button className="text-gray-700 hover:text-orange-500 transition duration-200 font-medium text-left">
 										Iniciar Sesión
@@ -322,7 +332,7 @@ export default function Landing() {
 
 			{/* Hero Section */}
 			<section className="relative bg-gradient-to-br from-orange-50 to-orange-100 py-16 lg:py-24 
-                             items-center justify-center">
+                            items-center justify-center">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 text-center">
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
@@ -335,13 +345,12 @@ export default function Landing() {
 									Disfruta de tus platillos favoritos desde la comodidad de tu hogar.
 								</p>
 							</div>
-							{/* Puedes añadir aquí el formulario o botones que tenías */}
 						</div>
 					</div>
 				</div>
 			</section>
 
-			{/* Ariculos Section */}
+			{/* Articulos Section */}
 			<section className="py-16 bg-white">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="text-center mb-12">
@@ -352,7 +361,10 @@ export default function Landing() {
 						<div className="flex gap-2 overflow-x-auto pb-2  items-center justify-center">
 							<button
 								className={`px-4 py-2 rounded-full border  items-center justify-center${categoriaSeleccionada === null ? "bg-orange-500 text-white" : "bg-white text-gray-800 hover:bg-orange-100"}`}
-								onClick={() => setCategoriaSeleccionada(null)}
+								onClick={() => {
+									setCategoriaSeleccionada(null);
+									setMainSearch(""); // Limpiar la búsqueda principal cuando se selecciona "Todos"
+								}}
 							>
 								Todos
 							</button>
@@ -360,7 +372,10 @@ export default function Landing() {
 								<button
 									key={cat.id}
 									className={`px-4 py-2 rounded-full border whitespace-nowrap ${categoriaSeleccionada === cat.id ? "bg-orange-500 text-white" : "bg-white text-gray-800 hover:bg-orange-100"}`}
-									onClick={() => setCategoriaSeleccionada(cat.id!)}
+									onClick={() => {
+										setCategoriaSeleccionada(cat.id!);
+										setMainSearch(""); // Limpiar la búsqueda principal cuando se selecciona una categoría
+									}}
 								>
 									{cat.denominacion}
 								</button>
@@ -370,8 +385,8 @@ export default function Landing() {
 					<div className="mb-8 max-w-xl mx-auto">
 						<input
 							type="text"
-							value={search}
-							onChange={e => setSearch(e.target.value)}
+							value={mainSearch} // Usa el estado de búsqueda principal
+							onChange={e => setMainSearch(e.target.value)} // Actualiza el estado de búsqueda principal
 							className="w-full p-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-orange-400 outline-none text-lg"
 							placeholder="Buscar productos por nombre o descripción..."
 						/>
@@ -397,7 +412,7 @@ export default function Landing() {
 						</div>
 					) : (
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-							{articulosFiltrados.map((articulo) => (
+							{articulosFiltradosPrincipal.map((articulo) => ( // Usa el filtro principal
 								<div
 									key={articulo.id}
 									className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200"
@@ -486,11 +501,6 @@ export default function Landing() {
 					)}
 				</div>
 			</section>
-
-			{/* Categories Section */}
-
-
-
 
 			{/* How it Works */}
 			<section className="py-16 bg-white">
