@@ -1,20 +1,21 @@
 // src/services/ArticuloService.ts
-import axios from 'axios';
+import axios from 'axios'; // <-- Revertimos la importación de axios
 
 // Importa las CLASES de modelo que usarás para tus objetos de dominio en el frontend
 import { ArticuloManufacturado } from '../models/Articulos/ArticuloManufacturado';
 import { ArticuloInsumo } from '../models/Articulos/ArticuloInsumo';
-import { Articulo } from '../models/Articulos/Articulo';
+import { Articulo } from '../models/Articulos/Articulo'; // Clase base Articulo
 import { ArticuloManufacturadoDetalle } from '../models/Articulos/ArticuloManufacturadoDetalle';
 
 // Importa las CLASES de modelos relacionados (ajusta las rutas según tu organización)
 import { Categoria } from '../models/Categoria/Categoria';
-import { Imagen } from '../models/Categoria/Imagen'; // Asumiendo que Imagen está en models/Common
-import { UnidadMedida } from '../models/Categoria/UnidadMedida'; // Asumiendo que UnidadMedida está en models/Common
+import { Imagen } from '../models/Categoria/Imagen';
+import { UnidadMedida } from '../models/Categoria/UnidadMedida';
 
 // Importa las INTERFACES de respuesta JSON (DTOs de backend) usando 'type'
-import type { IArticuloInsumoResponseDTO } from '../models/DTO/IAArticuloInsumoResponseDTO';
-import type { IArticuloManufacturadoResponseDTO } from '../models/DTO/IAArticuloManufacturadoResponseDTO';
+// ¡Asegúrate que los nombres IArticuloInsumoResponseDTO y IArticuloManufacturadoResponseDTO sean EXACTOS!
+import type { IArticuloInsumoResponseDTO } from '../models/DTO/IAArticuloInsumoResponseDTO'; // Confirmado que es IArticuloInsumoResponseDTO
+import type { IArticuloManufacturadoResponseDTO } from '../models/DTO/IAArticuloManufacturadoResponseDTO'; // Confirmado que es IArticuloManufacturadoResponseDTO
 import type { IArticuloManufacturadoDetalleResponseDTO } from '../models/DTO/IAArticuloManufacturadoDetalleResposeDTO';
 import type { ICategoriaResponseDTO } from '../models/DTO/ICategoriaResponseDTO';
 import type { IUnidadMedidaResponseDTO } from '../models/DTO/IUnidadMedidaResponseDTO';
@@ -26,70 +27,54 @@ export class ArticuloService {
 
     // --- Métodos para ArticuloManufacturado ---
 
-    /**
-     * Obtiene todos los artículos manufacturados.
-     * @returns Promesa que resuelve a una lista de ArticuloManufacturado.
-     */
     async getAllArticulosManufacturados(): Promise<ArticuloManufacturado[]> {
-        // Axios espera un array de la interfaz de respuesta del backend
         const response = await axios.get<IArticuloManufacturadoResponseDTO[]>(
             `http://localhost:8080/api/articuloManufacturado/manufacturados`
         );
-        // Mapea los objetos planos JSON (interfaces) a instancias de la clase ArticuloManufacturado
         console.log("Respuesta cruda del back:", response.data);
         return response.data.map(data => this.mapToArticuloManufacturado(data));
     }
 
-    /**
-     * Obtiene un artículo manufacturado por su ID.
-     * @param id El ID del artículo manufacturado.
-     * @returns Promesa que resuelve a un ArticuloManufacturado o null si no se encuentra.
-     */
     async getArticuloManufacturadoById(id: number): Promise<ArticuloManufacturado | null> {
         try {
-            // Axios espera una única instancia de la interfaz de respuesta
-            const response = await axios.get<IArticuloManufacturadoResponseDTO>(`${API_BASE_URL}/${id}`);
+            const response = await axios.get<IArticuloManufacturadoResponseDTO>(`${API_BASE_URL}/manufacturados/${id}`);
             return this.mapToArticuloManufacturado(response.data);
         } catch (error) {
-            if (axios.isAxiosError(error) && error.response?.status === 404) {
-                return null; // No encontrado
-            }
+            console.error('Error altraer el ariticulo Manufacturado:', error);
+
             throw error;
         }
     }
+    async findAllArticulosInsumoActivos(): Promise<ArticuloInsumo[]> {
+        try {
+            const response = await axios.get<IArticuloInsumoResponseDTO[]>(`${API_INSUMO_BASE_URL}/insumos`);
+            const allInsumos: IArticuloInsumoResponseDTO[] = response.data;
 
-    /**
-     * Crea un nuevo artículo manufacturado.
-     * @param articulo El objeto ArticuloManufacturado a crear (será serializado a JSON).
-     * @returns Promesa que resuelve al ArticuloManufacturado creado.
-     */
+            // Filtra en el frontend: solo activos (baja = false), con stockActual > 0 y NO esParaElaborar
+            const filteredInsumos = allInsumos.filter(insumo =>
+                insumo.baja === false && insumo.stockActual > 0 && insumo.esParaElaborar === false // <--- NUEVA CONDICIÓN
+            );
+
+            return filteredInsumos.map(data => this.mapToArticuloInsumo(data));
+        } catch (error) {
+            console.error('Error al cargar y filtrar artículos insumo activos:', error);
+            throw error;
+        }
+    }
     async createArticuloManufacturado(articulo: ArticuloManufacturado): Promise<ArticuloManufacturado> {
-        // Axios serializa la instancia de clase a JSON.
-        // La respuesta se tipa con la interfaz de respuesta del backend.
         const response = await axios.post<IArticuloManufacturadoResponseDTO>(`${API_BASE_URL}`, articulo);
         return this.mapToArticuloManufacturado(response.data);
     }
 
-    /**
-     * Actualiza un artículo manufacturado existente.
-     * @param id El ID del artículo a actualizar.
-     * @param articulo El objeto ArticuloManufacturado con los datos actualizados.
-     * @returns Promesa que resuelve al ArticuloManufacturado actualizado.
-     */
     async updateArticuloManufacturado(id: number, articulo: ArticuloManufacturado): Promise<ArticuloManufacturado> {
         console.log("Articulo a actualizar: ", articulo)
         const response = await axios.put<IArticuloManufacturadoResponseDTO>(`${API_BASE_URL}/${id}`, articulo);
         return this.mapToArticuloManufacturado(response.data);
     }
 
-    /**
-     * Elimina un artículo manufacturado por su ID.
-     * @param id El ID del artículo a eliminar.
-     * @returns Promesa que resuelve a un booleano indicando éxito.
-     */
     async deleteArticuloManufacturado(id: number): Promise<boolean> {
         try {
-            await axios.delete(`${API_BASE_URL}/${id}`); // El endpoint de borrado es general para Articulo
+            await axios.delete(`${API_BASE_URL}/${id}`);
             return true;
         } catch (error) {
             console.error("Error al eliminar artículo manufacturado:", error);
@@ -97,7 +82,6 @@ export class ArticuloService {
         }
     }
 
-    // Borrar articulo insumo
     deleteArticulo(id: number): Promise<void> {
         console.log("Id a desactivar: ", id)
         return fetch(`${API_INSUMO_BASE_URL}/${id}/deactivate`, {
@@ -118,10 +102,6 @@ export class ArticuloService {
 
     // --- Métodos para ArticuloInsumo (ABM de Insumos) ---
 
-    /**
-     * Obtiene todos los artículos insumo.
-     * @returns Promesa que resuelve a una lista de ArticuloInsumo.
-     */
     async getAllArticulosInsumo(): Promise<ArticuloInsumo[]> {
         const response = await axios.get<IArticuloInsumoResponseDTO[]>(`${API_INSUMO_BASE_URL}/insumos`);
         console.log("ARTICULOS TRAIDOS DEL BACK ", response)
@@ -129,18 +109,17 @@ export class ArticuloService {
     }
 
     async sumarStock(id: number, cantidad: number): Promise<ArticuloInsumo> {
-        // Usa PUT, tu backend ya espera un param llamado 'cantidad'
         const response = await axios.put<ArticuloInsumo>(`${API_INSUMO_BASE_URL}/${id}/sumar-stock?cantidad=${cantidad}`);
         return response.data;
     }
 
     async restarStock(id: number, cantidad: number): Promise<void> {
-        await axios.put(`/api/articuloInsumo/${id}/restar-stock?cantidad=${cantidad}`);
+        await axios.put(`${API_INSUMO_BASE_URL}/${id}/restar-stock?cantidad=${cantidad}`);
     }
 
 
     async actualizarPrecioCompra(id: number, precioCompra: number): Promise<void> {
-        await axios.put(`${API_INSUMO_BASE_URL}/${id}/actualizar-precio?precioCompra=${precioCompra}`);
+        await axios.put(`${API_INSUMO_BASE_URL}/actualizar-precio/${id}?precioCompra=${precioCompra}`); // Ajustado el orden de path variables
     }
 
     toggleBaja(id: number, baja: boolean): Promise<void> {
@@ -148,55 +127,32 @@ export class ArticuloService {
             method: 'PATCH',
         }).then(response => {
             if (!response.ok) {
-            throw new Error('No se pudo actualizar el estado de baja.');
+                throw new Error('No se pudo actualizar el estado de baja.');
             }
         });
     }
 
-    /**
-     * Obtiene un artículo insumo por su ID.
-     * @param id El ID del artículo insumo.
-     * @returns Promesa que resuelve a un ArticuloInsumo o null si no se encuentra.
-     */
     async getArticuloInsumoById(id: number): Promise<ArticuloInsumo | null> {
         try {
             const response = await axios.get<IArticuloInsumoResponseDTO>(`${API_INSUMO_BASE_URL}/insumos/${id}`);
             return this.mapToArticuloInsumo(response.data);
         } catch (error) {
-            if (axios.isAxiosError(error) && error.response?.status === 404) {
-                return null; // No encontrado
-            }
+            console.log('Error al obtener el artículo insumo:', error);
             throw error;
         }
     }
 
-    /**
-     * Crea un nuevo artículo insumo.
-     * @param insumo El objeto ArticuloInsumo a crear.
-     * @returns Promesa que resuelve al ArticuloInsumo creado.
-     */
     async createArticuloInsumo(insumo: ArticuloInsumo): Promise<ArticuloInsumo> {
         const response = await axios.post<IArticuloInsumoResponseDTO>(`${API_INSUMO_BASE_URL}`, insumo);
         console.log("Insumo creado: ", response.data)
         return this.mapToArticuloInsumo(response.data);
     }
 
-    /**
-     * Actualiza un artículo insumo existente.
-     * @param id El ID del insumo a actualizar.
-     * @param insumo El objeto ArticuloInsumo con los datos actualizados.
-     * @returns Promesa que resuelve al ArticuloInsumo actualizado.
-     */
     async updateArticuloInsumo(id: number, insumo: ArticuloInsumo): Promise<ArticuloInsumo> {
         const response = await axios.put<IArticuloInsumoResponseDTO>(`${API_INSUMO_BASE_URL}/${id}`, insumo);
         return this.mapToArticuloInsumo(response.data);
     }
 
-    /**
-     * Obtiene artículos insumo con stock bajo.
-     * @param stockMinimoReferencia Un valor opcional para filtrar por stock.
-     * @returns Promesa que resuelve a una lista de ArticuloInsumo.
-     */
     async getArticulosInsumoByStockBajo(stockMinimoReferencia?: number): Promise<ArticuloInsumo[]> {
         const params = stockMinimoReferencia ? { stockMinimoReferencia } : {};
         const response = await axios.get<IArticuloInsumoResponseDTO[]>(`${API_INSUMO_BASE_URL}/insumos/stock-bajo`, { params });
@@ -205,17 +161,10 @@ export class ArticuloService {
 
     // --- Métodos de Búsqueda General (para Articulo) ---
     // Estos endpoints pueden devolver una mezcla de ArticuloInsumo y ArticuloManufacturado.
-    // La respuesta de Axios se tipa como una unión de los DTOs de respuesta.
 
-    /**
-     * Busca artículos por denominación (parcial o completa).
-     * @param denominacion La denominación a buscar.
-     * @returns Promesa que resuelve a una lista de Articulo (puede ser insumo o manufacturado).
-     */
     async searchArticulosByDenominacion(denominacion: string): Promise<Articulo[]> {
         const response = await axios.get<(IArticuloInsumoResponseDTO | IArticuloManufacturadoResponseDTO)[]>(`${API_BASE_URL}/buscar`, { params: { denominacion } });
         return response.data.map(data => {
-            // Usamos Type Guard: 'esParaElaborar' es una propiedad exclusiva de ArticuloInsumo
             if ('esParaElaborar' in data && typeof (data as IArticuloInsumoResponseDTO).esParaElaborar === 'boolean') {
                 return this.mapToArticuloInsumo(data as IArticuloInsumoResponseDTO);
             }
@@ -223,11 +172,6 @@ export class ArticuloService {
         });
     }
 
-    /**
-     * Busca artículos por ID de categoría.
-     * @param categoriaId El ID de la categoría.
-     * @returns Promesa que resuelve a una lista de Articulo (puede ser insumo o manufacturado).
-     */
     async getArticulosByCategoria(categoriaId: number): Promise<Articulo[]> {
         const response = await axios.get<(IArticuloInsumoResponseDTO | IArticuloManufacturadoResponseDTO)[]>(`${API_BASE_URL}/categoria/${categoriaId}`);
         return response.data.map(data => {
@@ -238,10 +182,6 @@ export class ArticuloService {
         });
     }
 
-    /**
-     * Obtiene todos los artículos (insumos y manufacturados).
-     * @returns Promesa que resuelve a una lista de Articulo.
-     */
     async getAllArticulos(): Promise<Articulo[]> {
         const response = await axios.get<(IArticuloInsumoResponseDTO | IArticuloManufacturadoResponseDTO)[]>(`${API_BASE_URL}`);
         return response.data.map(data => {
@@ -257,32 +197,27 @@ export class ArticuloService {
         porcentajeAlerta: number = 20
     ) {
         return insumos.filter(i => {
-            if (i.baja) return false; // Solo activos
+            if (i.baja) return false;
             if (i.stockActual < i.stockMinimo) return true;
-            // Zona de alerta: stockActual <= porcentaje de stockMinimo
             return i.stockActual <= i.stockMinimo * (porcentajeAlerta / 100);
         });
     }
 
 
     // --- Métodos de Mapeo Internos (para convertir Response DTO a instancias de clase) ---
-    // Estos métodos toman una interfaz de respuesta (el JSON plano) y construyen una instancia de tu clase de modelo.
 
     private mapToArticuloManufacturado(data: IArticuloManufacturadoResponseDTO): ArticuloManufacturado {
-        // Mapea los detalles anidados
         const detalles = data.detalles && Array.isArray(data.detalles)
-            ? data.detalles.map((d: IArticuloManufacturadoDetalleResponseDTO) => // 'd' ya está tipado correctamente
+            ? data.detalles.map((d: IArticuloManufacturadoDetalleResponseDTO) =>
                 new ArticuloManufacturadoDetalle(
                     d.cantidad,
                     d.articuloInsumoId,
                     d.id,
-                    // Mapea el ArticuloInsumo anidado si existe
-                    d.articuloInsumo ? this.mapToArticuloInsumo(d.articuloInsumo) : undefined
+                    d.articuloInsumo ? this.mapToArticuloInsumo(d.articuloInsumo) : undefined // Mapea el ArticuloInsumo anidado
                 )
             )
             : [];
 
-        // Mapea objetos anidados (Categoria, Imagen, UnidadMedida) si existen
         const categoria = data.categoria
             ? new Categoria(data.categoria.denominacion, data.categoria.id, data.categoria.categoriaPadreId, data.categoria.sucursalIds)
             : undefined;
@@ -293,21 +228,20 @@ export class ArticuloService {
             ? new UnidadMedida(data.unidadMedida.denominacion, data.unidadMedida.id)
             : undefined;
 
-        // Crea y retorna una nueva instancia de ArticuloManufacturado
         return new ArticuloManufacturado(
             data.denominacion,
             data.precioVenta,
             data.categoriaId,
-            data.descripcion,
-            data.tiempoEstimadoMinutos,
+            data.descripcion, // Descripcion presente en manufacturado
+            data.tiempoEstimadoMinutos, // TiempoEstimadoMinutos presente en manufacturado
             data.preparacion,
-            detalles, // Pasa la lista de detalles mapeados
+            detalles,
             data.id,
             data.imagenId,
             imagen,
             categoria,
-            data.unidadMedidaId, // Asegúrate de que esta propiedad exista en tu clase ArticuloManufacturado si la pasas
-            unidadMedida, // Asegúrate de que esta propiedad exista en tu clase ArticuloManufacturado si la pasas
+            data.unidadMedidaId,
+            unidadMedida,
             data.baja,
         );
     }
@@ -349,57 +283,37 @@ export class ArticuloService {
         );
     }
 
-    /**
-     * Obtiene todas las unidades de medida.
-     * @returns Promesa que resuelve a una lista de UnidadMedida.
-     */
     async getAllUnidadesMedida(): Promise<UnidadMedida[]> {
         const response = await axios.get<IUnidadMedidaResponseDTO[]>(`http://localhost:8080/api/unidades-medida`);
         return response.data.map(data =>
             new UnidadMedida(data.denominacion, data.id)
         );
     }
-    /** 
-     @param articuloId El ID del artículo al que se asociará la imagen.
-   * @param file El archivo de imagen a subir (File).
-   * @returns Promesa que resuelve a la URL de la imagen guardada o un objeto Imagen.
-   */
 
     async uploadArticuloImagen(articuloId: number, file: File): Promise<Imagen> {
-
-        const API_UPLOAD_URL = 'http://localhost:8080/api/uploads'; // URL base para subir imágenes
+        const API_UPLOAD_URL = 'http://localhost:8080/api/uploads';
 
         const formData = new FormData();
-        formData.append('file', file); // 'file' debe coincidir con el @RequestParam del backend
-        formData.append('idArticulo', articuloId.toString()); // 'idArticulo' debe coincidir con el @RequestParam del backend
+        formData.append('file', file);
+        formData.append('idArticulo', articuloId.toString());
 
         try {
-            // Endpoint de subida de imagen en el backend.
-            // Asumiendo que el backend tiene un controlador para manejar uploads,
-            // ej. POST /api/uploads/articulo-imagen
             const response = await axios.post<Imagen>(`${API_UPLOAD_URL}/articulo-imagen`, formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data', // Importante para enviar archivos
+                    'Content-Type': 'multipart/form-data',
                 },
             });
-            return new Imagen(response.data.denominacion, response.data.id); // Mapear la respuesta a la clase Imagen
+            return new Imagen(response.data.denominacion, response.data.id);
         } catch (error) {
             console.error("Error al subir la imagen:", error);
-            throw error; // Propagar el error para manejarlo en el componente
+            throw error;
         }
     }
-    /**
-      * Obtiene todos los artículos manufacturados que están activos (no dados de baja).
-      * Este método DEBE llamar a un endpoint en el backend que filtre por 'estaDadoDeBaja = false'.
-      * En el backend, ArticuloServiceImpl.findAllArticulosManufacturadosActivos() ya hace esto.
-      * @returns Promesa que resuelve a una lista de ArticuloManufacturado activo.
-      */
+
+    // Método para obtener solo ArticulosManufacturados activos, devolviendo las CLASES.
+    // Confirmo que usas el endpoint /manufacturados y mapeas a la clase.
     async findAllArticulosManufacturadosActivos(): Promise<ArticuloManufacturado[]> {
-        // Asumiendo que el endpoint /manufacturados/activos existe y devuelve solo los activos
-        // O que el endpoint general /manufacturados ya ha sido modificado en el backend para solo devolver activos.
-        // Si tu backend modificó findAllManufacturados para devolver solo activos, puedes seguir usando getAllArticulosManufacturados.
-        // Si tienes un endpoint específico en el backend como "/manufacturados/activos", úsalo aquí.
-        const response = await axios.get<IArticuloManufacturadoResponseDTO[]>(`${API_BASE_URL}/manufacturados`); // O /manufacturados/activos si lo creaste
+        const response = await axios.get<IArticuloManufacturadoResponseDTO[]>(`${API_BASE_URL}/manufacturados`);
         return response.data.map(data => this.mapToArticuloManufacturado(data));
     }
 }

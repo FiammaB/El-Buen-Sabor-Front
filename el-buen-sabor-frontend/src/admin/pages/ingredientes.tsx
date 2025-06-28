@@ -9,6 +9,7 @@ import { Categoria } from "../../models/Categoria/Categoria";
 import { UnidadMedidaService } from "../../services/UnidadMedidaService";
 import { UnidadMedida } from "../../models/Categoria/UnidadMedida";
 import { uploadImage } from "../../services/imagenService.ts";
+import { Imagen } from "../../models/Categoria/Imagen";
 
 /** Componente principal */
 export default function Ingredientes() {
@@ -27,7 +28,7 @@ export default function Ingredientes() {
   // Form data (se reutiliza para crear y editar)
   const [formData, setFormData] = useState<Partial<ArticuloInsumo>>({});
   const [isUploading, setIsUploading] = useState(false);
-
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Listas auxiliares
   const [categoriasList, setCategoriasList] = useState<Categoria[]>([]);
@@ -75,25 +76,47 @@ export default function Ingredientes() {
   /* ------------------------------------------------------------------ */
   /* ---------------------- HANDLERS UTILITARIOS ---------------------- */
   /* ------------------------------------------------------------------ */
-  const resetForm = () => setFormData({});
+  const resetForm = () => {
+    setFormData({});
+    setPreviewImage(null);
+  };
 
   const abrirPopupCrear = () => {
     resetForm();
     setEsEdicion(false);
     setIngredienteEditando(null);
     setMostrarFormulario(true);
+    // Inicializa campos para un nuevo ingrediente
+    setFormData((prev) => ({
+      ...prev,
+      esParaElaborar: false,
+      precioVenta: 0, // Inicializa precioVenta a 0 para crear
+    }));
   };
 
   const abrirPopupEditar = (ing: ArticuloInsumo) => {
-    setFormData({ ...ing });
+    setFormData({ ...ing }); // Carga todos los datos del ingrediente
     setIngredienteEditando(ing);
     setEsEdicion(true);
     setMostrarFormulario(true);
+    // Establece la imagen de previsualización si existe
+    if (ing.imagen?.denominacion) {
+      setPreviewImage(ing.imagen.denominacion);
+    } else {
+      setPreviewImage(null);
+    }
+    // Asegura que esParaElaborar y precioVenta se carguen correctamente
+    setFormData((prev) => ({
+      ...prev,
+      esParaElaborar: ing.esParaElaborar,
+      precioVenta: ing.precioVenta, // Carga precioVenta existente
+    }));
   };
 
   const cerrarPopup = () => {
     setMostrarFormulario(false);
     setIngredienteEditando(null);
+    resetForm();
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,11 +124,13 @@ export default function Ingredientes() {
     if (!file) return;
 
     setIsUploading(true);
+    setPreviewImage(URL.createObjectURL(file));
     try {
-      const { data: img } = await uploadImage(file);
-      setFormData((prev) => ({ ...prev, imagen: { id: img.id, denominacion: img.denominacion } }));
+      const res = await uploadImage(file);
+      setFormData((prev) => ({ ...prev, imagen: new Imagen(res.data.denominacion, res.data.id) }));
     } catch (err) {
       alert("Error al subir la imagen");
+      setPreviewImage(null);
     } finally {
       setIsUploading(false);
     }
@@ -119,21 +144,23 @@ export default function Ingredientes() {
     const errores: string[] = [];
 
     if (!formData.denominacion?.trim()) errores.push("La denominación es obligatoria.");
-    if (!formData.precioCompra || formData.precioCompra <= 0)
+    if (formData.precioCompra === undefined || formData.precioCompra <= 0)
       errores.push("El precio de compra debe ser mayor a 0.");
     if (formData.stockActual === undefined || formData.stockActual < 0)
       errores.push("El stock actual no puede ser negativo.");
     if (formData.stockMinimo === undefined || formData.stockMinimo < 0)
       errores.push("El stock mínimo no puede ser negativo.");
+    if (formData.precioVenta === undefined || formData.precioVenta < 0) // <-- Validación para precioVenta
+      errores.push("El precio de venta no puede ser negativo.");
     if (!formData.categoria?.id) errores.push("Debe seleccionar una categoría.");
     if (!formData.unidadMedida?.id) errores.push("Debe seleccionar una unidad de medida.");
 
     if (errores.length > 0) {
-      alert("Errores en el formulario:" + errores.join(""));
+      alert("Errores en el formulario:\n" + errores.join("\n"));
       return;
     }
 
-    const payload = {
+    const payload: ArticuloInsumo = {
       denominacion: formData.denominacion?.trim() || "",
       precioCompra: Number(formData.precioCompra) || 0,
       stockActual: Number(formData.stockActual) || 0,
@@ -141,22 +168,24 @@ export default function Ingredientes() {
       categoriaId: formData.categoria?.id || 0,
       unidadMedidaId: formData.unidadMedida?.id || 0,
       imagenId: formData.imagen?.id || 0,
-      esParaElaborar: true, // o true, según tu lógica de negocio
-      precioVenta: 0,
+      esParaElaborar: formData.esParaElaborar ?? false,
+      precioVenta: Number(formData.precioVenta) || 0, // <--- USA EL VALOR DE formData.precioVenta
+      id: esEdicion ? ingredienteEditando?.id : undefined,
+      baja: esEdicion ? ingredienteEditando?.baja : false
     };
 
 
     try {
       if (esEdicion && ingredienteEditando?.id) {
-        const actualizado = await articuloService.updateArticuloInsumo(ingredienteEditando.id, payload as any);
+        const actualizado = await articuloService.updateArticuloInsumo(ingredienteEditando.id, payload);
         setIngredientes((prev) => prev.map((i) => (i.id === actualizado.id ? actualizado : i)));
       } else {
-        const creado = await articuloService.createArticuloInsumo(payload as any);
+        const creado = await articuloService.createArticuloInsumo(payload);
         setIngredientes((prev) => [...prev, creado]);
       }
       cerrarPopup();
     } catch (err: any) {
-      alert(err?.response?.data?.message || "Error al guardar el ingrediente (revisa los campos)");
+      alert(err?.response?.data?.message || "Error al guardar el ingrediente (revisa la consola para más detalles)");
       console.error(err);
     }
   };
@@ -194,8 +223,10 @@ export default function Ingredientes() {
                     "ID",
                     "Denominación",
                     "Precio Compra",
+                    "Precio Venta", // <-- NUEVA COLUMNA EN LA TABLA
                     "Stock Actual",
                     "Stock Mínimo",
+                    "Es para Elaborar",
                     "Unidad",
                     "Categoría",
                     "Acciones",
@@ -212,8 +243,12 @@ export default function Ingredientes() {
                     <td className="px-4 py-3 whitespace-nowrap">{ing.id}</td>
                     <td className="px-4 py-3 whitespace-nowrap">{ing.denominacion}</td>
                     <td className="px-4 py-3 whitespace-nowrap">${ing.precioCompra?.toFixed(2)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">${ing.precioVenta?.toFixed(2)}</td> {/* <-- MOSTRAR PRECIO VENTA */}
                     <td className="px-4 py-3 whitespace-nowrap">{ing.stockActual ?? "-"}</td>
                     <td className="px-4 py-3 whitespace-nowrap">{ing.stockMinimo ?? "-"}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {ing.esParaElaborar ? "Sí" : "No"}
+                    </td>
                     <td className="px-4 py-3 whitespace-nowrap">{ing.unidadMedida?.denominacion ?? "N/A"}</td>
                     <td className="px-4 py-3 whitespace-nowrap">{ing.categoria?.denominacion ?? "N/A"}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -273,7 +308,7 @@ export default function Ingredientes() {
                   className="border border-gray-300 rounded p-2"
                 />
 
-                {/* Precio */}
+                {/* Precio Compra */}
                 <input
                   type="number"
                   placeholder="Precio de compra"
@@ -282,6 +317,19 @@ export default function Ingredientes() {
                     setFormData({ ...formData, precioCompra: e.target.value === "" ? undefined : parseFloat(e.target.value) })
                   }
                   className="border border-gray-300 rounded p-2"
+                />
+
+                {/* Precio Venta */}
+                <input // <-- NUEVO CAMPO PARA PRECIO DE VENTA
+                  type="number"
+                  placeholder="Precio de venta"
+                  value={formData.precioVenta ?? ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, precioVenta: e.target.value === "" ? undefined : parseFloat(e.target.value) })
+                  }
+                  className="border border-gray-300 rounded p-2"
+                  min={0}
+                  step="0.01"
                 />
 
                 {/* Stock actual */}
@@ -346,18 +394,43 @@ export default function Ingredientes() {
                   ))}
                 </select>
 
-                {/* Imagen */}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={isUploading}
-                  className="border border-gray-300 rounded p-2"
-                />
+                {/* Checkbox para "Es para elaborar" */}
+                <div className="flex items-center space-x-2 sm:col-span-2">
+                  <input
+                    type="checkbox"
+                    id="esParaElaborar"
+                    checked={formData.esParaElaborar ?? false}
+                    onChange={e => setFormData({ ...formData, esParaElaborar: e.target.checked })}
+                    className="form-checkbox h-5 w-5 text-blue-600"
+                  />
+                  <label htmlFor="esParaElaborar" className="text-gray-700">¿Es para elaborar?</label>
+                </div>
+
+                {/* Campo de Imagen y Previsualización */}
+                <div className="sm:col-span-2">
+                  {previewImage && (
+                    <div className="mb-2 w-32 h-32 rounded-lg overflow-hidden border border-gray-300 flex items-center justify-center">
+                      <img src={previewImage} alt="Previsualización" className="object-cover w-full h-full" />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={isUploading}
+                    className="border border-gray-300 rounded p-2 w-full"
+                  />
+                  {isUploading && (
+                    <div className="flex items-center text-gray-500 mt-2">
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Subiendo imagen...
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* BOTONES */}
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex justify-end gap-2">
                 <button onClick={guardarIngrediente} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
                   {esEdicion ? "Guardar cambios" : "Crear ingrediente"}
                 </button>

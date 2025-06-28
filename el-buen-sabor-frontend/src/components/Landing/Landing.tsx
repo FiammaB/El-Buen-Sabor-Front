@@ -1,13 +1,21 @@
 // src/pages/Landing/Landing.tsx
 import { useEffect, useState } from "react";
 import { ArticuloService } from "../../services/ArticuloService";
-import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
+// IMPORTAMOS LAS CLASES DE MODELO, YA QUE EL SERVICIO LAS RETORNA
+import { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
+import { ArticuloInsumo } from "../../models/Articulos/ArticuloInsumo";
+import { Articulo } from "../../models/Articulos/Articulo"; // La clase base Articulo
 import { useAuth } from "../Auth/Context/AuthContext";
 import { Search, Clock, Truck, CreditCard, ShoppingBag, Menu, X, Heart, Plus } from 'lucide-react';
 import { useCart } from "../Cart/context/cart-context";
-import type { Categoria } from "../../models/Categoria/Categoria.ts";
+import type { Categoria } from "../../models/Categoria/Categoria"; // Categoria es una clase/modelo
+
 import { useNavigate } from "react-router-dom";
 
+
+// El tipo que contendrá todos los artículos para display ahora es la CLASE BASE Articulo
+// Ya que ArticuloManufacturado y ArticuloInsumo extienden de ella
+type AnyArticuloDisplay = Articulo; // <-- ¡Simplificado y preciso!
 
 export default function Landing() {
 
@@ -15,33 +23,37 @@ export default function Landing() {
 	const navigate = useNavigate();
 
 	console.log("ROL DETECTADO:", role);
-	const [articulosManufacturados, setArticulosManufacturados] = useState<ArticuloManufacturado[]>([]);
+	// El estado ahora es de tipo Articulo[], ya que el servicio devuelve instancias de Articulo o sus subclases
+	const [articulos, setArticulos] = useState<AnyArticuloDisplay[]>([]); // CAMBIO
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-	// NUEVO ESTADO para la barra de búsqueda del Header
 	const [headerSearch, setHeaderSearch] = useState<string>("");
 	const [showHeaderSuggestions, setShowHeaderSuggestions] = useState<boolean>(false);
 
-	// MANTENEMOS ESTE ESTADO para la barra de búsqueda de la sección de artículos
 	const [mainSearch, setMainSearch] = useState<string>("");
 
 	const [categorias, setCategorias] = useState<Categoria[]>([]);
 	const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(null);
 
-	// Cart functions
 	const { addToCart, isInCart, getItemQuantity, totalItems, removeFromCart } = useCart()
 
 	const articuloService = new ArticuloService();
 
+	// Función para cargar AMBOS tipos de artículos
 	const fetchArticulos = async () => {
 		try {
 			setLoading(true);
-			const data = await articuloService.findAllArticulosManufacturadosActivos();
-			setArticulosManufacturados(data);
+			// Estos métodos ahora retornan CLASES de modelo
+			const manufacturedData: ArticuloManufacturado[] = await articuloService.findAllArticulosManufacturadosActivos();
+			const insumoData: ArticuloInsumo[] = await articuloService.findAllArticulosInsumoActivos(); // <--- ¡Añade los paréntesis aquí!//este metodo no existe
+			//Type '() => Promise<ArticuloInsumo[]>' is not assignable to type 'ArticuloInsumo[]'.
+			// Combinar ambos arrays. Ambos son compatibles con Articulo (la clase base)
+			const allArticulos: Articulo[] = [...manufacturedData, ...insumoData];
+			setArticulos(allArticulos);
 		} catch (err) {
-			setError('Error al cargar los artículos manufacturados.');
+			setError('Error al cargar los artículos.');
 			console.error(err);
 		} finally {
 			setLoading(false);
@@ -54,6 +66,7 @@ export default function Landing() {
 		"Hamburguesa",
 		"Sanguche",
 		"Lomito",
+		"Bebida"
 	];
 
 	useEffect(() => {
@@ -88,10 +101,13 @@ export default function Landing() {
 	];
 
 	// Lógica de filtrado para los artículos mostrados en la sección principal
-	const articulosFiltradosPrincipal = articulosManufacturados.filter(a => {
+	const articulosFiltradosPrincipal = articulos.filter(a => {
 		const coincideBusqueda = mainSearch
-			? (a.denominacion?.toLowerCase().includes(mainSearch.toLowerCase()) ||
-				a.descripcion?.toLowerCase().includes(mainSearch.toLowerCase()))
+			? (
+				a.denominacion?.toLowerCase().includes(mainSearch.toLowerCase()) ||
+				// Usa 'instanceof' para comprobar si es un ArticuloManufacturado y así acceder a 'descripcion'
+				(a instanceof ArticuloManufacturado && a.descripcion && a.descripcion.toLowerCase().includes(mainSearch.toLowerCase()))
+			)
 			: true;
 
 		const coincideCategoria = categoriaSeleccionada === null || a.categoria?.id === categoriaSeleccionada;
@@ -99,11 +115,14 @@ export default function Landing() {
 	});
 
 	// Lógica de filtrado para las sugerencias de la barra del header
-	const articulosFiltradosHeader = articulosManufacturados.filter(a => {
+	const articulosFiltradosHeader = articulos.filter(a => {
 		return headerSearch
-			? (a.denominacion?.toLowerCase().includes(headerSearch.toLowerCase()) ||
-				a.descripcion?.toLowerCase().includes(headerSearch.toLowerCase()))
-			: false; // Si no hay búsqueda en el header, no mostramos sugerencias
+			? (
+				a.denominacion?.toLowerCase().includes(headerSearch.toLowerCase()) ||
+				// Usa 'instanceof' para comprobar si es un ArticuloManufacturado y así acceder a 'descripcion'
+				(a instanceof ArticuloManufacturado && a.descripcion && a.descripcion.toLowerCase().includes(headerSearch.toLowerCase()))
+			)
+			: false;
 	});
 
 
@@ -135,10 +154,10 @@ export default function Landing() {
 							<div className="relative w-64">
 								<input
 									type="text"
-									value={headerSearch} // Usa el nuevo estado
+									value={headerSearch}
 									onFocus={() => setShowHeaderSuggestions(true)}
-									onBlur={() => setTimeout(() => setShowHeaderSuggestions(false), 150)} // Permite clickear sugerencias antes de cerrar
-									onChange={e => setHeaderSearch(e.target.value)} // Actualiza el nuevo estado
+									onBlur={() => setTimeout(() => setShowHeaderSuggestions(false), 150)}
+									onChange={e => setHeaderSearch(e.target.value)}
 									placeholder="Buscar productos..."
 									className="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 transition w-full"
 								/>
@@ -150,9 +169,9 @@ export default function Landing() {
 												key={a.id}
 												className="px-4 py-2 cursor-pointer hover:bg-orange-100 flex items-center"
 												onMouseDown={() => {
-													window.location.href = `/producto/${a.id}`;
+													navigate(`/producto/${a.id}`);
 													setShowHeaderSuggestions(false);
-													setHeaderSearch(''); // Limpiar la búsqueda del header
+													setHeaderSearch('');
 												}}
 											>
 												<img
@@ -169,7 +188,7 @@ export default function Landing() {
 										{articulosFiltradosHeader.length > 6 && (
 											<div className="px-4 py-2 text-sm text-gray-600 cursor-pointer hover:bg-orange-50"
 												onMouseDown={() => {
-													window.location.href = `/explore?search=${encodeURIComponent(headerSearch)}`;
+													navigate(`/explore?search=${encodeURIComponent(headerSearch)}`);
 													setShowHeaderSuggestions(false);
 													setHeaderSearch('');
 												}}>
@@ -189,7 +208,9 @@ export default function Landing() {
 						{/* Desktop Navigation */}
 						<nav className="hidden md:flex items-center space-x-8">
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Inicio</a>
+
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ofertas</a>
+
 						</nav>
 						{/* Botones para usuarios no logueados */}
 						{!role && (
@@ -315,7 +336,9 @@ export default function Landing() {
 						<div className="md:hidden py-4 border-t">
 							<div className="flex flex-col space-y-4">
 								<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Inicio</a>
+
 								<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Promociones</a>
+
 								<div className="flex flex-col space-y-2 pt-4 border-t">
 									<button className="text-gray-700 hover:text-orange-500 transition duration-200 font-medium text-left">
 										Iniciar Sesión
@@ -331,7 +354,7 @@ export default function Landing() {
 			</header>
 
 			{/* Hero Section */}
-			<section className="relative bg-gradient-to-br from-orange-50 to-orange-100 py-16 lg:py-24 
+			<section className="relative bg-gradient-to-br from-orange-50 to-orange-100 py-16 lg:py-24
                             items-center justify-center">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 text-center">
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -355,7 +378,7 @@ export default function Landing() {
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="text-center mb-12">
 						<h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Nuestros Productos Especiales</h2>
-						<p className="text-xl text-gray-600">Artículos manufacturados con la mejor calidad</p>
+						<p className="text-xl text-gray-600">Artículos manufacturados y de insumo con la mejor calidad</p>
 					</div>
 					<div className="mb-8 items-center justify-center">
 						<div className="flex gap-2 overflow-x-auto pb-2  items-center justify-center">
@@ -363,7 +386,7 @@ export default function Landing() {
 								className={`px-4 py-2 rounded-full border  items-center justify-center${categoriaSeleccionada === null ? "bg-orange-500 text-white" : "bg-white text-gray-800 hover:bg-orange-100"}`}
 								onClick={() => {
 									setCategoriaSeleccionada(null);
-									setMainSearch(""); // Limpiar la búsqueda principal cuando se selecciona "Todos"
+									setMainSearch("");
 								}}
 							>
 								Todos
@@ -374,7 +397,7 @@ export default function Landing() {
 									className={`px-4 py-2 rounded-full border whitespace-nowrap ${categoriaSeleccionada === cat.id ? "bg-orange-500 text-white" : "bg-white text-gray-800 hover:bg-orange-100"}`}
 									onClick={() => {
 										setCategoriaSeleccionada(cat.id!);
-										setMainSearch(""); // Limpiar la búsqueda principal cuando se selecciona una categoría
+										setMainSearch("");
 									}}
 								>
 									{cat.denominacion}
@@ -385,8 +408,8 @@ export default function Landing() {
 					<div className="mb-8 max-w-xl mx-auto">
 						<input
 							type="text"
-							value={mainSearch} // Usa el estado de búsqueda principal
-							onChange={e => setMainSearch(e.target.value)} // Actualiza el estado de búsqueda principal
+							value={mainSearch}
+							onChange={e => setMainSearch(e.target.value)}
 							className="w-full p-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-orange-400 outline-none text-lg"
 							placeholder="Buscar productos por nombre o descripción..."
 						/>
@@ -406,13 +429,13 @@ export default function Landing() {
 								Reintentar
 							</button>
 						</div>
-					) : articulosManufacturados.length === 0 ? (
+					) : articulos.length === 0 ? (
 						<div className="text-center py-12">
 							<p className="text-gray-500 text-lg">No hay artículos disponibles en este momento</p>
 						</div>
 					) : (
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-							{articulosFiltradosPrincipal.map((articulo) => ( // Usa el filtro principal
+							{articulosFiltradosPrincipal.map((articulo) => (
 								<div
 									key={articulo.id}
 									className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200"
@@ -430,7 +453,8 @@ export default function Landing() {
 										<button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition duration-200">
 											<Heart className="w-4 h-4 text-gray-400" />
 										</button>
-										{articulo.tiempoEstimadoMinutos && (
+										{/* Condición para mostrar tiempoEstimadoMinutos solo si es ArticuloManufacturado */}
+										{articulo instanceof ArticuloManufacturado && articulo.tiempoEstimadoMinutos !== undefined && (
 											<div className="absolute bottom-3 left-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-sm">
 												<Clock className="w-3 h-3 inline mr-1" />
 												{articulo.tiempoEstimadoMinutos} min
@@ -447,15 +471,19 @@ export default function Landing() {
 										</div>
 
 										<p className="text-gray-600 text-sm mb-4 line-clamp-2">
-											{articulo.descripcion || "Delicioso producto artesanal"}
+											{/* Si es ArticuloManufacturado, usa su descripción; si no, un mensaje genérico */}
+											{articulo instanceof ArticuloManufacturado && articulo.descripcion
+												? articulo.descripcion
+												: "Delicioso producto."}
 										</p>
 
 										<div className="flex justify-between items-center">
 											<div className="text-sm text-gray-500">
-												{articulo.categoria?.denominacion || "Producto especial"}
+												{articulo.categoria?.denominacion || "Producto"}
 											</div>
 											<button
-												onClick={() => addToCart(articulo)}
+												onClick={() => addToCart(articulo)}/*Argument of type 'Articulo' is not assignable to parameter of type 'ArticuloManufacturado'.
+  Type 'Articulo' is missing the following properties from type 'ArticuloManufacturado': descripcion, tiempoEstimadoMinutos, preparacion, detallests(2345)*/
 												className={`p-2 rounded-full transition duration-200 ${isInCart(articulo.id || 1)
 													? "bg-green-500 text-white"
 													: "bg-orange-500 text-white hover:bg-orange-600"
@@ -485,6 +513,7 @@ export default function Landing() {
 												</div>
 											) : ''}
 										</div>
+										{/* Asume que /producto/:id puede manejar ambos tipos de artículos */}
 										<a className="text-center bg-orange-400 text-white py-2 block mx-auto mt-4" href={`/producto/${articulo.id}`}>Ver detalle</a>
 									</div>
 								</div>
@@ -492,7 +521,7 @@ export default function Landing() {
 						</div>
 					)}
 
-					{articulosManufacturados.length > 0 && (
+					{articulos.length > 0 && (
 						<div className="text-center mt-12">
 							<button className="bg-orange-500 text-white px-8 py-3 rounded-full hover:bg-orange-600 transition duration-200 font-medium">
 								Ver todos los productos
