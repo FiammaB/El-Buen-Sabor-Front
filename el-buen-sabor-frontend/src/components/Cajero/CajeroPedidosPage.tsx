@@ -4,22 +4,37 @@ import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO";
 import { Eye } from "lucide-react";
 
 // Helpers UI
-function getProximoEstado(pedido: IPedidoDTO): {estado: string, label: string} | null {
-    if (pedido.estado === "A_CONFIRMAR" && pedido.formaPago === "EFECTIVO") {
+function getProximoEstado(pedido: IPedidoDTO): { estado: string, label: string } | null {
+    if (pedido.estado === "A_CONFIRMAR") {
+        // Pago se confirma igual para ambos tipos, ajustá si tenés lógica especial
         return { estado: "PAGADO", label: "Marcar como Pagado" };
     }
+
     if (pedido.estado === "PAGADO") {
-        return { estado: "EN_COCINA", label: "Pasar a En Cocina" };
+        // Siempre va a cocina si tiene manufacturados
+        const tieneManufacturados = pedido.detalles?.some(det => !!det.articuloManufacturado);
+        if (tieneManufacturados) {
+            return { estado: "EN_COCINA", label: "Pasar a En Cocina" };
+        } else {
+            return { estado: "LISTO", label: "Pasar a Listo" };
+        }
     }
+
     if (pedido.estado === "LISTO") {
-        if (pedido.formaPago === "EFECTIVO") {
+        if (pedido.tipoEnvio === "RETIRO_EN_LOCAL") {
+            // Si es retiro, pasa directo a ENTREGADO
             return { estado: "ENTREGADO", label: "Pasar a Entregado" };
-        } else if (pedido.formaPago === "MERCADO_PAGO") {
+        }
+        if (pedido.tipoEnvio === "DELIVERY") {
+            // Si es delivery, va a EN_DELIVERY
             return { estado: "EN_DELIVERY", label: "Pasar a En Delivery" };
         }
     }
+
     return null;
 }
+
+
 function puedeCancelar(pedido: IPedidoDTO) {
     return !["CANCELADO", "DEVOLUCION", "ENTREGADO"].includes(pedido.estado || "");
 }
@@ -194,7 +209,22 @@ export default function CajeroPedidosPage() {
                                         {pedido.fechaPedido?.slice(0, 10)}
                                     </td>
                                     <td className="p-2 text-center">
-                                        ${pedido.detalles ? pedido.detalles.reduce((acc, det) => acc + (det.subTotal || 0), 0).toFixed(2) : "-"}
+                                        $
+                                        {pedido.detalles
+                                            ? pedido.detalles
+                                                .reduce((acc, det) => {
+                                                    if (det.articuloManufacturado) {
+                                                        // Manufacturado: usá su precio
+                                                        return acc + (det.cantidad || 0) * (det.articuloManufacturado.precioVenta || 0);
+                                                    } else if (det.articuloInsumo) {
+                                                        // Insumo: usá su precio
+                                                        return acc + (det.cantidad || 0) * (det.articuloInsumo.precioVenta || 0);
+                                                    } else {
+                                                        return acc;
+                                                    }
+                                                }, 0)
+                                                .toFixed(2)
+                                            : "-"}
                                     </td>
                                     <td className="p-2 text-center">
                                         {getProximoEstado(pedido) ? (

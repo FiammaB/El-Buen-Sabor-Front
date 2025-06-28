@@ -47,6 +47,9 @@ import CajeroPedidosPage from "./components/Cajero/CajeroPedidosPage.tsx";
 
 // ✅ Página de perfil
 import PerfilPage from "./components/Auth/components/PerfilPage.tsx";
+import DeliveryAdminLayout from "./components/Delivery/DeliveryAdminLayout.tsx";
+import DeliveryPedidosPage from "./components/Delivery/DeliveryPedidosPage.tsx";
+import VerPedidoPage from "./components/Delivery/VerPedidoPage.tsx";
 
 function App() {
   return (
@@ -192,6 +195,19 @@ function App() {
           >
             <Route path="caja" element={<CajeroPedidosPage />} />
           </Route>
+
+            {/* Layout DELIVERY */}
+            <Route
+                path="/delivery"
+                element={
+                    <ProtectedRoute role="DELIVERY">
+                        <DeliveryAdminLayout />
+                    </ProtectedRoute>
+                }
+            >
+                <Route path="pedidos" element={<DeliveryPedidosPage />} />
+                <Route path="pedido/:pedidoId" element={<VerPedidoPage />} />
+            </Route>
 
           {/* Ruta por defecto */}
           <Route path="*" element={<Landing />} />

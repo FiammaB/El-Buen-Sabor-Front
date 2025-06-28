@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 // Tipos válidos de rol
-export type UserRole = "ADMINISTRADOR" | "CLIENTE" | "COCINERO" | "CAJERO" | null;
+export type UserRole = "ADMINISTRADOR" | "CLIENTE" | "COCINERO" | "CAJERO" | "DELIVERY" | null;
 
 // Interface del contexto
 interface AuthContextType {
@@ -37,7 +37,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (
             storedRole &&
-            ["ADMINISTRADOR", "CLIENTE", "COCINERO", "CAJERO"].includes(storedRole) &&
+            ["ADMINISTRADOR", "CLIENTE", "COCINERO", "CAJERO", "DELIVERY"].includes(storedRole) &&
             storedUsername
         ) {
             setRole(storedRole as UserRole);
@@ -45,6 +45,16 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             setEmail(storedEmail);
             setTelefono(storedTelefono);
             setIsAuthenticated(true);
+        } else {
+            setIsAuthenticated(false);
+            setRole(null);
+            setUsername(null);
+            setEmail(null);
+            setTelefono(null);
+            localStorage.removeItem("role");
+            localStorage.removeItem("username");
+            localStorage.removeItem("email");
+            localStorage.removeItem("telefono");
         }
     }, []);
 

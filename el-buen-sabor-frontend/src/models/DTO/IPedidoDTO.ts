@@ -6,7 +6,22 @@ export interface IPedidoDTO {
   total: number;
   estado: string;
   clienteId?: number;
+  cliente?: {
+    nombre: string;
+    apellido: string;
+    telefono?: string;
+    usuario: {
+      email?: string;
+    };
+  };
   domicilioId?: number;
+  domicilio?: {
+    calle: string;
+    numero: number;
+    cp: number;
+    localidad?: { nombre: string }
+  };
+
   tipoEnvio: TipoEnvio;
   formaPago: FormaPago;
   horaEstimadaFinalizacion: string;
