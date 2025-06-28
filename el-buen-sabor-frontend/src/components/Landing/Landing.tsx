@@ -197,15 +197,15 @@ export default function Landing() {
 							</div>
 						)}
 						{/*LOGIN Y REGISTRO*/}
+
 						{role === "ADMINISTRADOR" && (
 							<div className="flex items-center space-x-4">
-								<span className="text-green-600 font-bold">Administrador</span>
-
+								<span className="text-indigo-700 font-bold">Admin: {username}</span>
 								<a
 									href="/admin/dashboard"
-									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+									className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
 								>
-									Dashboard
+									Panel Admin
 								</a>
 								<button
 									onClick={logout}
@@ -215,6 +215,7 @@ export default function Landing() {
 								</button>
 							</div>
 						)}
+
 
 						{role === "CAJERO" && (
 							<div className="flex items-center space-x-4">
