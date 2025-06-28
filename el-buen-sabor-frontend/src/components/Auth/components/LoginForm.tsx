@@ -46,20 +46,52 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
     try {
       const res = await axios.post("http://localhost:8080/api/auth/login", {
-        email: formData.email, // ✅ Corregido
+        email: formData.email,
         password: formData.password,
       });
 
-      const { rol, nombre, apellido, email, telefono } = res.data;
-      console.log("RESPUESTA DEL BACK:", res.data)
-      login(rol, `${nombre} ${apellido}`, email, telefono);
+      const {
+        rol,
+        nombre = "",
+        apellido = "",
+        email: userEmail,
+        telefono = "",
+      } = res.data;
+
+      if (!rol || !userEmail) {
+        console.error("❌ Datos de respuesta inválidos:", res.data);
+        setErrors((prev) => ({
+          ...prev,
+          general: "Error inesperado al iniciar sesión.",
+        }));
+        return;
+      }
+
+      const fullName = `${nombre} ${apellido}`.trim();
+      login(rol, fullName || "Sin Nombre", userEmail, telefono);
 
       if (onSuccess) {
         onSuccess();
       } else {
-        if (rol === "ADMINISTRADOR") navigate("/admin");
-        else if (rol === "CLIENTE") navigate("/cliente");
-        else navigate("/");
+        switch (rol) {
+          case "ADMINISTRADOR":
+            navigate("/admin");
+            break;
+          case "CLIENTE":
+            navigate("/cliente");
+            break;
+          case "COCINERO":
+            navigate("/cocinero");
+            break;
+          case "CAJERO":
+            navigate("/cajero");
+            break;
+          case "DELIVERY":
+            navigate("/delivery");
+            break;
+          default:
+            navigate("/");
+        }
       }
     } catch (error) {
       console.error("Error en login:", error);
@@ -73,79 +105,102 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
   };
 
   return (
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {errors.general && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-700">{errors.general}</p>
-            </div>
-        )}
-
-        {/* Email */}
-        <div className="space-y-2">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">Correo electrónico</label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-            <input
-                id="email"
-                name="email"
-                type="email"
-                className={`w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.email ? "border-red-300" : "border-gray-300"}`}
-                placeholder="tu@email.com"
-                value={formData.email}
-                onChange={handleInputChange}
-            />
-          </div>
-          {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {errors.general && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p className="text-sm text-red-700">{errors.general}</p>
         </div>
+      )}
 
-        {/* Password */}
-        <div className="space-y-2">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-            <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                className={`w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.password ? "border-red-300" : "border-gray-300"}`}
-                placeholder="Tu contraseña"
-                value={formData.password}
-                onChange={handleInputChange}
-            />
-            <button type="button" className="absolute right-3 top-3.5" onClick={() => setShowPassword(!showPassword)}>
-              {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
-            </button>
-          </div>
-          {errors.password && <p className="text-sm text-red-600">{errors.password}</p>}
+      {/* Email */}
+      <div className="space-y-2">
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          Correo electrónico
+        </label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+          <input
+            id="email"
+            name="email"
+            type="email"
+            className={`w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${
+              errors.email ? "border-red-300" : "border-gray-300"
+            }`}
+            placeholder="tu@email.com"
+            value={formData.email}
+            onChange={handleInputChange}
+          />
         </div>
+        {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
+      </div>
 
-        <div className="flex items-center justify-between">
-          <label className="flex items-center text-sm text-gray-900">
-            <input type="checkbox" className="mr-2 h-4 w-4 text-orange-600 border-gray-300 rounded" />
-            Recordarme
-          </label>
+      {/* Password */}
+      <div className="space-y-2">
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          Contraseña
+        </label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+          <input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            className={`w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${
+              errors.password ? "border-red-300" : "border-gray-300"
+            }`}
+            placeholder="Tu contraseña"
+            value={formData.password}
+            onChange={handleInputChange}
+          />
           <button
-              type="button"
-              onClick={() => navigate("/recuperar")} // ✅ Ruta corregida
-              className="text-sm font-medium text-orange-600 hover:text-orange-500"
+            type="button"
+            className="absolute right-3 top-3.5"
+            onClick={() => setShowPassword(!showPassword)}
           >
-            ¿Olvidaste tu contraseña?
+            {showPassword ? (
+              <EyeOff className="h-5 w-5 text-gray-400" />
+            ) : (
+              <Eye className="h-5 w-5 text-gray-400" />
+            )}
           </button>
         </div>
+        {errors.password && <p className="text-sm text-red-600">{errors.password}</p>}
+      </div>
 
-
+      <div className="flex items-center justify-between">
+        <label className="flex items-center text-sm text-gray-900">
+          <input
+            type="checkbox"
+            className="mr-2 h-4 w-4 text-orange-600 border-gray-300 rounded"
+          />
+          Recordarme
+        </label>
         <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+          type="button"
+          onClick={() => navigate("/recuperar")}
+          className="text-sm font-medium text-orange-600 hover:text-orange-500"
         >
-          {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+          ¿Olvidaste tu contraseña?
         </button>
+      </div>
 
-        <p className="text-sm text-center text-gray-600">
-          ¿No tienes una cuenta?{" "}
-          <button onClick={() => navigate("/register")} className="font-medium text-orange-600 hover:text-orange-500">Regístrate aquí</button>
-        </p>
-      </form>
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+      >
+        {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+      </button>
+
+      <p className="text-sm text-center text-gray-600">
+        ¿No tienes una cuenta?{" "}
+        <button
+          onClick={() => navigate("/register")}
+          className="font-medium text-orange-600 hover:text-orange-500"
+        >
+          Regístrate aquí
+        </button>
+      </p>
+    </form>
   );
 }
