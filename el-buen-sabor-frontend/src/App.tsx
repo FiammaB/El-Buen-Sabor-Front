@@ -28,6 +28,7 @@ import OrderFailed from './components/order-failed/OrderFailed';
 import CompraIngredientesPage from "./components/CompraIngrediente/CompraIngredientesPage.tsx";
 
 // Reportes y promociones
+import PromocionCreatePage from "./components/promocion/PromocionCreatePage.tsx";
 import ReporteClientesPage from "./components/Reportes/ReporteClientesPage.tsx";
 import RankingProductosPage from "./components/RankingProductos/RankingProductosPage";
 import PromocionPage from "./components/promocion/PromocionPage";
@@ -63,13 +64,17 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/explore" element={<ExplorarPage />} />
-          <Route path="/promociones" element={<PromocionPage />} />
 
           {/* Reportes y promociones */}
-          <Route path="/promociones/crear" element={<PromocionForm />} />
           <Route path="/ranking" element={<RankingProductosPage />} />
+          <Route path="/promociones" element={<PromocionPage />} />
           <Route path="/reporte-clientes" element={<ReporteClientesPage />} />
           <Route path="/reporte-monetario" element={<ReporteMonetarioPage />} />
+          <Route path="/promociones/crear" element={
+            <ProtectedRoute role="ADMINISTRADOR">
+              <PromocionCreatePage />
+            </ProtectedRoute>
+          } />
 
           {/* Recuperación de contraseña */}
           <Route path="/recuperar" element={<RecoverPasswordForm />} />

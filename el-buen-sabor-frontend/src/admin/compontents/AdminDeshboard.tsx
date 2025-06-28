@@ -54,6 +54,18 @@ export default function AdminDashboard() {
                         Cerrar Sesión
                     </button>
                 </div>
+
+                <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
+                    <h3 className="text-lg font-bold mb-2">🎉 Crear Promociones</h3>
+                    <p className="text-sm text-gray-600 mb-4">Agregá nuevas promociones para mostrar a los clientes.</p>
+                    <button
+                        onClick={() => navigate("/promociones/crear")}
+                        className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+                    >
+                        Ir a Crear Promoción
+                    </button>
+                </div>
+
             </div>
         </div>
     );
