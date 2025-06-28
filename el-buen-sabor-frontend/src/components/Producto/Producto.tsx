@@ -1,3 +1,5 @@
+// src/pages/ProductDetailPage/ProductDetailPage.tsx
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -10,7 +12,7 @@ export default function ProductDetailPage() {
   // ───────────────────────────── hooks ─────────────────────────────
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-	const { addToCart, isInCart, getItemQuantity, totalItems, removeFromCart } = useCart()
+  const { addToCart, isInCart, getItemQuantity, totalItems, removeFromCart } = useCart() // Asegúrate de que totalItems esté aquí
 
   // ──────────────────────────── state ──────────────────────────────
   const [producto, setProducto] = useState<ArticuloManufacturado | null>(null)
@@ -63,10 +65,11 @@ export default function ProductDetailPage() {
   // ────────────────────── helpers internos ──────────────────────
   const increaseQty = () => setQuantity((q) => Math.min(q + 1, 10))
   const decreaseQty = () => setQuantity((q) => Math.max(q - 1, 1))
+
   const handleAddToCart = () => {
     if (!producto) return
     for (let i = 0; i < quantity; i++) addToCart(producto)
-    navigate("/cart")
+
   }
 
   // ──────────────────────────── UI states ────────────────────────
@@ -77,6 +80,17 @@ export default function ProductDetailPage() {
   // ─────────────────────────── render ────────────────────────────
   return (
     <div className="min-h-screen bg-white">
+
+      {totalItems > 0 && (
+        <a
+          href="/cart"
+          className="text-white fixed bottom-[30px] right-[30px] rounded-full font-bold bg-green-500 p-8 z-50 text-white"
+        >
+          IR AL CARRITO
+        </a>
+      )}
+
+
       <div className="max-w-6xl mx-auto px-4 py-10">
         {/* volver */}
         <button
@@ -164,80 +178,80 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {related.map((item) => (
                 <div
-									key={item.id}
-									className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200"
-								>
-									<div className="relative">
-										<img
-											src={
-												item.imagen
-													? item.imagen.denominacion
-													: "/placeholder.svg?height=200&width=300"
-											}
-											alt={item.denominacion}
-											className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
-										/>
-										<button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition duration-200">
-											<Heart className="w-4 h-4 text-gray-400" />
-										</button>
-										{item.tiempoEstimadoMinutos && (
-											<div className="absolute bottom-3 left-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-sm">
-												<Clock className="w-3 h-3 inline mr-1" />
-												{item.tiempoEstimadoMinutos} min
-											</div>
-										)}
-									</div>
+                  key={item.id}
+                  className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200"
+                >
+                  <div className="relative">
+                    <img
+                      src={
+                        item.imagen
+                          ? item.imagen.denominacion
+                          : "/placeholder.svg?height=200&width=300"
+                      }
+                      alt={item.denominacion}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+                    />
+                    <button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition duration-200">
+                      <Heart className="w-4 h-4 text-gray-400" />
+                    </button>
+                    {item.tiempoEstimadoMinutos && (
+                      <div className="absolute bottom-3 left-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-sm">
+                        <Clock className="w-3 h-3 inline mr-1" />
+                        {item.tiempoEstimadoMinutos} min
+                      </div>
+                    )}
+                  </div>
 
-									<div className="p-6">
-										<div className="flex justify-between items-start mb-2">
-											<h3 className="font-bold text-gray-900 text-lg line-clamp-2">{item.denominacion}</h3>
-											<div className="flex items-center space-x-1 ml-2">
-												<span className="text-lg font-bold text-orange-500">${item.precioVenta}</span>
-											</div>
-										</div>
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-gray-900 text-lg line-clamp-2">{item.denominacion}</h3>
+                      <div className="flex items-center space-x-1 ml-2">
+                        <span className="text-lg font-bold text-orange-500">${item.precioVenta}</span>
+                      </div>
+                    </div>
 
-										<p className="text-gray-600 text-sm mb-4 line-clamp-2">
-											{item.descripcion || "Delicioso producto artesanal"}
-										</p>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {item.descripcion || "Delicioso producto artesanal"}
+                    </p>
 
-										<div className="flex justify-between items-center">
-											<div className="text-sm text-gray-500">
-												{item.categoria?.denominacion || "Producto especial"}
-											</div>
-											<button
-												onClick={() => addToCart(item)}
-												className={`p-2 rounded-full transition duration-200 ${isInCart(item.id || 1)
-													? "bg-green-500 text-white"
-													: "bg-orange-500 text-white hover:bg-orange-600"
-													}`}
-											>
-												{isInCart(item.id || 1) ? (
-													<div className="flex gap-2">
-														<span className="text-xs font-bold">{getItemQuantity(item.id || 0)}</span>
-														<Plus className="w-4 h-4" />
-													</div>
-												) : (
-													<Plus className="w-4 h-4" />
-												)}
-											</button>
-											{isInCart(item.id || 1) ? (
-												<div className="flex gap-2">
-													<button
-														onClick={(e) => {
-															e.stopPropagation()
-															removeFromCart(item.id || 0)
-														}}
-														className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-200"
-														title="Eliminar del carrito"
-													>
-														<X className="w-3 h-3" />
-													</button>
-												</div>
-											) : ''}
-										</div>
-										<a className="text-center bg-orange-400 text-white py-2 block mx-auto mt-4" href={`/producto/${item.id}`}>Ver detalle</a>
-									</div>
-								</div>
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-gray-500">
+                        {item.categoria?.denominacion || "Producto especial"}
+                      </div>
+                      <button
+                        onClick={() => addToCart(item)}
+                        className={`p-2 rounded-full transition duration-200 ${isInCart(item.id || 1)
+                          ? "bg-green-500 text-white"
+                          : "bg-orange-500 text-white hover:bg-orange-600"
+                          }`}
+                      >
+                        {isInCart(item.id || 1) ? (
+                          <div className="flex gap-2">
+                            <span className="text-xs font-bold">{getItemQuantity(item.id || 0)}</span>
+                            <Plus className="w-4 h-4" />
+                          </div>
+                        ) : (
+                          <Plus className="w-4 h-4" />
+                        )}
+                      </button>
+                      {isInCart(item.id || 1) ? (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              removeFromCart(item.id || 0)
+                            }}
+                            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-200"
+                            title="Eliminar del carrito"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : ''}
+                    </div>
+                    <a className="text-center bg-orange-400 text-white py-2 block mx-auto mt-4" href={`/producto/${item.id}`}>Ver detalle</a>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
