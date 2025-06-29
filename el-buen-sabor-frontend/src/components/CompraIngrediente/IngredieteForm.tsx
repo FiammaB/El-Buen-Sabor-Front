@@ -23,6 +23,9 @@ export default function IngredienteForm({ onSave, onCancel }: IngredienteFormPro
     const [imagenId, setImagenId] = useState<number | undefined>(undefined);
     const [formReady, setFormReady] = useState(false);
 
+    // NUEVO ESTADO para esParaElaborar
+    const [esParaElaborar, setEsParaElaborar] = useState(false); // Por defecto, false (no es para elaborar)
+
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [unidades, setUnidades] = useState<UnidadMedida[]>([]);
     const [isUploading, setIsUploading] = useState(false);
@@ -82,14 +85,15 @@ export default function IngredienteForm({ onSave, onCancel }: IngredienteFormPro
             precioCompra: Number(precioCompra),
             stockActual: Number(stockActual),
             stockMinimo: Number(stockMinimo),
-            precioVenta: 0,
-            esParaElaborar: false,
+            precioVenta: 0, // Asegúrate de que este campo sea requerido por tu backend si es 0
+            esParaElaborar: esParaElaborar, // <--- USA EL NUEVO ESTADO AQUÍ
             categoriaId: Number(categoriaId),
             unidadMedidaId: Number(unidadMedidaId),
             imagenId: imagenId ?? null,
         };
 
         try {
+            // Asegúrate que el ArticuloInsumo constructor y el backend DTO acepten todas estas propiedades
             await new ArticuloService().createArticuloInsumo(payload as ArticuloInsumo);
             // Reset form después de crear
             setDenominacion("");
@@ -99,9 +103,11 @@ export default function IngredienteForm({ onSave, onCancel }: IngredienteFormPro
             setCategoriaId(categorias[0]?.id ?? "");
             setUnidadMedidaId(unidades[0]?.id ?? "");
             setImagenId(undefined);
+            setEsParaElaborar(false); // Resetea también el campo 'esParaElaborar'
             onSave();
-        } catch {
-            alert("Error al crear ingrediente");
+        } catch (error) { // Captura el error para una mejor depuración
+            console.error("Error al crear ingrediente:", error);
+            alert("Error al crear ingrediente. Revisa la consola para más detalles.");
         }
     };
 
@@ -163,6 +169,19 @@ export default function IngredienteForm({ onSave, onCancel }: IngredienteFormPro
                     <option key={u.id} value={u.id}>{u.denominacion}</option>
                 ))}
             </select>
+
+            {/* NUEVO: Checkbox para "Es para elaborar" */}
+            <div className="flex items-center space-x-2">
+                <input
+                    type="checkbox"
+                    id="esParaElaborar"
+                    checked={esParaElaborar}
+                    onChange={e => setEsParaElaborar(e.target.checked)}
+                    className="form-checkbox h-5 w-5 text-blue-600"
+                />
+                <label htmlFor="esParaElaborar" className="text-gray-700">¿Es para elaborar?</label>
+            </div>
+
             <input
                 type="file"
                 accept="image/*"

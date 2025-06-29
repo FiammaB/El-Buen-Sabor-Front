@@ -1,3 +1,4 @@
+import type { Articulo } from "../../../models/Articulos/Articulo"
 import type { ArticuloManufacturado } from "../../../models/Articulos/ArticuloManufacturado"
 
 export interface CartItem {
@@ -14,7 +15,7 @@ export interface CartContextType {
   items: CartItem[]
   totalItems: number
   totalAmount: number
-  addToCart: (articulo: ArticuloManufacturado, quantity?: number) => void
+  addToCart: (articulo: Articulo, quantity?: number) => void
   removeFromCart: (id: number) => void
   updateQuantity: (id: number, quantity: number) => void
   clearCart: () => void

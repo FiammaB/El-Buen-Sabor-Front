@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { ArticuloService } from "../../services/ArticuloService";
 import { ArticuloInsumo } from "../../models/Articulos/ArticuloInsumo";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../Auth/Context/AuthContext.tsx";
+
 
 export default function ControlStockPage() {
     const [insumos, setInsumos] = useState<ArticuloInsumo[]>([]);
@@ -9,6 +11,7 @@ export default function ControlStockPage() {
     const [porcentajeAlerta, setPorcentajeAlerta] = useState(20);
     const navigate = useNavigate();
     const alertaDecimal = porcentajeAlerta / 100;
+    const { role } = useAuth();
 
     useEffect(() => {
         new ArticuloService()
@@ -70,6 +73,11 @@ export default function ControlStockPage() {
                     [...insumosBajoStock, ...insumosCercaDelMinimo].map(ins => {
                         const bajoMinimo = ins.stockActual < ins.stockMinimo;
                         const diferencia = ins.stockActual - ins.stockMinimo;
+                        const compraRoute =
+                            role === "ADMINISTRADOR"
+                                ? "/admin/compra-ingredientes"
+                                : "/cocinero/compra-ingredientes";
+
                         return (
                             <tr
                                 key={ins.id}
@@ -86,7 +94,7 @@ export default function ControlStockPage() {
                                 <td className="p-2">
                                     <button
                                         className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
-                                        onClick={() => navigate("/cocinero/compra-ingredientes", { state: { insumoId: ins.id } })}
+                                        onClick={() => navigate(compraRoute, { state: { insumoId: ins.id } })}
                                     >
                                         Registrar compra
                                     </button>

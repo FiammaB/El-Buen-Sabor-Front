@@ -84,6 +84,36 @@ export class PedidoService {
       horaEstimadaFinalizacion: nuevaHora,
     });
   }
+
+  async getPedidosByClienteId(clienteId: number): Promise<IPedidoDTO[]> {
+    try {
+      const response = await axios.get<IPedidoDTO[]>(`${API_BASE_URL}/cliente/${clienteId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al obtener pedidos para el cliente ${clienteId}:`, error);
+      throw error;
+    }
+  }
+
+  async getFacturaPdfUrl(pedidoId: number): Promise<string> {
+    try {
+      const response = await axios.get<string>(`${API_BASE_URL}/${pedidoId}/factura-pdf`, {responseType: 'text'});
+      return response.data;
+    } catch (error) {
+      console.error(`Error al obtener la URL del PDF de la factura para el pedido ${pedidoId}:`, error);
+      throw error;
+    }
+  }
+
+  async anularPedidoConNotaCredito(
+      pedidoId: number,
+      anulacion: { usuarioAnuladorId: number, motivoAnulacion: string }
+  ): Promise<any> {
+    const response = await axios.patch(`${API_BASE_URL}/${pedidoId}/anular`, anulacion);
+    return response.data;
+
+  }
+
 }
 
 export default PedidoService;

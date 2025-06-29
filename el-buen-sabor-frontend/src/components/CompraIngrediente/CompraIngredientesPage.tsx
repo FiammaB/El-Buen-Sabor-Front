@@ -196,32 +196,68 @@ const CompraIngredientesPage: React.FC = () => {
 
             {/* Tabla de referencia */}
             <h2 className="text-xl font-semibold mb-2">Lista de ingredientes</h2>
-            <table className="w-full border text-sm">
+            <div className="mb-6">
+                <div
+                    className={`min-h-[64px] rounded-xl border-2 transition-all duration-200 shadow-sm bg-white 
+    ${selectedInsumo ? "border-green-400 shadow-md" : "border-dashed border-gray-300"}
+    flex items-center gap-8 px-8 py-4`}
+                    style={{ opacity: selectedInsumo ? 1 : 0.8 }}
+                >
+                    {selectedInsumo ? (
+                        <>
+                            <div className="flex-1">
+                                <div className="text-lg font-bold text-green-700">{selectedInsumo.denominacion}</div>
+                                <div className="text-sm text-gray-500">
+                                    Unidad: {selectedInsumo.unidadMedida?.denominacion ?? "-"}
+                                    {" | "} Stock actual: {selectedInsumo.stockActual}
+                                    {" | "} Precio compra: ${selectedInsumo.precioCompra?.toFixed(2)}
+                                </div>
+                            </div>
+                            <div>
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold
+            ${selectedInsumo.baja ? "bg-red-200 text-red-800" : "bg-green-200 text-green-800"}`}>
+            {selectedInsumo.baja ? "Inactivo" : "Activo"}
+          </span>
+                            </div>
+                        </>
+                    ) : (
+                        <span className="text-gray-400">Seleccione un ingrediente para editar sus datos</span>
+                    )}
+                </div>
+            </div>
+            <table className="w-full border text-sm border-separate border-spacing-y-2">
                 <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Unidad</th>
-                    <th>Stock Actual</th>
-                    <th>Precio Compra</th>
-                    <th>Activo</th>
+                <tr className="bg-gray-100">
+                    <th className="p-3">Nombre</th>
+                    <th className="p-3">Unidad</th>
+                    <th className="p-3">Stock Actual</th>
+                    <th className="p-3">Precio Compra</th>
+                    <th className="p-3">Activo</th>
                 </tr>
                 </thead>
                 <tbody>
-                {insumos.map(ins => (
-                    <tr key={ins.id} className={ins.baja ? 'bg-gray-100' : ''}>
-                        <td>{ins.denominacion}</td>
-                        <td>{ins.unidadMedida?.denominacion || '-'}</td>
-                        <td>{ins.stockActual}</td>
-                        <td>${ins.precioCompra.toFixed(2)}</td>
-                        <td>
-                            {ins.baja ? (
-                                <span className="text-red-500">No</span>
-                            ) : (
-                                <span className="text-green-600">Sí</span>
-                            )}
-                        </td>
-                    </tr>
-                ))}
+                {insumos.map((ins, idx) => {
+                    // Alternar fondo blanco y gris claro
+                    const bg = idx % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                    return (
+                        <tr
+                            key={ins.id}
+                            className={`${bg} ${ins.baja ? 'opacity-60' : ''} rounded-lg transition`}
+                        >
+                            <td className="p-3">{ins.denominacion}</td>
+                            <td className="p-3">{ins.unidadMedida?.denominacion || '-'}</td>
+                            <td className="p-3">{ins.stockActual}</td>
+                            <td className="p-3">${ins.precioCompra.toFixed(2)}</td>
+                            <td className="p-3">
+                                {ins.baja ? (
+                                    <span className="text-red-500">No</span>
+                                ) : (
+                                    <span className="text-green-600">Sí</span>
+                                )}
+                            </td>
+                        </tr>
+                    );
+                })}
                 </tbody>
             </table>
         </div>

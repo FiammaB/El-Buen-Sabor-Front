@@ -1,550 +1,447 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import type { ArticuloInsumo } from "../../models/Articulos/ArticuloInsumo"
-import { ArticuloService } from "../../services/ArticuloService"
-import { Pencil, Trash2, Plus, Check, X, Loader2 } from "lucide-react"
-import { CategoriaService } from '../../services/CategoriaService.';
-import { Categoria } from "../../models/Categoria/Categoria"
-// import { all } from "axios"
-import SideBar from '../compontents/Sidebar';
-import { UnidadMedidaService } from '../../services/UnidadMedidaService';
+import { useEffect, useState } from "react";
+import type { ArticuloInsumo } from "../../models/Articulos/ArticuloInsumo";
+import { ArticuloService } from "../../services/ArticuloService";
+import { Pencil, Trash2, Plus, Check, X, Loader2 } from "lucide-react";
+import { CategoriaService } from "../../services/CategoriaService.";
+import { Categoria } from "../../models/Categoria/Categoria";
+import { UnidadMedidaService } from "../../services/UnidadMedidaService";
 import { UnidadMedida } from "../../models/Categoria/UnidadMedida";
-import {uploadImage} from "../../services/imagenService.ts";
+import { uploadImage } from "../../services/imagenService.ts";
+import { Imagen } from "../../models/Categoria/Imagen";
 
+/** Componente principal */
 export default function Ingredientes() {
-  const [ingredientes, setIngredientes] = useState<ArticuloInsumo[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
-  const [ingredienteEditando, setIngredienteEditando] = useState<ArticuloInsumo | null>(null)
-  const [formData, setFormData] = useState<Partial<ArticuloInsumo>>({})
-  const [nuevoIngrediente, setNuevoIngrediente] = useState<Partial<ArticuloInsumo>>({
-    categoria: { id: 1, denominacion: "Default" },
-    unidadMedida: { id: 1, denominacion: "Default" },
-    imagen: { id: 1, denominacion: "Default" },
-    stockActual: 0,
-    stockMinimo: 0,
-    precioCompra: 0,
-  })
-  const [categoriasList, setCategoriasList] = useState<Categoria[]>([])
+  /* ------------------------------------------------------------------ */
+  /* ----------------------------- STATE ------------------------------ */
+  /* ------------------------------------------------------------------ */
+  const [ingredientes, setIngredientes] = useState<ArticuloInsumo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Popup & edición
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [esEdicion, setEsEdicion] = useState(false);
+  const [ingredienteEditando, setIngredienteEditando] = useState<ArticuloInsumo | null>(null);
+
+  // Form data (se reutiliza para crear y editar)
+  const [formData, setFormData] = useState<Partial<ArticuloInsumo>>({});
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // Listas auxiliares
+  const [categoriasList, setCategoriasList] = useState<Categoria[]>([]);
   const [unidadMedidaList, setUnidadMedidaList] = useState<UnidadMedida[]>([]);
+
+  /* ------------------------------------------------------------------ */
+  /* ------------------------- SERVICES ------------------------------- */
+  /* ------------------------------------------------------------------ */
+  const articuloService = new ArticuloService();
+  const categoriaService = new CategoriaService();
   const unidadMedidaService = new UnidadMedidaService();
 
-  const fileEditInputRef = useRef<HTMLInputElement | null>(null);
-
-  const articuloService = new ArticuloService()
-
+  /* ------------------------------------------------------------------ */
+  /* ---------------------- FETCH INITIAL DATA ------------------------ */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    (async () => {
+      await Promise.all([fetchIngredientes(), fetchCategorias(), fetchUnidadesMedida()]);
+    })();
+  }, []);
 
   const fetchIngredientes = async () => {
     try {
-      setLoading(true)
-      const data = await articuloService.getAllArticulosInsumo()
-      console.log("Ingredientes fetcheados: ", data)
-      setIngredientes(data)
+      setLoading(true);
+      const data = await articuloService.getAllArticulosInsumo();
+      setIngredientes(data);
     } catch (err) {
-      setError("Error al cargar los ingredientes.")
-      console.error(err)
+      setError("Error al cargar los ingredientes");
+      console.error(err);
     } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleEliminar = async (id: number) => {
-    try {
-      await articuloService.deleteArticulo(id)
-      fetchIngredientes();
-    } catch (error) {
-      console.error(error)
-      alert("Error al eliminar el ingrediente.")
-    }
-  }
-
-  const editarIngrediente = (ingrediente: ArticuloInsumo) => {
-    setIngredienteEditando(ingrediente)
-    setFormData(ingrediente)
-  }
-
-  const handleActivar = async (id: number) => {
-    try {
-      await articuloService.toggleBaja(id, false);
-      fetchIngredientes();
-    } catch (error) {
-      console.error(error);
-      alert("Error al activar el ingrediente.");
+      setLoading(false);
     }
   };
 
-
-  const guardarCambios = async () => {
-    console.log("ENTRA", ingredienteEditando)
-    if (!ingredienteEditando?.id) return
-    try {
-      const payload = {
-        ...formData,
-        categoriaId: formData.categoria?.id,
-        unidadMedidaId: formData.unidadMedida?.id,
-        imagenId: formData.imagen?.id,
-      }
-      console.log("Payload ", payload);
-      const actualizado = await articuloService.updateArticuloInsumo(
-        ingredienteEditando.id,
-        payload as ArticuloInsumo
-      )
-      console.log("Articulo actualizado: ", actualizado)
-      setIngredientes((prev) =>
-        prev.map((i) => (i.id === actualizado.id ? actualizado : i))
-      )
-
-      setIngredienteEditando(null)
-
-      if (fileEditInputRef.current) {
-        fileEditInputRef.current.value = "";
-      }
-    } catch (err) {
-      console.error("Error al actualizar:", err)
-      alert("Hubo un error al actualizar el ingrediente.")
-    }
-  }
-
-  const cancelarEdicion = () => {
-    setIngredienteEditando(null);
-    if (fileEditInputRef.current) fileEditInputRef.current.value = "";
+  const fetchCategorias = async () => {
+    const cats = await categoriaService.getAll();
+    setCategoriasList(cats);
   };
-
-  const crearIngrediente = async () => {
-    try {
-      const payload = {
-        ...nuevoIngrediente,
-        categoriaId: nuevoIngrediente.categoria?.id || 1,
-        unidadMedidaId: nuevoIngrediente.unidadMedida?.id || 1,
-        imagenId: nuevoIngrediente.imagen?.id || 1,
-      }
-      const creado = await articuloService.createArticuloInsumo(payload as ArticuloInsumo)
-      setIngredientes((prev) => [...prev, creado])
-      setNuevoIngrediente(ingredienteVacio)
-    } catch (err) {
-      console.error("Error al crear:", err)
-      alert("Hubo un error al crear el ingrediente.")
-    }
-  }
 
   const fetchUnidadesMedida = async () => {
-    const allUnidades = await unidadMedidaService.getAll();
-    setUnidadMedidaList(allUnidades);
+    const unidades = await unidadMedidaService.getAll();
+    setUnidadMedidaList(unidades);
   };
 
-  useEffect(() => {
-    fetchIngredientes()
-    fetchCategorias();
-    fetchUnidadesMedida();
-  }, [])
+  /* ------------------------------------------------------------------ */
+  /* ---------------------- HANDLERS UTILITARIOS ---------------------- */
+  /* ------------------------------------------------------------------ */
+  const resetForm = () => {
+    setFormData({});
+    setPreviewImage(null);
+  };
 
-  // LISTAR CATEGORIAS
-  const categoriaService = new CategoriaService();
-  const fetchCategorias = async () => {
-    const allCategorias = await categoriaService.getAll()
-    console.log("CATEGORIAS: ", allCategorias)
-    setCategoriasList(allCategorias)
-  }
+  const abrirPopupCrear = () => {
+    resetForm();
+    setEsEdicion(false);
+    setIngredienteEditando(null);
+    setMostrarFormulario(true);
+    // Inicializa campos para un nuevo ingrediente
+    setFormData((prev) => ({
+      ...prev,
+      esParaElaborar: false,
+      precioVenta: 0, // Inicializa precioVenta a 0 para crear
+    }));
+  };
 
-  const [isUploading, setIsUploading] = useState(false);
+  const abrirPopupEditar = (ing: ArticuloInsumo) => {
+    setFormData({ ...ing }); // Carga todos los datos del ingrediente
+    setIngredienteEditando(ing);
+    setEsEdicion(true);
+    setMostrarFormulario(true);
+    // Establece la imagen de previsualización si existe
+    if (ing.imagen?.denominacion) {
+      setPreviewImage(ing.imagen.denominacion);
+    } else {
+      setPreviewImage(null);
+    }
+    // Asegura que esParaElaborar y precioVenta se carguen correctamente
+    setFormData((prev) => ({
+      ...prev,
+      esParaElaborar: ing.esParaElaborar,
+      precioVenta: ing.precioVenta, // Carga precioVenta existente
+    }));
+  };
 
-  const handleImageUploadNuevo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const cerrarPopup = () => {
+    setMostrarFormulario(false);
+    setIngredienteEditando(null);
+    resetForm();
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
+    setPreviewImage(URL.createObjectURL(file));
     try {
-      // Llama al servicio, igual que en ArticuloManufacturadoForm
-      const response = await uploadImage(file); // asegúrate de importar uploadImage
-      const imagenSubida = response.data;
-      setNuevoIngrediente(prev => ({
-        ...prev,
-        imagen: { id: imagenSubida.id, denominacion: imagenSubida.denominacion },
-      }));
-    } catch (error) {
+      const res = await uploadImage(file);
+      setFormData((prev) => ({ ...prev, imagen: new Imagen(res.data.denominacion, res.data.id) }));
+    } catch (err) {
       alert("Error al subir la imagen");
+      setPreviewImage(null);
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleImageUploadEditar = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  /* ------------------------------------------------------------------ */
+  /* -------------------- CREAR / EDITAR INGREDIENTE ------------------ */
+  /* ------------------------------------------------------------------ */
+  const guardarIngrediente = async () => {
+    // Validaciones detalladas
+    const errores: string[] = [];
 
-    setIsUploading(true);
+    if (!formData.denominacion?.trim()) errores.push("La denominación es obligatoria.");
+    if (formData.precioCompra === undefined || formData.precioCompra <= 0)
+      errores.push("El precio de compra debe ser mayor a 0.");
+    if (formData.stockActual === undefined || formData.stockActual < 0)
+      errores.push("El stock actual no puede ser negativo.");
+    if (formData.stockMinimo === undefined || formData.stockMinimo < 0)
+      errores.push("El stock mínimo no puede ser negativo.");
+    if (formData.precioVenta === undefined || formData.precioVenta < 0) // <-- Validación para precioVenta
+      errores.push("El precio de venta no puede ser negativo.");
+    if (!formData.categoria?.id) errores.push("Debe seleccionar una categoría.");
+    if (!formData.unidadMedida?.id) errores.push("Debe seleccionar una unidad de medida.");
+
+    if (errores.length > 0) {
+      alert("Errores en el formulario:\n" + errores.join("\n"));
+      return;
+    }
+
+    const payload: ArticuloInsumo = {
+      denominacion: formData.denominacion?.trim() || "",
+      precioCompra: Number(formData.precioCompra) || 0,
+      stockActual: Number(formData.stockActual) || 0,
+      stockMinimo: Number(formData.stockMinimo) || 0,
+      categoriaId: formData.categoria?.id || 0,
+      unidadMedidaId: formData.unidadMedida?.id || 0,
+      imagenId: formData.imagen?.id || 0,
+      esParaElaborar: formData.esParaElaborar ?? false,
+      precioVenta: Number(formData.precioVenta) || 0, // <--- USA EL VALOR DE formData.precioVenta
+      id: esEdicion ? ingredienteEditando?.id : undefined,
+      baja: esEdicion ? ingredienteEditando?.baja : false
+    };
+
+
     try {
-      const response = await uploadImage(file); // usá tu servicio de imágenes
-      const imagenSubida = response.data;
-      setFormData(prev => ({
-        ...prev,
-        imagen: { id: imagenSubida.id, denominacion: imagenSubida.denominacion },
-      }));
-    } catch (error) {
-      alert("Error al subir la imagen");
-    } finally {
-      setIsUploading(false);
+      if (esEdicion && ingredienteEditando?.id) {
+        const actualizado = await articuloService.updateArticuloInsumo(ingredienteEditando.id, payload);
+        setIngredientes((prev) => prev.map((i) => (i.id === actualizado.id ? actualizado : i)));
+      } else {
+        const creado = await articuloService.createArticuloInsumo(payload);
+        setIngredientes((prev) => [...prev, creado]);
+      }
+      cerrarPopup();
+    } catch (err: any) {
+      alert(err?.response?.data?.message || "Error al guardar el ingrediente (revisa la consola para más detalles)");
+      console.error(err);
     }
   };
 
-  const ingredienteVacio: Partial<ArticuloInsumo> = {
-    denominacion: "",
-    precioCompra: 0,
-    stockActual: 0,
-    stockMinimo: 0,
-    categoria: undefined,
-    unidadMedida: undefined,
-    imagen: undefined,
-  };
-
-
-
+  /* ------------------------------------------------------------------ */
+  /* --------------------------- RENDER -------------------------------- */
+  /* ------------------------------------------------------------------ */
   return (
-    <div>
-      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-2xl mb-6 font-bold">Administración de Ingredientes</h1>
 
-          <div className="flex gap-8">
-            {/* <SideBar /> */}
-            <div>
-              <h1 className="text-2xl mb-8 font-bold text-gray-900">
-                Administración de Ingredientes
-              </h1>
-              {loading && (
-                <div className="flex items-center space-x-2 text-gray-600">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Cargando ingredientes...</span>
-                </div>
-              )}
-              {error && <p className="text-red-600 font-medium">{error}</p>}
+        {/* BOTÓN NUEVO ING */}
+        <button
+          onClick={abrirPopupCrear}
+          className="inline-flex items-center space-x-2 bg-orange-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-orange-600 mb-6"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Nuevo ingrediente</span>
+        </button>
 
-              <section className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
-                <h2 className="text-lg font-bold text-gray-900">Crear nuevo ingrediente</h2>
+        {/* TABLA */}
+        {loading ? (
+          <div className="flex items-center space-x-2 text-gray-600">
+            <Loader2 className="w-5 h-5 animate-spin" /> <span>Cargando...</span>
+          </div>
+        ) : error ? (
+          <p className="text-red-600 font-medium">{error}</p>
+        ) : (
+          <section className="bg-white rounded-2xl shadow-sm overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  {[
+                    "ID",
+                    "Denominación",
+                    "Precio Compra",
+                    "Precio Venta", // <-- NUEVA COLUMNA EN LA TABLA
+                    "Stock Actual",
+                    "Stock Mínimo",
+                    "Es para Elaborar",
+                    "Unidad",
+                    "Categoría",
+                    "Acciones",
+                  ].map((h) => (
+                    <th key={h} className="px-4 py-3 text-left font-semibold text-gray-700">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {ingredientes.map((ing) => (
+                  <tr key={ing.id} className={`hover:bg-gray-50 ${ing.baja ? "opacity-50" : ""}`}>
+                    <td className="px-4 py-3 whitespace-nowrap">{ing.id}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{ing.denominacion}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">${ing.precioCompra?.toFixed(2)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">${ing.precioVenta?.toFixed(2)}</td> {/* <-- MOSTRAR PRECIO VENTA */}
+                    <td className="px-4 py-3 whitespace-nowrap">{ing.stockActual ?? "-"}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{ing.stockMinimo ?? "-"}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {ing.esParaElaborar ? "Sí" : "No"}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">{ing.unidadMedida?.denominacion ?? "N/A"}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{ing.categoria?.denominacion ?? "N/A"}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        {ing.baja ? (
+                          <button
+                            onClick={() => articuloService.toggleBaja(ing.id!, false).then(fetchIngredientes)}
+                            className="p-2 rounded-full bg-green-50 hover:bg-green-100 text-green-600"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => articuloService.deleteArticulo(ing.id!).then(fetchIngredientes)}
+                              className="p-2 rounded-full bg-red-50 hover:bg-red-100 text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => abrirPopupEditar(ing)}
+                              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <input
-                    type="text"
-                    value={nuevoIngrediente.denominacion || ""}
-                    onChange={(e) =>
-                      setNuevoIngrediente({
-                        ...nuevoIngrediente,
-                        denominacion: e.target.value,
-                      })
-                    }
-                    placeholder="Denominación"
-                    className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                  />
-                  <input
-                    type="number"
-                    value={nuevoIngrediente.precioCompra || ""}
-                    onChange={(e) =>
-                      setNuevoIngrediente({
-                        ...nuevoIngrediente,
-                        precioCompra: parseFloat(e.target.value),
-                      })
-                    }
-                    placeholder="Precio de compra"
-                    className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                  />
-                  <input
-                    type="number"
-                    value={nuevoIngrediente.stockActual || ""}
-                    onChange={(e) =>
-                      setNuevoIngrediente({
-                        ...nuevoIngrediente,
-                        stockActual: parseFloat(e.target.value),
-                      })
-                    }
-                    placeholder="Stock actual"
-                    className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                  />
-                  <input
-                    type="number"
-                    value={nuevoIngrediente.stockMinimo || ""}
-                    onChange={(e) =>
-                      setNuevoIngrediente({
-                        ...nuevoIngrediente,
-                        stockMinimo: parseFloat(e.target.value),
-                      })
-                    }
-                    placeholder="Stock mínimo"
-                    className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                  />
-                  {/* <input
+        {/* POPUP FORM */}
+        {mostrarFormulario && (
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 w-full max-w-3xl shadow-lg relative">
+              <button onClick={cerrarPopup} className="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+
+              <h2 className="text-lg font-bold mb-4">
+                {esEdicion ? `Editar ingrediente #${ingredienteEditando?.id}` : "Crear nuevo ingrediente"}
+              </h2>
+
+              {/* FORM FIELDS */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Denominacion */}
+                <input
+                  type="text"
+                  placeholder="Denominación"
+                  value={formData.denominacion || ""}
+                  onChange={(e) => setFormData({ ...formData, denominacion: e.target.value })}
+                  className="border border-gray-300 rounded p-2"
+                />
+
+                {/* Precio Compra */}
+                <input
                   type="number"
-                  value={nuevoIngrediente.categoria?.id || ""}
+                  placeholder="Precio de compra"
+                  value={formData.precioCompra ?? ""}
                   onChange={(e) =>
-                    setNuevoIngrediente({
-                      ...nuevoIngrediente,
-                      categoria: { id: parseInt(e.target.value), denominacion: nuevoIngrediente.categoria?.denominacion || "" }
-                    })
+                    setFormData({ ...formData, precioCompra: e.target.value === "" ? undefined : parseFloat(e.target.value) })
                   }
-                  placeholder="ID Categoría"
-                  className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                /> */}
-                  <select
-                    value={nuevoIngrediente.categoria?.id ?? ""}
-                    onChange={(e) => {
-                      const id = parseInt(e.target.value);
-                      const categoriaSeleccionada = categoriasList.find((c) => c.id === id);
-                      setNuevoIngrediente({
-                        ...nuevoIngrediente,
-                        categoria: {
-                          id,
-                          denominacion: categoriaSeleccionada?.denominacion || "",
-                        },
-                      });
-                    }}
-                    className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                  >
-                    <option value="" disabled>
-                      Seleccione categoría
+                  className="border border-gray-300 rounded p-2"
+                />
+
+                {/* Precio Venta */}
+                <input // <-- NUEVO CAMPO PARA PRECIO DE VENTA
+                  type="number"
+                  placeholder="Precio de venta"
+                  value={formData.precioVenta ?? ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, precioVenta: e.target.value === "" ? undefined : parseFloat(e.target.value) })
+                  }
+                  className="border border-gray-300 rounded p-2"
+                  min={0}
+                  step="0.01"
+                />
+
+                {/* Stock actual */}
+                <input
+                  type="number"
+                  placeholder="Stock actual"
+                  value={formData.stockActual ?? ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, stockActual: e.target.value === "" ? undefined : parseFloat(e.target.value) })
+                  }
+                  className="border border-gray-300 rounded p-2"
+                />
+
+                {/* Stock mínimo */}
+                <input
+                  type="number"
+                  placeholder="Stock mínimo"
+                  value={formData.stockMinimo ?? ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, stockMinimo: e.target.value === "" ? undefined : parseFloat(e.target.value) })
+                  }
+                  className="border border-gray-300 rounded p-2"
+                />
+
+                {/* Categoría */}
+                <select
+                  value={formData.categoria?.id ?? ""}
+                  onChange={(e) => {
+                    const id = parseInt(e.target.value);
+                    const cat = categoriasList.find((c) => c.id === id);
+                    setFormData({ ...formData, categoria: cat });
+                  }}
+                  className="border border-gray-300 rounded p-2"
+                >
+                  <option value="" disabled>
+                    Seleccione categoría
+                  </option>
+                  {categoriasList.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.denominacion}
                     </option>
-                    {categoriasList.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.denominacion}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={nuevoIngrediente.unidadMedida?.id ?? ""}
-                    onChange={(e) => {
-                      const id = parseInt(e.target.value);
-                      const unidadSeleccionada = unidadMedidaList.find((u) => u.id === id);
-                      setNuevoIngrediente({
-                        ...nuevoIngrediente,
-                        unidadMedida: {
-                          id,
-                          denominacion: unidadSeleccionada?.denominacion || "",
-                        },
-                      });
-                    }}
-                    className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                  >
-                    <option value="" disabled>Seleccione unidad de medida</option>
-                    {unidadMedidaList.map((unidad) => (
-                      <option key={unidad.id} value={unidad.id}>
-                        {unidad.denominacion}
-                      </option>
-                    ))}
-                  </select>
+                  ))}
+                </select>
+
+                {/* Unidad */}
+                <select
+                  value={formData.unidadMedida?.id ?? ""}
+                  onChange={(e) => {
+                    const id = parseInt(e.target.value);
+                    const un = unidadMedidaList.find((u) => u.id === id);
+                    setFormData({ ...formData, unidadMedida: un });
+                  }}
+                  className="border border-gray-300 rounded p-2"
+                >
+                  <option value="" disabled>
+                    Seleccione unidad de medida
+                  </option>
+                  {unidadMedidaList.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.denominacion}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Checkbox para "Es para elaborar" */}
+                <div className="flex items-center space-x-2 sm:col-span-2">
                   <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUploadEditar}
-                      disabled={isUploading}
-                      className="w-full border border-gray-200 rounded-lg p-3"
-                      ref={fileEditInputRef}
+                    type="checkbox"
+                    id="esParaElaborar"
+                    checked={formData.esParaElaborar ?? false}
+                    onChange={e => setFormData({ ...formData, esParaElaborar: e.target.checked })}
+                    className="form-checkbox h-5 w-5 text-blue-600"
                   />
+                  <label htmlFor="esParaElaborar" className="text-gray-700">¿Es para elaborar?</label>
                 </div>
 
-                <button
-                  onClick={crearIngrediente}
-                  className="inline-flex items-center space-x-2 bg-orange-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-orange-600 transition duration-200"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Crear ingrediente</span>
+                {/* Campo de Imagen y Previsualización */}
+                <div className="sm:col-span-2">
+                  {previewImage && (
+                    <div className="mb-2 w-32 h-32 rounded-lg overflow-hidden border border-gray-300 flex items-center justify-center">
+                      <img src={previewImage} alt="Previsualización" className="object-cover w-full h-full" />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={isUploading}
+                    className="border border-gray-300 rounded p-2 w-full"
+                  />
+                  {isUploading && (
+                    <div className="flex items-center text-gray-500 mt-2">
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Subiendo imagen...
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* BOTONES */}
+              <div className="mt-4 flex justify-end gap-2">
+                <button onClick={guardarIngrediente} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                  {esEdicion ? "Guardar cambios" : "Crear ingrediente"}
                 </button>
-              </section>
-
-              {/* --- Tabla de Ingredientes --- */}
-              <section className="bg-white rounded-2xl my-8 shadow-sm overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">ID</th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                        Denominación
-                      </th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                        Precio Compra
-                      </th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                        Stock Actual
-                      </th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                        Stock Mínimo
-                      </th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                        Unidad
-                      </th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                        Categoría
-                      </th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-700 text-center">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {ingredientes.map((ingrediente) => (
-                      <tr key={ingrediente.id} className={`hover:bg-gray-50 ${ingrediente.baja ? 'opacity-[50%]' : ''}`}>
-                        <td className="px-4 py-3 whitespace-nowrap">{ingrediente.id}</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {ingrediente.denominacion}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">$
-                          {ingrediente.precioCompra?.toFixed(2)}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {ingrediente.stockActual ?? "-"}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {ingrediente.stockMinimo ?? "-"}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {ingrediente.unidadMedida?.denominacion ?? "N/A"}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {ingrediente.categoria?.denominacion ?? "N/A"}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex items-center justify-center space-x-2">
-                            {ingrediente.baja ? (
-                              <button
-                                onClick={() => ingrediente.id && handleActivar(ingrediente.id)}
-                                className="p-2 rounded-full bg-green-50 hover:bg-green-100 text-green-600 transition duration-200"
-                              >
-                                <Check className="w-4 h-4" />
-                              </button>
-                            ) : (
-                              <>
-                                <button
-                                  onClick={() => ingrediente.id && handleEliminar(ingrediente.id)}
-                                  className="p-2 rounded-full bg-red-50 hover:bg-red-100 text-red-600 transition duration-200"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => editarIngrediente(ingrediente)}
-                                  className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition duration-200"
-                                >
-                                  <Pencil className="w-4 h-4" />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </section>
-
-              {/* --- Editar Ingrediente --- */}
-              {ingredienteEditando && (
-                <section className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
-                  <h2 className="text-lg font-bold text-gray-900">
-                    Editar ingrediente #{ingredienteEditando.id}
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <input
-                      type="text"
-                      value={formData.denominacion || ""}
-                      onChange={(e) => setFormData({ ...formData, denominacion: e.target.value })}
-                      placeholder="Denominación"
-                      className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                    />
-                    <input
-                      type="number"
-                      value={formData.precioCompra || ""}
-                      onChange={(e) => setFormData({ ...formData, precioCompra: parseFloat(e.target.value) })}
-                      placeholder="Precio de compra"
-                      className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                    />
-                    <input
-                      type="number"
-                      value={formData.stockActual || ""}
-                      onChange={(e) => setFormData({ ...formData, stockActual: parseFloat(e.target.value) })}
-                      placeholder="Stock actual"
-                      className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                    />
-                    <input
-                      type="number"
-                      value={formData.stockMinimo || ""}
-                      onChange={(e) => setFormData({ ...formData, stockMinimo: parseFloat(e.target.value) })}
-                      placeholder="Stock mínimo"
-                      className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                    />
-                    <select
-                      value={formData.categoria?.id ?? ""}
-                      onChange={(e) => {
-                        const id = parseInt(e.target.value);
-                        const categoriaSeleccionada = categoriasList.find((c) => c.id === id);
-                        setFormData({
-                          ...formData,
-                          categoria: {
-                            id,
-                            denominacion: categoriaSeleccionada?.denominacion || "",
-                          },
-                        });
-                      }}
-                      className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                    >
-                      <option value="" disabled>
-                        Seleccione categoría
-                      </option>
-                      {categoriasList.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.denominacion}
-                        </option>
-                      ))}
-                    </select>
-
-                    <select
-                      value={formData.unidadMedida?.id ?? ""}
-                      onChange={(e) => {
-                        const id = parseInt(e.target.value);
-                        const unidadSeleccionada = unidadMedidaList.find((u) => u.id === id);
-                        setFormData({
-                          ...formData,
-                          unidadMedida: {
-                            id,
-                            denominacion: unidadSeleccionada?.denominacion || "",
-                          },
-                        });
-                      }}
-                      className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                    >
-                      <option value="" disabled>Seleccione unidad de medida</option>
-                      {unidadMedidaList.map((unidad) => (
-                        <option key={unidad.id} value={unidad.id}>
-                          {unidad.denominacion}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="number"
-                      value={formData.imagen?.id || ""}
-                      onChange={(e) => setFormData({ ...formData, imagen: { id: parseInt(e.target.value), denominacion: formData.imagen?.denominacion || "" } })}
-                      placeholder="ID Imagen"
-                      className="w-full border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                    />
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={guardarCambios}
-                      className="inline-flex items-center space-x-2 bg-green-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-green-600 transition duration-200"
-                    >
-                      <Check className="w-4 h-4" />
-                      <span>Guardar</span>
-                    </button>
-                    <button
-                      onClick={() => setIngredienteEditando(null)}
-                      className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-5 py-3 rounded-xl font-semibold hover:bg-gray-200 transition duration-200"
-                    >
-                      <X className="w-4 h-4" />
-                      <span>Cancelar</span>
-                    </button>
-                  </div>
-                </section>
-              )}
+                <button onClick={cerrarPopup} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded">
+                  Cancelar
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
-  )
+  );
 }

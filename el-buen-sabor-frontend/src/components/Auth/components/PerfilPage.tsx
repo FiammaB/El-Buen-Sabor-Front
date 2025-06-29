@@ -1,38 +1,51 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "../Context/AuthContext"; // ✅ correcto
+import { useAuth } from "../Context/AuthContext";
 
 export default function PerfilPage() {
-  const { email, telefono, username, role, login } = useAuth(); // accedemos a todo lo necesario
+  const { id, email, telefono, username, role, login } = useAuth();
+  console.log(email,telefono,username,role,login)
 
   const [form, setForm] = useState({
     email: "",
     nombre: "",
     apellido: "",
     telefono: "",
+    fechaNacimiento: "",
+
+    passwordActual: "",
+    nuevaPassword: "",
+    repetirPassword: "",
   });
 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (email) {
-      axios
-        .get(`/api/usuarios/perfil/${email}`)
-        .then((res) => {
-          const usuario = res.data.usuario;
-          setForm({
-            email: usuario.email,
-            nombre: usuario.nombre,
-            apellido: usuario.apellido,
-            telefono: usuario.telefono,
-          });
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.error("Error al cargar perfil", err);
-          setLoading(false);
-        });
-    }
+
+
+    axios
+      .get(`http://localhost:8080/api/usuarios/perfil/${email}`)
+      .then((res) => {
+        const usuario = res.data.usuario;
+
+        setForm((prev) => ({
+          ...prev,
+          id: usuario.id,
+          email: usuario.email || "",
+          nombre: usuario.nombre || "",
+          apellido: usuario.apellido || "",
+          telefono: usuario.telefono || "",
+          fechaNacimiento: usuario.fechaNacimiento || "",
+        }));
+
+        console.log("USER ID:", usuario.id)
+      })
+      .catch((err) => {
+        console.error("Error al cargar perfil:", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [email]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,24 +56,36 @@ export default function PerfilPage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    axios
-      .put(`/api/usuarios/perfil/${email}`, {
+
+    try {
+      await axios.put(`http://localhost:8080/api/usuarios/perfil/cliente/${email}`, {
         nombre: form.nombre,
         apellido: form.apellido,
         telefono: form.telefono,
-      })
-      .then(() => {
-        // ✅ Actualizar contexto
-        login(role, form.nombre + " " + form.apellido, form.email, form.telefono);
-        alert("Perfil actualizado correctamente");
-      })
-      .catch((err) => {
-        console.error("Error al actualizar perfil", err);
-        alert("Error al guardar cambios");
+        email: form.email,
+        fechaNacimiento: form.fechaNacimiento,
+        passwordActual: form.passwordActual,
+        nuevaPassword: form.nuevaPassword,
+        repetirPassword: form.repetirPassword,
       });
+
+      login(id ? id : 0, role, `${form.nombre} ${form.apellido}`, form.email, form.telefono);
+      alert("Perfil actualizado correctamente.");
+    } catch (err) {
+      console.error("Error al actualizar perfil", err);
+      alert("Error al guardar cambios.");
+    }
   };
+
+  if (!email) {
+    return (
+      <p className="text-center mt-10 text-red-500">
+        Error: no se pudo obtener el email del usuario.
+      </p>
+    );
+  }
 
   if (loading) return <p className="text-center mt-10">Cargando perfil...</p>;
 
@@ -101,6 +126,36 @@ export default function PerfilPage() {
             <input
               name="telefono"
               value={form.telefono}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+          </div>
+          <div>
+            <label className="block mb-1 text-sm">Contraseña actual</label>
+            <input
+              type="password"
+              name="passwordActual"
+              value={form.passwordActual}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+          </div>
+          <div>
+            <label className="block mb-1 text-sm">Nueva contraseña</label>
+            <input
+              type="password"
+              name="nuevaPassword"
+              value={form.nuevaPassword}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+          </div>
+          <div>
+            <label className="block mb-1 text-sm">Repetir nueva contraseña</label>
+            <input
+              type="password"
+              name="repetirPassword"
+              value={form.repetirPassword}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2"
             />
