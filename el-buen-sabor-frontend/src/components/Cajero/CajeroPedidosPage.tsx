@@ -2,16 +2,14 @@ import React, { useEffect, useState } from "react";
 import { PedidoService } from "../../services/PedidoService";
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO";
 import { Eye } from "lucide-react";
+import {useAuth} from "../Auth/Context/AuthContext";
 
 // Helpers UI
 function getProximoEstado(pedido: IPedidoDTO): { estado: string, label: string } | null {
     if (pedido.estado === "A_CONFIRMAR") {
-        // Pago se confirma igual para ambos tipos, ajustá si tenés lógica especial
         return { estado: "PAGADO", label: "Marcar como Pagado" };
     }
-
     if (pedido.estado === "PAGADO") {
-        // Siempre va a cocina si tiene manufacturados
         const tieneManufacturados = pedido.detalles?.some(det => !!det.articuloManufacturado);
         if (tieneManufacturados) {
             return { estado: "EN_COCINA", label: "Pasar a En Cocina" };
@@ -19,21 +17,16 @@ function getProximoEstado(pedido: IPedidoDTO): { estado: string, label: string }
             return { estado: "LISTO", label: "Pasar a Listo" };
         }
     }
-
     if (pedido.estado === "LISTO") {
         if (pedido.tipoEnvio === "RETIRO_EN_LOCAL") {
-            // Si es retiro, pasa directo a ENTREGADO
             return { estado: "ENTREGADO", label: "Pasar a Entregado" };
         }
         if (pedido.tipoEnvio === "DELIVERY") {
-            // Si es delivery, va a EN_DELIVERY
             return { estado: "EN_DELIVERY", label: "Pasar a En Delivery" };
         }
     }
-
     return null;
 }
-
 
 function puedeCancelar(pedido: IPedidoDTO) {
     return !["CANCELADO", "DEVOLUCION", "ENTREGADO"].includes(pedido.estado || "");
@@ -71,6 +64,35 @@ export default function CajeroPedidosPage() {
         }
     };
 
+    const handleCancelar = async (pedido: IPedidoDTO) => {
+        if (!window.confirm("¿Seguro que deseas cancelar este pedido?")) return;
+        try {
+            await new PedidoService().actualizarEstadoPedido(pedido.id!, "CANCELADO");
+            alert("Pedido cancelado exitosamente.");
+            fetchPedidos();
+        } catch (e: any) {
+            alert("Error al cancelar el pedido: " + (e?.response?.data?.error || e.message));
+        }
+    };
+
+    const handleDevolver = async (pedido: IPedidoDTO) => {
+        const motivoAnulacion = prompt("Motivo de la devolución/anulación:");
+        if (!motivoAnulacion) return;
+        try {
+            // Usá el userId real cuando lo tengas en el contexto
+            const usuarioAnuladorId = 1; // HARDCODE para test
+            await new PedidoService().anularPedidoConNotaCredito(pedido.id!, {
+                usuarioAnuladorId,
+                motivoAnulacion,
+            });
+            await new PedidoService().actualizarEstadoPedido(pedido.id!, "DEVOLUCION");
+            alert("Pedido anulado y Nota de Crédito enviada al cliente.");
+            fetchPedidos();
+        } catch (e: any) {
+            alert("Error al generar la Nota de Crédito: " + (e?.response?.data?.error || e.message));
+        }
+    };
+
     useEffect(() => {
         fetchPedidos();
     }, [estadoFiltro, idBusqueda]);
@@ -91,81 +113,66 @@ export default function CajeroPedidosPage() {
         fetchPedidos();
     };
 
-    // Función para cancelar
-    const handleCancelar = async (pedido: IPedidoDTO) => {
-        if (!window.confirm("¿Seguro que deseas cancelar este pedido?")) return;
-        await new PedidoService().actualizarEstadoPedido(pedido.id!, "CANCELADO");
-        fetchPedidos();
-    };
-
-    // Función para devolver (pasa a DEVOLUCION)
-    const handleDevolver = async (pedido: IPedidoDTO) => {
-        if (!window.confirm("¿Seguro que deseas pasar este pedido a DEVOLUCIÓN?")) return;
-        await new PedidoService().actualizarEstadoPedido(pedido.id!, "DEVOLUCION");
-        fetchPedidos();
-    };
     return (
-
         <div>
             {/* FILTROS ARRIBA DE LA TABLA */}
             <div className="mb-4 flex flex-wrap gap-4 items-end">
-                    {/* Filtro por ID */}
-                    <form onSubmit={handleBuscarPorId} className="flex items-center gap-2">
-                        <input
-                            type="number"
-                            className="border rounded px-2 py-1 text-sm"
-                            placeholder="Buscar por ID"
-                            value={idBusqueda}
-                            onChange={(e) => setIdBusqueda(e.target.value)}
-                            style={{ width: 120 }}
-                        />
+                {/* Filtro por ID */}
+                <form onSubmit={handleBuscarPorId} className="flex items-center gap-2">
+                    <input
+                        type="number"
+                        className="border rounded px-2 py-1 text-sm"
+                        placeholder="Buscar por ID"
+                        value={idBusqueda}
+                        onChange={(e) => setIdBusqueda(e.target.value)}
+                        style={{ width: 120 }}
+                    />
+                    <button
+                        type="submit"
+                        className="bg-blue-600 text-white rounded px-2 py-1 text-xs font-medium transition hover:bg-blue-700"
+                    >
+                        Buscar
+                    </button>
+                    {idBusqueda && (
                         <button
-                            type="submit"
-                            className="bg-blue-600 text-white rounded px-2 py-1 text-xs font-medium transition hover:bg-blue-700"
+                            type="button"
+                            className="text-xs text-red-600 ml-1"
+                            onClick={() => { setIdBusqueda(""); fetchPedidos(); }}
                         >
-                            Buscar
+                            Limpiar
                         </button>
-                        {idBusqueda && (
-                            <button
-                                type="button"
-                                className="text-xs text-red-600 ml-1"
-                                onClick={() => { setIdBusqueda(""); fetchPedidos(); }}
-                            >
-                                Limpiar
-                            </button>
-                        )}
-                    </form>
-
-                    {/* Filtro por Estado */}
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm">Filtrar por Estado:</label>
-                        <select
-                            value={estadoFiltro}
-                            onChange={e => setEstadoFiltro(e.target.value)}
-                            className="border rounded px-2 py-1 text-sm"
+                    )}
+                </form>
+                {/* Filtro por Estado */}
+                <div className="flex items-center gap-2">
+                    <label className="text-sm">Filtrar por Estado:</label>
+                    <select
+                        value={estadoFiltro}
+                        onChange={e => setEstadoFiltro(e.target.value)}
+                        className="border rounded px-2 py-1 text-sm"
+                    >
+                        <option value="">Todos</option>
+                        <option value="A_CONFIRMAR">A Confirmar</option>
+                        <option value="PAGADO">Pagado</option>
+                        <option value="EN_COCINA">En Cocina</option>
+                        <option value="EN_PREPARACION">En Preparación</option>
+                        <option value="LISTO">Listo</option>
+                        <option value="EN_DELIVERY">En Delivery</option>
+                        <option value="ENTREGADO">Entregado</option>
+                        <option value="CANCELADO">Cancelado</option>
+                        <option value="DEVOLUCION">Devolución</option>
+                    </select>
+                    {estadoFiltro && (
+                        <button
+                            type="button"
+                            className="text-xs text-red-600 ml-1"
+                            onClick={() => { setEstadoFiltro(""); fetchPedidos(); }}
                         >
-                            <option value="">Todos</option>
-                            <option value="A_CONFIRMAR">A Confirmar</option>
-                            <option value="PAGADO">Pagado</option>
-                            <option value="EN_COCINA">En Cocina</option>
-                            <option value="EN_PREPARACION">En Preparación</option>
-                            <option value="LISTO">Listo</option>
-                            <option value="EN_DELIVERY">En Delivery</option>
-                            <option value="ENTREGADO">Entregado</option>
-                            <option value="CANCELADO">Cancelado</option>
-                            <option value="DEVOLUCION">Devolución</option>
-                        </select>
-                        {estadoFiltro && (
-                            <button
-                                type="button"
-                                className="text-xs text-red-600 ml-1"
-                                onClick={() => { setEstadoFiltro(""); fetchPedidos(); }}
-                            >
-                                Limpiar
-                            </button>
-                        )}
-                    </div>
+                            Limpiar
+                        </button>
+                    )}
                 </div>
+            </div>
             <div className="overflow-x-auto">
                 <table className="min-w-full border text-sm rounded shadow">
                     <thead>
@@ -214,10 +221,8 @@ export default function CajeroPedidosPage() {
                                             ? pedido.detalles
                                                 .reduce((acc, det) => {
                                                     if (det.articuloManufacturado) {
-                                                        // Manufacturado: usá su precio
                                                         return acc + (det.cantidad || 0) * (det.articuloManufacturado.precioVenta || 0);
                                                     } else if (det.articuloInsumo) {
-                                                        // Insumo: usá su precio
                                                         return acc + (det.cantidad || 0) * (det.articuloInsumo.precioVenta || 0);
                                                     } else {
                                                         return acc;
@@ -235,10 +240,9 @@ export default function CajeroPedidosPage() {
                                                 {pedido.estado}: {getProximoEstado(pedido)?.label}
                                             </button>
                                         ) : (
-                                            // Si no puede avanzar más, solo badge de estado
                                             <span className="inline-block bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
-                                                {pedido.estado}
-                                            </span>
+                                                    {pedido.estado}
+                                                </span>
                                         )}
                                     </td>
                                     <td className="p-2 text-center">
@@ -277,13 +281,13 @@ export default function CajeroPedidosPage() {
                                                                         {" "} (x{det.cantidad})
                                                                         <div className="ml-4 text-xs text-gray-700">
                                                                             <strong>Preparación:</strong> {det.articuloManufacturado.preparacion}
-                                                                            <br/>
+                                                                            <br />
                                                                             <strong>Insumos:</strong>{" "}
                                                                             {det.articuloManufacturado.detalles?.map((d, i) => (
                                                                                 <span key={i}>
-                                                                                    {d.articuloInsumo.denominacion} (x{d.cantidad})
+                                                                                        {d.articuloInsumo.denominacion} (x{d.cantidad})
                                                                                     {i < det.articuloManufacturado.detalles.length - 1 ? ", " : ""}
-                                                                                </span>
+                                                                                    </span>
                                                                             )) || " - "}
                                                                         </div>
                                                                     </>
@@ -291,8 +295,8 @@ export default function CajeroPedidosPage() {
                                                                 : det.articuloInsumo
                                                                     ? (
                                                                         <span className="font-bold text-blue-800">
-                                                                            {det.articuloInsumo.denominacion} (x{det.cantidad})
-                                                                        </span>
+                                                                                {det.articuloInsumo.denominacion} (x{det.cantidad})
+                                                                            </span>
                                                                     )
                                                                     : <span>-</span>
                                                             }
@@ -307,7 +311,6 @@ export default function CajeroPedidosPage() {
                             </React.Fragment>
                         ))
                     )}
-
                     </tbody>
                 </table>
             </div>

@@ -181,10 +181,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalItems = state.items.reduce((total, item) => total + item.quantity, 0)
   const totalAmount = state.items.reduce((total, item) => total + item.subtotal, 0)
 
+
+
   // Funciones del carrito
-  const addToCart = (articulo: Articulo, quantity = 1) => {
+  const addToCart = (articulo: Partial<ArticuloManufacturado> & { id: string | number; precioVenta: number; denominacion: string }, quantity = 1) => {
     console.log("Agregando al carrito:", articulo.denominacion, "cantidad:", quantity)
-    dispatch({ type: "ADD_TO_CART", payload: { articulo, quantity } })
+    dispatch({ type: "ADD_TO_CART", payload: { articulo: articulo as ArticuloManufacturado, quantity } })
   }
 
   const removeFromCart = (id: number) => {

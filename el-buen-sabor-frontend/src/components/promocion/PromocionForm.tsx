@@ -5,9 +5,12 @@ import { getArticulosManufacturados } from "../../services/ArticuloManufacturado
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import "./PromocionForm.css";
+import { useNavigate } from "react-router-dom";
+
 
 const MySwal = withReactContent(Swal);
-const tipos = ["HAPPY_HOUR", "PROMO_1"];
+const tipos = ["HAPPY_HOUR","PROMOCION_GENERAL"];
+
 
 interface ArticuloSeleccionado {
     articuloId: number;
@@ -27,6 +30,12 @@ const PromocionForm: React.FC = () => {
     const { register, handleSubmit, reset } = useForm<FormularioPromocion>();
     const [articulosDisponibles, setArticulosDisponibles] = useState<any[]>([]);
     const [seleccionados, setSeleccionados] = useState<{ [key: number]: number }>({});
+    const navigate = useNavigate();
+
+    const handleVolver = () => {
+        navigate("/landing"); // o a donde quieras redirigir
+    };
+
 
     useEffect(() => {
         getArticulosManufacturados()
@@ -74,6 +83,9 @@ const PromocionForm: React.FC = () => {
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="promo-form">
             <h2>Crear Promoción</h2>
+            <button type="button" onClick={handleVolver} className="btn-volver">
+                Volver a la página principal
+            </button>
 
             <label>Denominación</label>
             <input type="text" {...register("denominacion")} required />
@@ -146,7 +158,10 @@ const PromocionForm: React.FC = () => {
                 Guardar Promoción
             </button>
         </form>
+
     );
+
 };
+
 
 export default PromocionForm;

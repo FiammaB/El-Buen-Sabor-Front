@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from 'react'
 import {
     ArrowLeft, Plus, Minus, Trash2, ShoppingBag,
@@ -101,18 +99,20 @@ export default function CartPage() {
                                         <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-100 rounded-xl">
                                             <img
                                                 src={
-                                                    item.articulo.imagen?.denominacion || "/placeholder.svg?height=80&width=80"
+                                                    item.articulo.imagen?.denominacion
+                                                        ? `http://localhost:8080/${item.articulo.imagen.denominacion}`
+                                                        : "/placeholder.svg?height=80&width=80"
                                                 }
                                                 alt={item.articulo.denominacion}
-                                                className="w-20 h-20 object-cover rounded-lg"
                                             />
+
 
                                             <div className="flex-1">
                                                 <h3 className="font-semibold text-gray-900 mb-1">{item.articulo.denominacion}</h3>
                                                 <p className="text-sm text-gray-500 mb-2">
                                                     {item.articulo.categoria?.denominacion || "Producto especial"}
                                                 </p>
-                                                <p className="text-orange-500 font-bold">${item.articulo.precioVenta}</p>
+                                                <p className="text-orange-500 font-bold">${item.articulo.precioVenta != null ? item.articulo.precioVenta.toFixed(2) : '0.00'}</p>
                                             </div>
 
                                             <div className="flex items-center space-x-3">
@@ -134,7 +134,10 @@ export default function CartPage() {
                                             </div>
 
                                             <div className="text-right">
-                                                <p className="font-bold text-lg text-gray-900">${item.subtotal.toFixed(2)}</p>
+                                                <p className="font-bold text-lg text-gray-900">
+                                                    ${typeof item.subtotal === "number" ? item.subtotal.toFixed(2) : "0.00"}
+                                                </p>
+
                                                 <button
                                                     onClick={() => removeFromCart(item.id)}
                                                     className="text-red-500 hover:text-red-600 text-sm mt-1 transition duration-200"
