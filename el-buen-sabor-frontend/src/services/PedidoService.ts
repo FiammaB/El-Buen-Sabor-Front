@@ -85,11 +85,6 @@ export class PedidoService {
     });
   }
 
-  /**
-  * Obtiene todos los pedidos de un cliente específico.
-  * @param clienteId El ID del cliente.
-  * @returns Promesa que resuelve a una lista de IPedidoDTO.
-  */
   async getPedidosByClienteId(clienteId: number): Promise<IPedidoDTO[]> {
     try {
       const response = await axios.get<IPedidoDTO[]>(`${API_BASE_URL}/cliente/${clienteId}`);
@@ -100,19 +95,23 @@ export class PedidoService {
     }
   }
 
-  /**
-   * Obtiene la URL del PDF de la factura de un pedido.
-   * @param pedidoId El ID del pedido.
-   * @returns Promesa que resuelve a la URL del PDF (string).
-   */
   async getFacturaPdfUrl(pedidoId: number): Promise<string> {
     try {
-      const response = await axios.get<string>(`${API_BASE_URL}/${pedidoId}/factura-pdf`, { responseType: 'text' });
+      const response = await axios.get<string>(`${API_BASE_URL}/${pedidoId}/factura-pdf`, {responseType: 'text'});
       return response.data;
     } catch (error) {
       console.error(`Error al obtener la URL del PDF de la factura para el pedido ${pedidoId}:`, error);
       throw error;
     }
+  }
+
+  async anularPedidoConNotaCredito(
+      pedidoId: number,
+      anulacion: { usuarioAnuladorId: number, motivoAnulacion: string }
+  ): Promise<any> {
+    const response = await axios.patch(`${API_BASE_URL}/${pedidoId}/anular`, anulacion);
+    return response.data;
+
   }
 
 }
