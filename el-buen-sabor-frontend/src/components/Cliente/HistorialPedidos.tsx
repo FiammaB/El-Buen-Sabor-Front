@@ -2,26 +2,20 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PedidoService } from '../../services/PedidoService';
-// Ya no necesitamos ClienteService aquí porque el id viene del AuthContext:
-// import { ClienteService } from '../../services/ClienteService';
-import type { IPedidoDTO } from '../../models/DTO/IPedidoDTO';
-import { useAuth } from '../Auth/Context/AuthContext'; // Asegúrate de que la ruta sea correcta
+import type { IPedidoDTO } from '../../models/DTO/IPedidoDTO'; // Importa la interfaz IPedidoDTO
+import { useAuth } from '../Auth/Context/AuthContext';
 
 export default function HistorialPedidos() {
     const [pedidos, setPedidos] = useState<IPedidoDTO[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
-    // ¡Ahora obtenemos el 'id' directamente del AuthContext!
-    const { role, id: clienteId } = useAuth(); // Renombramos 'id' a 'clienteId' para mayor claridad
+    const { role, id: clienteId } = useAuth();
 
     const pedidoService = new PedidoService();
-    // Ya no necesitamos instanciar ClienteService aquí:
-    // const clienteService = new ClienteService();
 
     useEffect(() => {
         const fetchHistorialPedidos = async () => {
-            // Asegúrate de que el usuario sea un CLIENTE y tenga un clienteId válido
             if (role !== "CLIENTE" || clienteId === null || clienteId === undefined) {
                 setError("Acceso denegado. Debes ser un cliente logueado para ver tu historial de pedidos.");
                 setLoading(false);
@@ -30,7 +24,6 @@ export default function HistorialPedidos() {
 
             try {
                 setLoading(true);
-                // Directamente usamos el clienteId obtenido del AuthContext
                 const data = await pedidoService.getPedidosByClienteId(clienteId);
                 setPedidos(data);
             } catch (err: unknown) {
@@ -42,23 +35,46 @@ export default function HistorialPedidos() {
         };
 
         fetchHistorialPedidos();
-    }, [role, clienteId]); // Re-ejecuta si el rol o clienteId cambia
+    }, [role, clienteId]);
 
     const handleVerDetalle = (pedidoId: number) => {
         navigate(`/historial-pedidos/${pedidoId}`);
     };
 
-    const handleVerFactura = async (pedidoId: number) => {
+    // FUNCIÓN MODIFICADA: Ahora visualizará el PDF en una nueva pestaña (usando Blob)
+    const handleVisualizarFactura = async (pedidoId: number) => {
         try {
-            const urlPdf = await pedidoService.getFacturaPdfUrl(pedidoId);
-            if (urlPdf) {
-                window.open(urlPdf, '_blank');
-            } else {
-                alert("La URL de la factura no está disponible.");
-            }
+            // Llama al mismo método que descarga el binario
+            const blob = await pedidoService.downloadFacturaPdf(pedidoId);
+            const url = window.URL.createObjectURL(blob); // Crea una URL temporal para el Blob
+            window.open(url, '_blank'); // Abre la URL en una nueva pestaña
+
+            // Importante: Liberar la URL del objeto cuando ya no sea necesaria
+            // Podrías usar un setTimeout si sabes que la pestaña ya cargó el PDF,
+            // o confiar en que el navegador la liberará.
+            // window.URL.revokeObjectURL(url);
+
         } catch (err) {
-            console.error("Error al obtener la factura:", err);
-            alert("No se pudo cargar la factura. Verifica que exista y que el servidor esté funcionando.");
+            console.error("Error al visualizar la factura:", err);
+            alert("No se pudo visualizar la factura. Verifica que exista y que el servidor esté funcionando.");
+        }
+    };
+
+    // Función para descargar la factura (forzar descarga)
+    const handleDescargarFactura = async (pedidoId: number) => {
+        try {
+            const blob = await pedidoService.downloadFacturaPdf(pedidoId);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `factura_pedido_${pedidoId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error("Error al descargar la factura:", err);
+            alert("No se pudo descargar la factura. Verifica que exista y que el servidor esté funcionando.");
         }
     };
 
@@ -74,10 +90,9 @@ export default function HistorialPedidos() {
         return (
             <div className="flex justify-center items-center h-screen">
                 <p className="text-xl text-red-500">{error}</p>
-                {/* Opcional: botón para ir al login si el problema es de autenticación */}
-                {(role !== "CLIENTE" || clienteId === null) && ( // Muestra el botón si no es CLIENTE o no tiene ID
+                {(role !== "CLIENTE" || clienteId === null) && (
                     <button
-                        onClick={() => navigate('/login')} // Asume que tienes una ruta /login
+                        onClick={() => navigate('/login')}
                         className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                     >
                         Ir a Iniciar Sesión
@@ -140,12 +155,20 @@ export default function HistorialPedidos() {
                                             Ver Detalle
                                         </button>
                                         {pedido.factura?.urlPdf && (
-                                            <button
-                                                onClick={() => handleVerFactura(pedido.id)}
-                                                className="text-green-600 hover:text-green-900"
-                                            >
-                                                Ver Factura
-                                            </button>
+                                            <div className="inline-flex space-x-2">
+                                                <button // CAMBIO AQUÍ: Ahora llama a handleVisualizarFactura
+                                                    onClick={() => handleVisualizarFactura(pedido.id)}
+                                                    className="text-blue-600 hover:text-blue-900"
+                                                >
+                                                    Visualizar {/* Botón para abrir en nueva pestaña */}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDescargarFactura(pedido.id)}
+                                                    className="text-green-600 hover:text-green-900"
+                                                >
+                                                    Descargar {/* Botón para forzar descarga */}
+                                                </button>
+                                            </div>
                                         )}
                                     </td>
                                 </tr>

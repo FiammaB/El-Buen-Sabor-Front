@@ -114,7 +114,18 @@ export class PedidoService {
       throw error;
     }
   }
-
+  async downloadFacturaPdf(pedidoId: number): Promise<Blob> { // <-- Cambiado el tipo de retorno a Blob
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/${pedidoId}/descargar-factura`, // <-- ¡Nuevo endpoint de descarga!
+        { responseType: 'blob' } // <-- ¡Importante: espera una respuesta binaria (blob)!
+      );
+      return response.data as Blob; // Type 'unknown' is not assignable to type 'Blob'
+    } catch (error) {
+      console.error(`Error al descargar el PDF de la factura para el pedido ${pedidoId}:`, error);
+      throw error;
+    }
+  }
 }
 
 export default PedidoService;
