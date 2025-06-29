@@ -39,8 +39,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedEmail = localStorage.getItem("email");
         const storedTelefono = localStorage.getItem("telefono");
 
+        console.log("ID: ", storedId) // ID: null (necesito ayuda con esto)
+
         if (
-            storedId &&
             storedRole &&
             ["ADMINISTRADOR", "CLIENTE", "COCINERO", "CAJERO", "DELIVERY"].includes(storedRole) &&
             storedUsername
@@ -52,6 +53,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             setTelefono(storedTelefono);
             setIsAuthenticated(true);
         } else {
+            console.log("ENTRA ACA Y REINICIA DATOS")
             setIsAuthenticated(false);
             setId(null)
             setRole(null);
@@ -68,12 +70,14 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     // Función para login
     const login = (userId: number, userRole: UserRole, userName: string, userEmail: string, userTelefono: string) => {
         if (!userRole || !userName) return;
+        console.log("Id de usuario en funcion login: ", userId)
         setId(userId)
         setIsAuthenticated(true);
         setRole(userRole);
         setUsername(userName);
         setEmail(userEmail);
         setTelefono(userTelefono);
+        localStorage.setItem("id", userId.toString());
         localStorage.setItem("role", userRole);
         localStorage.setItem("username", userName);
         localStorage.setItem("email", userEmail);
@@ -84,6 +88,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Función para logout
     const logout = () => {
+        console.log("Cerrando sesion...")
         setId(null);
         setIsAuthenticated(false);
         setRole(null);
