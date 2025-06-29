@@ -52,7 +52,9 @@ import CajeroPedidosPage from "./components/Cajero/CajeroPedidosPage.tsx";
 import DeliveryAdminLayout from "./components/Delivery/DeliveryAdminLayout.tsx";
 import DeliveryPedidosPage from "./components/Delivery/DeliveryPedidosPage.tsx";
 import VerPedidoPage from "./components/Delivery/VerPedidoPage.tsx";
-
+// 📦 Pedidos del Cliente
+import HistorialPedidos from './components/Cliente/HistorialPedidos.tsx'; // Importa el componente del historial
+import PedidoDetalle from './components/Pedidos/PedidoDetalle.tsx';
 function App() {
   return (
     <AuthProvider>
@@ -78,12 +80,30 @@ function App() {
           <Route path="/verificar-codigo" element={<VerifyCodeForm />} />
           <Route path="/cambiar-password" element={<ChangePasswordForm />} />
 
+
           {/* 🧑 PERFIL MULTIROL */}
           <Route
             path="/perfil"
             element={
               <ProtectedRoute role={["ADMINISTRADOR", "CLIENTE", "COCINERO", "CAJERO"]}>
                 <PerfilPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* ✅ NUEVAS RUTAS PARA EL HISTORIAL DE PEDIDOS DEL CLIENTE */}
+          <Route
+            path="/historial-pedidos"
+            element={
+              <ProtectedRoute role="CLIENTE"> {/* Solo clientes pueden ver su historial */}
+                <HistorialPedidos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/historial-pedidos/:id"
+            element={
+              <ProtectedRoute role="CLIENTE"> {/* Detalle también protegido para clientes */}
+                <PedidoDetalle />
               </ProtectedRoute>
             }
           />
