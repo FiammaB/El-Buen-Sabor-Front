@@ -1,18 +1,17 @@
 // src/pages/cliente/PedidoDetalle.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PedidoService } from '../../services/PedidoService'; // Importa la CLASE PedidoService
-import type { IPedidoDTO, TipoEnvio, FormaPago, EstadoPedido } from '../../models/DTO/IPedidoDTO'; // TipoEnvio, FormaPago, EstadoPedido son definido pero nunca ussados los borro?
+import { PedidoService } from '../../services/PedidoService';
+import type { IPedidoDTO, TipoEnvio, FormaPago, EstadoPedido } from '../../models/DTO/IPedidoDTO'; // Importa la interfaz IPedidoDTO
 
 export default function PedidoDetalle() {
-    const { id } = useParams<{ id: string }>(); // Obtiene el ID del pedido de la URL
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [pedido, setPedido] = useState<IPedidoDTO | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Instancia el servicio dentro del componente
-    const pedidoService = new PedidoService(); // Instanciamos el servicio aquí
+    const pedidoService = new PedidoService();
 
     useEffect(() => {
         const fetchPedidoDetalle = async () => {
@@ -24,14 +23,14 @@ export default function PedidoDetalle() {
 
             try {
                 setLoading(true);
-                const pedidoId = parseInt(id); // Convierte el ID de string a number
-                const data = await pedidoService.getPedidoById(pedidoId); // Llama al método del servicio
+                const pedidoId = parseInt(id);
+                const data = await pedidoService.getPedidoById(pedidoId);
                 if (data) {
                     setPedido(data);
                 } else {
                     setError(`Pedido con ID ${id} no encontrado.`);
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error("Error al cargar el detalle del pedido:", err);
                 setError("No se pudo cargar el detalle del pedido. Inténtalo de nuevo más tarde.");
             } finally {
@@ -40,19 +39,35 @@ export default function PedidoDetalle() {
         };
 
         fetchPedidoDetalle();
-    }, [id]); // Re-ejecuta si el ID del pedido cambia en la URL
+    }, [id]);
 
-    const handleVerFactura = async (pedidoId: number) => {
+    // FUNCIÓN MODIFICADA: Ahora visualizará el PDF en una nueva pestaña (usando Blob)
+    const handleVisualizarFactura = async (pedidoId: number) => {
         try {
-            const urlPdf = await pedidoService.getFacturaPdfUrl(pedidoId); // Llama al método del servicio para la URL del PDF
-            if (urlPdf) {
-                window.open(urlPdf, '_blank'); // Abre el PDF en una nueva pestaña
-            } else {
-                alert("La URL de la factura no está disponible.");
-            }
+            const blob = await pedidoService.downloadFacturaPdf(pedidoId); // Llama al método que descarga el binario
+            const url = window.URL.createObjectURL(blob); // Crea una URL temporal para el Blob
+            window.open(url, '_blank'); // Abre la URL en una nueva pestaña
         } catch (err) {
-            console.error("Error al obtener la factura:", err);
-            alert("No se pudo cargar la factura. Verifica que exista y que el servidor esté funcionando.");
+            console.error("Error al visualizar la factura:", err);
+            alert("No se pudo visualizar la factura. Verifica que exista y que el servidor esté funcionando.");
+        }
+    };
+
+    // Función para descargar la factura (forzar descarga)
+    const handleDescargarFactura = async (pedidoId: number) => {
+        try {
+            const blob = await pedidoService.downloadFacturaPdf(pedidoId);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `factura_pedido_${pedidoId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error("Error al descargar la factura:", err);
+            alert("No se pudo descargar la factura. Verifica que exista y que el servidor esté funcionando.");
         }
     };
 
@@ -79,7 +94,7 @@ export default function PedidoDetalle() {
     }
 
     if (!pedido) {
-        return null; // O un mensaje de "Pedido no encontrado", ya manejado por 'error'
+        return null;
     }
 
     return (
@@ -156,12 +171,20 @@ export default function PedidoDetalle() {
                     Volver al Historial
                 </button>
                 {pedido.factura?.urlPdf && (
-                    <button
-                        onClick={() => handleVerFactura(pedido.id)}
-                        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
-                    >
-                        Ver Factura
-                    </button>
+                    <div className="inline-flex space-x-2">
+                        <button // CAMBIO AQUÍ: Ahora llama a handleVisualizarFactura
+                            onClick={() => handleVisualizarFactura(pedido.id)}
+                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                        >
+                            Visualizar
+                        </button>
+                        <button
+                            onClick={() => handleDescargarFactura(pedido.id)}
+                            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
+                        >
+                            Descargar
+                        </button>
+                    </div>
                 )}
             </div>
         </div>
