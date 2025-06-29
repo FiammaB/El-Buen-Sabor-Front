@@ -51,6 +51,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       });
 
       const {
+        id,
         rol,
         nombre = "",
         apellido = "",
@@ -68,7 +69,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       }
 
       const fullName = `${nombre} ${apellido}`.trim();
-      login(rol, fullName || "Sin Nombre", userEmail, telefono);
+      login(id, rol, fullName || "Sin Nombre", userEmail, telefono);
 
       if (onSuccess) {
         onSuccess();

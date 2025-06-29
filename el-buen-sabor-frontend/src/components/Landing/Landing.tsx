@@ -19,10 +19,11 @@ type AnyArticuloDisplay = Articulo; // <-- ¡Simplificado y preciso!
 
 export default function Landing() {
 
-	const { role, logout, username } = useAuth();
+	const { id, role, logout, username } = useAuth();
 	const navigate = useNavigate();
 
 	console.log("ROL DETECTADO:", role);
+	console.log("ID DETECTADO:", id)
 	// El estado ahora es de tipo Articulo[], ya que el servicio devuelve instancias de Articulo o sus subclases
 	const [articulos, setArticulos] = useState<AnyArticuloDisplay[]>([]); // CAMBIO
 	const [loading, setLoading] = useState<boolean>(true);

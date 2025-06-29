@@ -3,7 +3,7 @@ import axios from "axios";
 import { useAuth } from "../Context/AuthContext";
 
 export default function PerfilPage() {
-  const { email, telefono, username, role, login } = useAuth();
+  const { id, email, telefono, username, role, login } = useAuth();
   console.log(email,telefono,username,role,login)
 
   const [form, setForm] = useState({
@@ -30,12 +30,15 @@ export default function PerfilPage() {
 
         setForm((prev) => ({
           ...prev,
+          id: usuario.id,
           email: usuario.email || "",
           nombre: usuario.nombre || "",
           apellido: usuario.apellido || "",
           telefono: usuario.telefono || "",
           fechaNacimiento: usuario.fechaNacimiento || "",
         }));
+
+        console.log("USER ID:", usuario.id)
       })
       .catch((err) => {
         console.error("Error al cargar perfil:", err);
@@ -68,7 +71,7 @@ export default function PerfilPage() {
         repetirPassword: form.repetirPassword,
       });
 
-      login(role, `${form.nombre} ${form.apellido}`, form.email, form.telefono);
+      login(id ? id : 0, role, `${form.nombre} ${form.apellido}`, form.email, form.telefono);
       alert("Perfil actualizado correctamente.");
     } catch (err) {
       console.error("Error al actualizar perfil", err);
