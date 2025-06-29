@@ -46,14 +46,14 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       } else {
         // Si es un producto nuevo, agregarlo
         if (articulo.id) {
-			const newItem: CartItem = {
-				id: articulo.id,
-				articulo,
-				quantity,
-				subtotal: quantity * articulo.precioVenta,
-			}
-			return { ...state, items: [...state.items, newItem] }
-		}
+          const newItem: CartItem = {
+            id: articulo.id,
+            articulo,
+            quantity,
+            subtotal: quantity * articulo.precioVenta,
+          }
+          return { ...state, items: [...state.items, newItem] }
+        }
       }
     }
 
@@ -132,13 +132,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Calcular totales
   const totalItems = state.items.reduce((total, item) => total + item.quantity, 0)
   const totalAmount = state.items.reduce((total, item) => total + item.subtotal, 0)
-  
+
 
 
   // Funciones del carrito
-  const addToCart = (articulo: ArticuloManufacturado, quantity = 1) => {
+  const addToCart = (articulo: Partial<ArticuloManufacturado> & { id: string | number; precioVenta: number; denominacion: string }, quantity = 1) => {
     console.log("Agregando al carrito:", articulo.denominacion, "cantidad:", quantity)
-    dispatch({ type: "ADD_TO_CART", payload: { articulo, quantity } })
+    dispatch({ type: "ADD_TO_CART", payload: { articulo: articulo as ArticuloManufacturado, quantity } })
   }
 
   const removeFromCart = (id: number) => {

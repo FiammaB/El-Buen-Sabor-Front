@@ -40,3 +40,36 @@
 .read-the-docs {
   color: #888;
 }
+
+.promos-section {
+  margin-top: 60px;
+  padding: 0 20px;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.promos-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.promo-card {
+  background-color: #fff4e0;
+  border: 1px solid #ff8000;
+  border-radius: 10px;
+  padding: 15px;
+  width: 250px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.promo-card h3 {
+  margin-top: 0;
+  color: #ff6600;
+}

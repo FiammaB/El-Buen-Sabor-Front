@@ -28,9 +28,11 @@
     cursor: pointer;
     border-radius: 4px;
 }
+
 .articulos-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr); /* 6 por fila */
+    grid-template-columns: repeat(6, 1fr);
+    /* 6 por fila */
     gap: 20px;
     margin-top: 1rem;
 }
@@ -41,7 +43,8 @@
     padding: 10px;
     border-radius: 12px;
     text-align: center;
-    width: 100%; /* Ocupar la celda del grid */
+    width: 100%;
+    /* Ocupar la celda del grid */
     box-sizing: border-box;
 }
 
@@ -56,4 +59,13 @@
 .articulo-cantidad {
     width: 60px;
     margin-top: 5px;
+}
+
+.btn-volver {
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #ccc;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
 }

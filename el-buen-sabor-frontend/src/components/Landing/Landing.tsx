@@ -3,10 +3,15 @@ import { useEffect, useState } from "react";
 import { ArticuloService } from "../../services/ArticuloService";
 import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
 import { useAuth } from "../Auth/Context/AuthContext";
+import { Link } from "react-router-dom";
 import { Search, MapPin, Clock, Star, Truck, CreditCard, ShoppingBag, Menu, X, Heart, Plus } from 'lucide-react';
 import { useCart } from "../Cart/context/cart-context";
 import type { Categoria } from "../../models/Categoria/Categoria.ts";
 import { useNavigate } from "react-router-dom";
+import { getPromociones } from "../../services/PromocionService.ts";
+import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO";
+import PromocionList from "../promocion/PromocionList.tsx";
+
 
 
 export default function Landing() {
@@ -92,6 +97,22 @@ export default function Landing() {
 		return coincideBusqueda && coincideCategoria;
 	});
 
+	//-----------------------------------PROMOCIONES--------------------------------------------
+	const [promociones, setPromociones] = useState<IPromocionDTO[]>([]);
+
+	useEffect(() => {
+		const fetchPromos = async () => {
+			try {
+				const data = await getPromociones();
+				setPromociones(data);
+			} catch (error) {
+				console.error("Error al cargar promociones:", error);
+			}
+		};
+		fetchPromos();
+	}, []);
+
+
 	return (
 		<div className="min-h-screen bg-white ebs-landing">
 
@@ -176,7 +197,9 @@ export default function Landing() {
 						<nav className="hidden md:flex items-center space-x-8">
 							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Inicio</a>
 
-							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Ofertas</a>
+							<Link to="/promociones" className="text-gray-700 hover:text-orange-500 transition duration-200">
+								Promociones
+							</Link>
 
 						</nav>
 						{/* Botones para usuarios no logueados */}
@@ -331,6 +354,27 @@ export default function Landing() {
 						<h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Nuestros Productos Especiales</h2>
 						<p className="text-xl text-gray-600">Artículos manufacturados con la mejor calidad</p>
 					</div>
+
+					<section className="promos-section">
+						<h2 className="section-title">Promociones destacadas</h2>
+						<div className="promos-grid">
+							{promociones.map((promo) => (
+								<div className="promo-card" key={promo.id}>
+									<h3>{promo.denominacion}</h3>
+									<p><strong>Precio promocional:</strong> ${promo.precioPromocional}</p>
+									<p><strong>Vigencia:</strong> {promo.fechaDesde} al {promo.fechaHasta}</p>
+									<ul>
+										{promo.articulos?.map((a) => (
+											<li key={a.id}>{a.denominacion}</li>
+										))}
+									</ul>
+
+								</div>
+							))}
+						</div>
+					</section>
+
+
 					<div className="mb-8 items-center justify-center">
 						<div className="flex gap-2 overflow-x-auto pb-2  items-center justify-center">
 							<button
