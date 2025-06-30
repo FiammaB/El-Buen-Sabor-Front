@@ -1,5 +1,6 @@
 import type { IArticuloManufacturadoResponseDTO } from './IAArticuloManufacturadoResponseDTO';
 import type { IImagenResponseDTO } from './IImagenResponseDTO';
+import type { IArticuloInsumoResponseDTO } from './IAArticuloInsumoResponseDTO';
 export interface IPromocionDTO {
     id: number; // El ID de la promoción, crucial para el ABM
     denominacion: string;
@@ -12,7 +13,7 @@ export interface IPromocionDTO {
 
     // <-- CAMBIO CLAVE: Asegura que tipoPromocion esté aquí
     tipoPromocion: "HAPPY_HOUR" | "PROMOCION_GENERAL" | string; // Puede ser un enum o string genérico
-
+    articulosInsumo?: IArticuloInsumoResponseDTO[];
     imagen?: IImagenResponseDTO; // La imagen de la promoción
     articulosManufacturados: IArticuloManufacturadoResponseDTO[]; // Los artículos que componen la promoción
     sucursales?: { id: number; denominacion: string }[]; // Las sucursales asociadas a la promoción

@@ -452,7 +452,7 @@ export default function Landing() {
 													</button>
 												)}
 												{/* Enlace para ver detalles de la promoción */}
-												<Link to={`/promociones/${promo.id}`} className="text-center bg-orange-400 text-white py-2 px-4 ml-auto rounded-md text-sm">
+												<Link to={`/producto/${promo.id}`} className="text-center bg-orange-400 text-white py-2 px-4 ml-auto rounded-md text-sm">
 													Ver detalles
 												</Link>
 											</div>
