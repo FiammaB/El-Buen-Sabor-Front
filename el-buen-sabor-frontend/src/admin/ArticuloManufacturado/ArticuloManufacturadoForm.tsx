@@ -42,7 +42,15 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
 
                 // Cargar insumos igual que antes
                 const insumosData = await articuloService.getAllArticulosInsumo();
-                setInsumos(insumosData);
+
+                const insumosFiltradosYOrdenados = insumosData
+                    .filter(insumo =>
+                        insumo.categoria?.denominacion.toLowerCase() !== 'bebida' &&
+                        insumo.categoria?.denominacion.toLowerCase() !== 'postre'
+                    )
+                    .sort((a, b) => a.denominacion.localeCompare(b.denominacion));
+
+                setInsumos(insumosFiltradosYOrdenados);
 
                 // Mapear data si es edición
                 if (articulo) {

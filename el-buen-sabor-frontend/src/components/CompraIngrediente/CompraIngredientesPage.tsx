@@ -3,16 +3,25 @@ import { ArticuloService } from '../../services/ArticuloService';
 import { ArticuloInsumo } from '../../models/Articulos/ArticuloInsumo';
 import { Plus } from 'lucide-react';
 import IngredienteForm from "./IngredieteForm.tsx";
+import { useLocation } from "react-router-dom";
 
 const articuloService = new ArticuloService();
 
 const CompraIngredientesPage: React.FC = () => {
     const [insumos, setInsumos] = useState<ArticuloInsumo[]>([]);
+    const location = useLocation();
     const [selectedInsumoId, setSelectedInsumoId] = useState<number | null>(null);
+    useEffect(() => {
+        const state = location.state as { insumoId?: number } | null;
+        if (state?.insumoId) {
+            setSelectedInsumoId(state.insumoId);
+        }
+    }, [location.state]);
     const [cantidad, setCantidad] = useState<number>(0);
     const [nuevoPrecio, setNuevoPrecio] = useState<number | undefined>(undefined);
     const [error, setError] = useState<string | null>(null);
     const [showAltaIngrediente, setShowAltaIngrediente] = useState(false);
+
 
     // Recarga la lista de insumos
     const fetchInsumos = async () => {

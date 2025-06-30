@@ -13,9 +13,9 @@ const navItems = [
     { href: "/admin/control-stock", label: "Control Stock", icon: <ListOrdered className="w-5 h-5" /> },
     { href: "/admin/ranking", label: "Ranking Productos", icon: <BarChart2 className="w-5 h-5" /> },
     { href: "/admin/reporte-clientes", label: "Ranking Clientes", icon: <BarChart2 className="w-5 h-5" /> },
+    { href: "/admin/clientes", label: "Panel de Clientes", icon: <User className="w-5 h-5" /> },
     // No implementadas
     { label: "Registrar Empleado", icon: <Users className="w-5 h-5" />, toImplement: true },
-    { label: "Panel de Clientes", icon: <User className="w-5 h-5" />, toImplement: true },
     { label: "Panel de Empleados", icon: <Users className="w-5 h-5" />, toImplement: true },
     { label: "Movimientos Monetarios", icon: <FileText className="w-5 h-5" />, toImplement: true },
 ];
