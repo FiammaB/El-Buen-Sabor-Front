@@ -24,8 +24,8 @@ export default function RegisterPage(props: RegisterProps) {
     (rolDestino === "COCINERO"
       ? "/api/usuarios/registrar-cocinero"
       : rolDestino === "CAJERO"
-      ? "/api/usuarios/registrar-cajero"
-      : "/api/auth/register");
+        ? "/api/usuarios/registrar-cajero"
+        : "/api/auth/register");
 
   // Formulario y errores
   const [formData, setFormData] = useState({
@@ -76,17 +76,41 @@ export default function RegisterPage(props: RegisterProps) {
       general: "",
     };
 
-    if (!formData.firstName.trim()) newErrors.firstName = "El nombre es requerido";
-    if (!formData.lastName.trim()) newErrors.lastName = "El apellido es requerido";
-    if (!formData.email) newErrors.email = "El email es requerido";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "El email no es válido";
-    if (!formData.phone) newErrors.phone = "El teléfono es requerido";
-    else if (!/^\+?[\d\s-()]+$/.test(formData.phone)) newErrors.phone = "El teléfono no es válido";
-    if (!formData.password) newErrors.password = "La contraseña es requerida";
-    else if (formData.password.length < 6) newErrors.password = "Debe tener al menos 6 caracteres";
-    if (!formData.confirmPassword) newErrors.confirmPassword = "Confirma tu contraseña";
-    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "No coinciden";
-
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "El nombre es requerido";
+    }
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "El apellido es requerido";
+    }
+    if (!formData.email) {
+      newErrors.email = "El email es requerido";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "El email no es válido";
+    }
+    if (!formData.phone) {
+      newErrors.phone = "El teléfono es requerido";
+    } else if (!/^\+?[\d\s-()]+$/.test(formData.phone)) {
+      newErrors.phone = "El teléfono no es válido";
+    }
+    if (!formData.password) {
+      newErrors.password = "La contraseña es requerida";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Debe tener al menos 8 caracteres";
+    } else if (!/[A-Z]/.test(formData.password)) {
+      newErrors.password = "Debe contener al menos una letra mayúscula";
+    } else if (!/[a-z]/.test(formData.password)) {
+      newErrors.password = "Debe contener al menos una letra minúscula";
+    } else if (!/[!@#$%^&*(),.?":{}|<>_\-+=]/.test(formData.password)) {
+      newErrors.password = "Debe contener al menos un símbolo";
+    }
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = "Confirma tu contraseña";
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "No coinciden";
+    }
+    if (rolDestino === "CLIENTE" && !formData.acceptTerms) {
+      newErrors.acceptTerms = "Debes aceptar los términos";
+    }
     if (rolDestino === "CLIENTE" && !formData.acceptTerms) {
       newErrors.acceptTerms = "Debes aceptar los términos";
     }
@@ -113,7 +137,7 @@ export default function RegisterPage(props: RegisterProps) {
         fechaNacimiento: "2000-01-01", // 🔒 Por ahora fijo
       };
 
-      await axios.post(`http://localhost:8080${endpoint}`, payload, {
+      const res = await axios.post(`http://localhost:8080${endpoint}`, payload, {
         headers: {
           Authorization: rolDestino !== "CLIENTE"
             ? `Bearer ${localStorage.getItem("token")}`
@@ -122,10 +146,20 @@ export default function RegisterPage(props: RegisterProps) {
       });
 
       if (rolDestino === "CLIENTE") {
-        login("CLIENTE", `${formData.firstName} ${formData.lastName}`, formData.email, formData.phone);
+        const usuario = res.data;
+
+        login(
+          usuario.id,                          // 🆔 ID que devuelve el backend
+          usuario.rol,                         // 🎭 Rol ("CLIENTE")
+          `${usuario.nombre} ${usuario.apellido}`, // 🧑 Nombre completo
+          usuario.email,
+          usuario.telefono
+        );
+
         alert("¡Registro exitoso!");
         navigate("/cliente");
-      } else {
+      }
+      else {
         alert(`${rolDestino === "COCINERO" ? "Cocinero" : "Cajero"} registrado correctamente`);
         setFormData({
           firstName: "",
@@ -137,15 +171,27 @@ export default function RegisterPage(props: RegisterProps) {
           acceptTerms: false,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error en registro:", error);
-      setErrors((prev) => ({
-        ...prev,
-        general: `Error al registrar ${rolDestino.toLowerCase()}`,
-      }));
-    } finally {
-      setIsLoading(false);
+
+      const mensaje = error?.response?.data?.error;
+
+      if (typeof mensaje === "string") {
+        if (mensaje.includes("email")) {
+          setErrors((prev) => ({ ...prev, email: mensaje }));
+        } else if (mensaje.includes("contraseña")) {
+          setErrors((prev) => ({ ...prev, password: mensaje }));
+        } else {
+          setErrors((prev) => ({ ...prev, general: mensaje }));
+        }
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          general: `Error al registrar ${rolDestino.toLowerCase()}`,
+        }));
+      }
     }
+
   };
 
   // 🖼️ Textos dinámicos por rol
