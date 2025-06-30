@@ -22,7 +22,7 @@ export default function AdminDashboard() {
       <h2 className="text-3xl font-bold text-orange-600 mb-6">Panel del Administrador 🛠</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
+
         {/* 📝 Gestión de productos */}
         <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
           <h3 className="text-lg font-bold mb-2">📝 Gestionar Productos</h3>
@@ -47,18 +47,47 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {/* 🎉 Crear promociones */}
+        {/*promociones */}
         <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
           <h3 className="text-lg font-bold mb-2">🎉 Crear Promociones</h3>
           <p className="text-sm text-gray-600 mb-4">Agregá nuevas promociones para mostrar a los clientes.</p>
           <button
-            onClick={() => navigate("/promociones/crear")}
+            onClick={() => navigate("/promociones")}
             className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
           >
-            Ir a Crear Promoción
+            Promociónes ABM
           </button>
         </div>
-
+        {/*Movimiento Monetario*/}
+        <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
+          <h3 className="text-lg font-bold mb-2">Movimientos Monetarios </h3>
+          <p className="text-sm text-gray-600 mb-4">Administrar movimientos monetarios.</p>
+          <button
+            onClick={() => navigate("/admin/movimientos-monetarios")}
+            className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+          >
+            Movimientos Monetarios
+          </button>
+        </div>
+        {/*Movimiento Monetario*/}
+        <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
+          <h3 className="text-lg font-bold mb-2">Rankings </h3>
+          <p className="text-sm text-gray-600 mb-4">Ver Rankings.</p>
+          <div className="space-y-2">
+            <button
+              onClick={() => navigate("/admin/ranking-productos")}
+              className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600  w-full"
+            >
+              Ranking de Productos
+            </button>
+            <button
+              onClick={() => navigate("/admin/ranking-clientes")}
+              className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600  w-full"
+            >
+              Ranking de Clientes
+            </button>
+          </div>
+        </div>
         {/* 👥 Registro de empleados */}
         <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
           <h3 className="text-lg font-bold mb-2">👥 Registrar Empleado</h3>
@@ -94,6 +123,6 @@ export default function AdminDashboard() {
           </button>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
