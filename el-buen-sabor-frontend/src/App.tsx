@@ -12,7 +12,7 @@ import ExplorarPage from './components/explore/explore-page';
 
 // 🔐 Autenticación
 import LoginPage from './components/Auth/components/Login-page.tsx';
-import RegisterPage from './components/Auth/components/Register-page.tsx'; // Se reutiliza para cliente y empleados
+import RegisterPage from './components/Auth/components/Register-page.tsx';
 import RecoverPasswordForm from './components/Auth/components/RecoverPaswordForm.tsx';
 import VerifyCodeForm from './components/Auth/components/VerifyCodeForm.tsx';
 import ChangePasswordForm from './components/Auth/components/ChangePasswordForm.tsx';
@@ -25,8 +25,8 @@ import { AuthProvider } from './components/Auth/Context/AuthContext.tsx';
 import ProtectedRoute from './components/Auth/ProtectedRouter.tsx';
 
 // 🎁 Promociones y Reportes
-import PromocionList from './components/promocion/PromocionList'; // <-- Importa el PromocionList actualizado
-import PromocionForm from './components/promocion/PromocionForm'; // <-- Asegúrate que esta sea la ruta correcta a tu formulario
+import PromocionList from './components/promocion/PromocionList';
+import PromocionForm from './components/promocion/PromocionForm';
 
 
 import ReporteClientesPage from "./components/Reportes/ReporteClientesPage.tsx";
@@ -41,6 +41,7 @@ import CategoriaInsumoPage from './components/Categoria/CategoriaInsumoPage.tsx'
 import CategoriaManufacturadoPage from './components/Categoria/CategoriaManufacturadoPage.tsx';
 import CompraIngredientesPage from "./components/CompraIngrediente/CompraIngredientesPage.tsx";
 import ControlStockPage from "./components/ControlStock/ControlStockPage.tsx";
+import ReporteMonetarioPage from "./components/Reportes/ReporteMonetarioPage.tsx";
 
 // 👨‍🍳 Panel Cocinero
 import CocineroAdminLayout from "./components/Cocinero/CocineroAdminLayout.tsx";
@@ -159,9 +160,10 @@ function App() {
             <Route path="categorias-manufacturado" element={<CategoriaManufacturadoPage />} />
             <Route path="compra-ingredientes" element={<CompraIngredientesPage />} />
             <Route path="control-stock" element={<ControlStockPage />} />
-            <Route path="ranking" element={<RankingProductosPage />} />
-            <Route path="reporte-clientes" element={<ReporteClientesPage />} />
+            <Route path="ranking-productos" element={<RankingProductosPage />} />
+            <Route path="ranking-clientes" element={<ReporteClientesPage />} />
             <Route path="clientes" element={<ClienteListPage />} />
+            <Route path="movimientos-monetarios" element={<ReporteMonetarioPage />} />
           </Route>
 
           {/* ✅ NUEVA RUTA: REGISTRO DE EMPLEADOS */}
