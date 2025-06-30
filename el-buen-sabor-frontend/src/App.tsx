@@ -59,6 +59,7 @@ import VerPedidoPage from "./components/Delivery/VerPedidoPage.tsx";
 import HistorialPedidos from './components/Cliente/HistorialPedidos.tsx'; // Importa el componente del historial
 import PedidoDetalle from './components/Pedidos/PedidoDetalle.tsx';
 import ClienteListPage from "./components/Admin/ClienteListPage.tsx";
+import EmpleadoListPage from "./components/Admin/EmpleadoListPage.tsx";
 
 
 
@@ -163,7 +164,11 @@ function App() {
             <Route path="ranking-productos" element={<RankingProductosPage />} />
             <Route path="ranking-clientes" element={<ReporteClientesPage />} />
             <Route path="clientes" element={<ClienteListPage />} />
+
             <Route path="movimientos-monetarios" element={<ReporteMonetarioPage />} />
+
+            <Route path="empleados" element={<EmpleadoListPage />} />
+
           </Route>
 
           {/* ✅ NUEVA RUTA: REGISTRO DE EMPLEADOS */}

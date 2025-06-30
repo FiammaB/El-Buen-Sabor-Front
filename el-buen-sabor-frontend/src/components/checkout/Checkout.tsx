@@ -262,7 +262,8 @@ export default function CheckoutPage() {
   const goToPreviousStep = () => {
     if (currentStep === "confirmation") setCurrentStep("payment")
     else if (currentStep === "payment") setCurrentStep("delivery")
-    else if (currentStep === "delivery") setCurrentStep("information")
+    else if (currentStep === "delivery" && !username) setCurrentStep("information")
+    else if (currentStep === "delivery" && username) navigate("/")
     else navigate("/cart")
   }
 
@@ -295,11 +296,11 @@ export default function CheckoutPage() {
                 <ArrowLeft className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Checkout</h1>
+                <h1 className="text-[20px] font-bold text-gray-900">Checkout</h1>
                 <p className="text-sm text-gray-500">{totalItems} productos</p>
               </div>
             </div>
-            <div className="text-2xl font-bold text-orange-500">El Buen Sabor</div>
+            <a href="/" className="text-2xl font-bold text-orange-500">El Buen Sabor</a>
           </div>
         </div>
       </header>
@@ -533,6 +534,7 @@ export default function CheckoutPage() {
                                       }
                                     }),
                                   });
+<<<<<<< HEAD
 
                                   if (!res.ok) throw new Error("Error al guardar domicilio");
                                   const saved = await res.json();
@@ -577,7 +579,52 @@ export default function CheckoutPage() {
                   </button>
                 </>
               )}
+=======
 
+                                  if (!res.ok) throw new Error("Error al guardar domicilio");
+                                  const saved = await res.json();
+
+                                  setAddresses((prev) => [...prev, saved]);
+                                  setSelectedAddressId(saved.id);
+                                  autopopulate(saved);
+                                  setShowNewAddressForm(false);
+                                  setNewAddress({ calle: "", numero: "", cp: "", localidadId: "" });
+                                } catch (err) {
+                                  console.error(err);
+                                  alert("Error al guardar el domicilio. Verificá los datos.");
+                                }
+                              }}
+                              className="bg-orange-500 text-white px-4 py-2 rounded-md"
+                            >
+                              Guardar domicilio
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowNewAddressForm(false);
+                                setNewAddress({ calle: "", numero: "", cp: "", localidadId: "" });
+                              }}
+                              className="border border-gray-300 px-4 py-2 rounded-md"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+>>>>>>> adc0982f474262a6d55113d1d1d7625af9c366ef
+
+                  <button
+                    onClick={goToNextStep}
+                    className="disabled:bg-gray-400 mt-8 w-full bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
+                    disabled={
+                      (deliveryType === TipoEnvio.DELIVERY && !selectedAddressId) || showNewAddressForm
+                    }
+                  >
+                    Continuar a Pago
+                  </button>
+                </>
+              )}
 
               {currentStep === "payment" && (
                 <div className="space-y-6">
