@@ -76,17 +76,41 @@ export default function RegisterPage(props: RegisterProps) {
       general: "",
     };
 
-    if (!formData.firstName.trim()) newErrors.firstName = "El nombre es requerido";
-    if (!formData.lastName.trim()) newErrors.lastName = "El apellido es requerido";
-    if (!formData.email) newErrors.email = "El email es requerido";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "El email no es válido";
-    if (!formData.phone) newErrors.phone = "El teléfono es requerido";
-    else if (!/^\+?[\d\s-()]+$/.test(formData.phone)) newErrors.phone = "El teléfono no es válido";
-    if (!formData.password) newErrors.password = "La contraseña es requerida";
-    else if (formData.password.length < 6) newErrors.password = "Debe tener al menos 6 caracteres";
-    if (!formData.confirmPassword) newErrors.confirmPassword = "Confirma tu contraseña";
-    else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "No coinciden";
-
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "El nombre es requerido";
+    }
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "El apellido es requerido";
+    }
+    if (!formData.email) {
+      newErrors.email = "El email es requerido";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "El email no es válido";
+    }
+    if (!formData.phone) {
+      newErrors.phone = "El teléfono es requerido";
+    } else if (!/^\+?[\d\s-()]+$/.test(formData.phone)) {
+      newErrors.phone = "El teléfono no es válido";
+    }
+    if (!formData.password) {
+      newErrors.password = "La contraseña es requerida";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Debe tener al menos 8 caracteres";
+    } else if (!/[A-Z]/.test(formData.password)) {
+      newErrors.password = "Debe contener al menos una letra mayúscula";
+    } else if (!/[a-z]/.test(formData.password)) {
+      newErrors.password = "Debe contener al menos una letra minúscula";
+    } else if (!/[!@#$%^&*(),.?":{}|<>_\-+=]/.test(formData.password)) {
+      newErrors.password = "Debe contener al menos un símbolo";
+    }
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = "Confirma tu contraseña";
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "No coinciden";
+    }
+    if (rolDestino === "CLIENTE" && !formData.acceptTerms) {
+      newErrors.acceptTerms = "Debes aceptar los términos";
+    }
     if (rolDestino === "CLIENTE" && !formData.acceptTerms) {
       newErrors.acceptTerms = "Debes aceptar los términos";
     }
@@ -150,23 +174,24 @@ export default function RegisterPage(props: RegisterProps) {
     } catch (error: any) {
       console.error("Error en registro:", error);
 
-      // ✅ Detectar si el error viene del backend y es por email duplicado
-      const mensaje = error?.response?.data;
-      if (typeof mensaje === "string" && mensaje.includes("usuario registrado con ese email")) {
-        setErrors((prev) => ({
-          ...prev,
-          email: "Ese correo ya está registrado. Probá con otro.",
-        }));
+      const mensaje = error?.response?.data?.error;
+
+      if (typeof mensaje === "string") {
+        if (mensaje.includes("email")) {
+          setErrors((prev) => ({ ...prev, email: mensaje }));
+        } else if (mensaje.includes("contraseña")) {
+          setErrors((prev) => ({ ...prev, password: mensaje }));
+        } else {
+          setErrors((prev) => ({ ...prev, general: mensaje }));
+        }
       } else {
-        // ⛔ Otro error (servidor, red, etc.)
         setErrors((prev) => ({
           ...prev,
           general: `Error al registrar ${rolDestino.toLowerCase()}`,
         }));
       }
-    } finally {
-      setIsLoading(false);
     }
+
   };
 
   // 🖼️ Textos dinámicos por rol
