@@ -871,7 +871,7 @@ export default function CheckoutPage() {
                     <span>Entrega estimada: 25-35 min</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <Shield className="w-4 h-4" />//Cannot find name 'Shield'
+                    <Shield className="w-4 h-4" />
                     <span>Pago 100% seguro</span>
                   </div>
                 </div>
