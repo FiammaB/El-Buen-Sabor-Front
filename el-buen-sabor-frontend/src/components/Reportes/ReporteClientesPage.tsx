@@ -4,13 +4,17 @@ import type { ClienteReporteDTO } from "../../models/DTO/ClienteReporteDTO";
 import * as XLSX from "xlsx";
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { useNavigate } from "react-router-dom"; // Importa useNavigate
 
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
-} from 'recharts';
-
+} from 'recharts'; // Importa los componentes de Recharts
 
 const MySwal = withReactContent(Swal);
+
+// Definir colores para los gráficos de torta
+const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#a4de6c', '#d0ed57', '#83a6ed', '#8dd1e1'];
+
 
 const ReporteClientesPage: React.FC = () => {
     const [desde, setDesde] = useState("");
@@ -18,9 +22,7 @@ const ReporteClientesPage: React.FC = () => {
     const [ordenarPor, setOrdenarPor] = useState("cantidad");
     const [clientes, setClientes] = useState<ClienteReporteDTO[]>([]);
     const [loading, setLoading] = useState(false);
-
-
-
+    const navigate = useNavigate(); // Inicializa useNavigate
 
     const cargarReporte = async () => {
         if (!desde || !hasta) {
@@ -75,9 +77,8 @@ const ReporteClientesPage: React.FC = () => {
         const datosParaExcel = clientes.map(c => ({
             "ID Cliente": c.idCliente,
             "Nombre": c.nombre,
-            "Apellido": c.apellido,
-            "Cantidad de Pedidos": c.cantidadPedidos,
             "Total Gastado": c.totalGastado,
+            "Cantidad de Pedidos": c.cantidadPedidos,
         }));
 
         const wb = XLSX.utils.book_new();
@@ -94,7 +95,7 @@ const ReporteClientesPage: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 p-8">
-            <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8">
+            <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-8"> {/* Aumentado a max-w-6xl para gráficos */}
                 <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">Reporte de Pedidos por Cliente</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -160,7 +161,7 @@ const ReporteClientesPage: React.FC = () => {
 
                 {!loading && clientes.length > 0 && (
                     <>
-                        <div className="tabla-resultados bg-gray-50 rounded-lg p-6 shadow-inner">
+                        <div className="tabla-resultados bg-gray-50 rounded-lg p-6 shadow-inner mb-8"> {/* Añadido mb-8 */}
                             <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Resultados del Reporte</h3>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full bg-white rounded-lg overflow-hidden">
@@ -183,13 +184,7 @@ const ReporteClientesPage: React.FC = () => {
                                                 <td className="py-3 px-4 whitespace-nowrap text-sm">
                                                     <button
                                                         className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors text-xs"
-                                                        onClick={() => {
-                                                            MySwal.fire({
-                                                                icon: 'info',
-                                                                title: 'Funcionalidad en desarrollo',
-                                                                text: 'Próximamente vas a poder ver el detalle de pedidos por cliente.',
-                                                            });
-                                                        }}
+                                                        onClick={() => navigate(`/admin/clientes/${c.idCliente}/pedidos`)} // <-- CAMBIO CLAVE AQUÍ
                                                     >
                                                         Ver Pedidos
                                                     </button>
@@ -201,23 +196,24 @@ const ReporteClientesPage: React.FC = () => {
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                            <div style={{ width: 500, height: 300 }}>
-                                <h4 style={{ textAlign: "center" }}>Cantidad de pedidos por cliente</h4>
-                                <ResponsiveContainer>
+                        {/* Contenedores para los gráficos */}
+                        <div className="flex flex-col lg:flex-row justify-center items-center gap-8 mt-8"> {/* Añadido mt-8 */}
+                            <div className="bg-gray-50 rounded-lg p-6 shadow-inner w-full lg:w-1/2"> {/* Estilos para cada gráfico */}
+                                <h4 className="text-xl font-bold text-gray-800 mb-4 text-center">Cantidad de pedidos por cliente</h4>
+                                <ResponsiveContainer width="100%" height={300}>
                                     <BarChart data={clientes}>
-                                        <XAxis dataKey="nombre" />
-                                        <YAxis />
-                                        <Tooltip />
+                                        <XAxis dataKey="nombre" tickLine={false} axisLine={false} style={{ fontSize: '0.75rem' }} />
+                                        <YAxis tickLine={false} axisLine={false} style={{ fontSize: '0.75rem' }} />
+                                        <Tooltip cursor={{ fill: 'rgba(0,0,0,0.1)' }} />
                                         <Legend />
-                                        <Bar dataKey="cantidadPedidos" fill="#8884d8" />
+                                        <Bar dataKey="cantidadPedidos" fill="#8884d8" name="Pedidos" />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
 
-                            <div style={{ width: 400, height: 300 }}>
-                                <h4 style={{ textAlign: "center" }}>Proporción del total gastado</h4>
-                                <ResponsiveContainer>
+                            <div className="bg-gray-50 rounded-lg p-6 shadow-inner w-full lg:w-1/2"> {/* Estilos para cada gráfico */}
+                                <h4 className="text-xl font-bold text-gray-800 mb-4 text-center">Proporción del total gastado</h4>
+                                <ResponsiveContainer width="100%" height={300}>
                                     <PieChart>
                                         <Pie
                                             data={clientes}
@@ -227,13 +223,14 @@ const ReporteClientesPage: React.FC = () => {
                                             cy="50%"
                                             outerRadius={100}
                                             fill="#82ca9d"
-                                            label
+                                            label={({ percent }) => `${(percent * 100).toFixed(0)}%`} // Formato de porcentaje
                                         >
-                                            {clientes.map((_, index) => (
-                                                <Cell key={index} fill={["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#8dd1e1"][index % 5]} />
+                                            {clientes.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                             ))}
                                         </Pie>
-                                        <Tooltip />
+                                        <Tooltip formatter={(value, name, props) => [`$${(value as number).toFixed(2)}`, props.payload.nombre]} />
+                                        <Legend />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>
@@ -241,6 +238,7 @@ const ReporteClientesPage: React.FC = () => {
                     </>
                 )}
 
+                {/* Mensaje de no resultados o si no se ha buscado aún */}
                 {!loading && clientes.length === 0 && (desde || hasta) && (
                     <div className="text-center py-12 text-gray-500">
                         <p>No se encontraron clientes para el rango de fechas seleccionado.</p>
@@ -250,7 +248,6 @@ const ReporteClientesPage: React.FC = () => {
                     <div className="text-center py-12 text-gray-500">
                         <p>Ingresa un rango de fechas y haz clic en "Buscar Reporte" para ver los clientes.</p>
                     </div>
-
                 )}
             </div>
         </div>
