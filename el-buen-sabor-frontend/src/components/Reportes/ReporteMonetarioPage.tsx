@@ -4,6 +4,9 @@ import type { ReporteMonetarioDTO } from "../../models/DTO/ReporteMonetarioDTO";
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import {
+    BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
 import "./ReporteMonetarioPage.css";
 
 const MySwal = withReactContent(Swal);
@@ -68,24 +71,72 @@ const ReporteMonetarioPage: React.FC = () => {
             </div>
 
             {reporte && (
-                <div className="tabla-resultados">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Total Ingresos</th>
-                                <th>Total Costos</th>
-                                <th>Ganancia</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>${reporte.totalIngresos}</td>
-                                <td>${reporte.totalCostos}</td>
-                                <td>${reporte.ganancia}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <>
+                    <div className="tabla-resultados">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Total Ingresos</th>
+                                    <th>Total Costos</th>
+                                    <th>Ganancia</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>${reporte.totalIngresos}</td>
+                                    <td>${reporte.totalCostos}</td>
+                                    <td>${reporte.ganancia}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        {/* Gráfico de torta */}
+                        <div style={{ width: 400, height: 300 }}>
+                            <h4 style={{ textAlign: "center" }}>Distribución Monetaria</h4>
+                            <ResponsiveContainer>
+                                <PieChart>
+                                    <Pie
+                                        data={[
+                                            { name: 'Ingresos', value: reporte.totalIngresos },
+                                            { name: 'Costos', value: reporte.totalCostos },
+                                            { name: 'Ganancia', value: reporte.ganancia },
+                                        ]}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={100}
+                                        fill="#8884d8"
+                                        label
+                                    >
+                                        <Cell fill="#00C49F" />
+                                        <Cell fill="#FF8042" />
+                                        <Cell fill="#0088FE" />
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Gráfico de barras */}
+                        <div style={{ width: 500, height: 300 }}>
+                            <h4 style={{ textAlign: "center" }}>Comparación de valores</h4>
+                            <ResponsiveContainer>
+                                <BarChart data={[reporte]}>
+                                    <XAxis dataKey="name" hide />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Bar dataKey="totalIngresos" fill="#00C49F" name="Ingresos" />
+                                    <Bar dataKey="totalCostos" fill="#FF8042" name="Costos" />
+                                    <Bar dataKey="ganancia" fill="#0088FE" name="Ganancia" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </>
             )}
         </div>
     );

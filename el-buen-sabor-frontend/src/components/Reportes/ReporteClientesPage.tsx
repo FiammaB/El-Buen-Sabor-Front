@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { getReporteClientes } from "../../services/ClienteReporteService";
 import type { ClienteReporteDTO } from "../../models/DTO/ClienteReporteDTO";
 import * as XLSX from "xlsx";
-import "./ReporteClientesPage.css";
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import {
+    BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
+import "./ReporteClientesPage.css";
 
 const MySwal = withReactContent(Swal);
 
@@ -95,38 +98,81 @@ const ReporteClientesPage: React.FC = () => {
             </div>
 
             {clientes.length > 0 && (
-                <table className="reporte-table">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Apellido</th>
-                            <th>Cantidad de Pedidos</th>
-                            <th>Total Gastado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {clientes.map((c) => (
-                            <tr key={c.idCliente}>
-                                <td>{c.nombre}</td>
-                                <td>{c.apellido}</td>
-                                <td>{c.cantidadPedidos}</td>
-                                <td>${c.totalGastado?.toFixed(2)}</td>
-                                <td>
-                                    <button className="btn-detalle" onClick={() => {
-                                        MySwal.fire({
-                                            icon: 'info',
-                                            title: 'Funcionalidad en desarrollo',
-                                            text: 'Próximamente vas a poder ver el detalle de pedidos por cliente.',
-                                        });
-                                    }}>
-                                        Ver Pedidos
-                                    </button>
-                                </td>
+                <>
+                    <table className="reporte-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Cantidad de Pedidos</th>
+                                <th>Total Gastado</th>
+                                <th>Acciones</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {clientes.map((c) => (
+                                <tr key={c.idCliente}>
+                                    <td>{c.nombre}</td>
+                                    <td>{c.apellido}</td>
+                                    <td>{c.cantidadPedidos}</td>
+                                    <td>${c.totalGastado?.toFixed(2)}</td>
+                                    <td>
+                                        <button className="btn-detalle" onClick={() => {
+                                            MySwal.fire({
+                                                icon: 'info',
+                                                title: 'Funcionalidad en desarrollo',
+                                                text: 'Próximamente vas a poder ver el detalle de pedidos por cliente.',
+                                            });
+                                        }}>
+                                            Ver Pedidos
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    {/* Gráficos */}
+                    <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        {/* Gráfico de barras */}
+                        <div style={{ width: 500, height: 300 }}>
+                            <h4 style={{ textAlign: "center" }}>Cantidad de pedidos por cliente</h4>
+                            <ResponsiveContainer>
+                                <BarChart data={clientes}>
+                                    <XAxis dataKey="nombre" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Bar dataKey="cantidadPedidos" fill="#8884d8" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Gráfico de torta */}
+                        <div style={{ width: 400, height: 300 }}>
+                            <h4 style={{ textAlign: "center" }}>Proporción del total gastado</h4>
+                            <ResponsiveContainer>
+                                <PieChart>
+                                    <Pie
+                                        data={clientes}
+                                        dataKey="totalGastado"
+                                        nameKey="nombre"
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={100}
+                                        fill="#82ca9d"
+                                        label
+                                    >
+                                        {clientes.map((_, index) => (
+                                            <Cell key={index} fill={["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#8dd1e1"][index % 5]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </>
             )}
         </div>
     );
