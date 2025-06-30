@@ -387,165 +387,211 @@ export default function CheckoutPage() {
               )}
 
               {currentStep === "delivery" && (
-                <>
+  <>
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold text-gray-900">Método de Entrega</h2>
 
-                  {!showNewAddressForm && (
-                    <>
-                      <h3 className="font-semibold">Elegí tu domicilio</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          className={`relative border-2 rounded-md p-4 cursor-pointer hover:bg-gray-50 transition-all ${
+            deliveryType === TipoEnvio.DELIVERY ? "border-orange-500" : "border-gray-200"
+          }`}
+          onClick={() => setDeliveryType(TipoEnvio.DELIVERY)}
+        >
+          <input
+            type="radio"
+            id="delivery"
+            name="deliveryType"
+            className="sr-only"
+            checked={deliveryType === TipoEnvio.DELIVERY}
+            onChange={() => setDeliveryType(TipoEnvio.DELIVERY)}
+          />
+          <div className="flex flex-col items-center">
+            <Truck className="mb-3 h-6 w-6" />
+            <span className="font-medium">Delivery a domicilio</span>
+            <span className="text-sm text-gray-500">25-35 minutos</span>
+            <span className="text-sm text-orange-500 font-medium mt-2">
+              {totalAmount >= 25 ? "Envío gratis" : `$${deliveryFee.toFixed(2)}`}
+            </span>
+          </div>
+        </div>
 
-                      <div className="space-y-3">
-                        {addresses.map((d) => (
-                          <label
-                            key={d.id}
-                            className={`block border-2 rounded-md p-4 cursor-pointer ${selectedAddressId === d.id ? "border-orange-500" : "border-gray-200"
-                              }`}
-                          >
-                            <input
-                              type="radio"
-                              className="sr-only"
-                              checked={selectedAddressId === d.id}
-                              onChange={() => {
-                                setSelectedAddressId(d.id);
-                                autopopulate(d);
-                              }}
-                            />
-                            <span className="block font-medium">{`${d.calle} ${d.numero}`}</span>
-                            <span className="text-sm text-gray-500">{`${d.localidad?.nombre ?? ""} (${d.cp})`}</span>
-                          </label>
-                        ))}
+        <div
+          className={`relative border-2 rounded-md p-4 cursor-pointer hover:bg-gray-50 transition-all ${
+            deliveryType === TipoEnvio.RETIRO_EN_LOCAL ? "border-orange-500" : "border-gray-200"
+          }`}
+          onClick={() => setDeliveryType(TipoEnvio.RETIRO_EN_LOCAL)}
+        >
+          <input
+            type="radio"
+            id="pickup"
+            name="deliveryType"
+            className="sr-only"
+            checked={deliveryType === TipoEnvio.RETIRO_EN_LOCAL}
+            onChange={() => setDeliveryType(TipoEnvio.RETIRO_EN_LOCAL)}
+          />
+          <div className="flex flex-col items-center">
+            <MapPin className="mb-3 h-6 w-6" />
+            <span className="font-medium">Retiro en sucursal</span>
+            <span className="text-sm text-gray-500">15-20 minutos</span>
+            <span className="text-sm text-green-500 font-medium mt-2">Gratis</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
-                        <button
-                          type="button"
-                          onClick={() => setShowNewAddressForm(true)}
-                          className="w-full border-2 border-dashed border-orange-300 rounded-md py-2 text-orange-500 hover:bg-orange-50"
-                        >
-                          + Agregar nuevo domicilio
-                        </button>
-                      </div>
-                    </>
-                  )}
+    {deliveryType === TipoEnvio.DELIVERY && (
+      <>
+        {!showNewAddressForm && (
+          <>
+            <h3 className="font-semibold mt-8">Elegí tu domicilio</h3>
 
-                  {showNewAddressForm && (
-                    <div className="space-y-4 pt-6 border-t mt-6">
-                      <h3 className="font-semibold text-lg">Nuevo domicilio</h3>
+            <div className="space-y-3">
+              {addresses.map((d) => (
+                <label
+                  key={d.id}
+                  className={`block border-2 rounded-md p-4 cursor-pointer ${
+                    selectedAddressId === d.id ? "border-orange-500" : "border-gray-200"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    className="sr-only"
+                    checked={selectedAddressId === d.id}
+                    onChange={() => {
+                      setSelectedAddressId(d.id);
+                      autopopulate(d);
+                    }}
+                  />
+                  <span className="block font-medium">{`${d.calle} ${d.numero}`}</span>
+                  <span className="text-sm text-gray-500">{`${d.localidad?.nombre ?? ""} (${d.cp})`}</span>
+                </label>
+              ))}
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm block text-gray-700 mb-1">Calle</label>
-                          <input
-                            type="text"
-                            className="w-full px-3 py-2 border rounded-md"
-                            value={newAddress.calle}
-                            onChange={(e) => setNewAddress({ ...newAddress, calle: e.target.value })}
-                            placeholder="Ej: San Martín"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-sm block text-gray-700 mb-1">Número</label>
-                          <input
-                            type="number"
-                            className="w-full px-3 py-2 border rounded-md"
-                            value={newAddress.numero}
-                            onChange={(e) => setNewAddress({ ...newAddress, numero: e.target.value })}
-                            placeholder="Ej: 123"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-sm block text-gray-700 mb-1">Código Postal</label>
-                          <input
-                            type="text"
-                            className="w-full px-3 py-2 border rounded-md"
-                            value={newAddress.cp}
-                            onChange={(e) => setNewAddress({ ...newAddress, cp: e.target.value })}
-                            placeholder="Ej: 5500"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-sm block text-gray-700 mb-1">Localidad</label>
-                          <select
-                            className="w-full px-3 py-2 border rounded-md"
-                            value={newAddress.localidadId}
-                            onChange={(e) => setNewAddress({ ...newAddress, localidadId: e.target.value })}
-                          >
-                            <option value="">Seleccioná una</option>
-                            {localidades.map((loc) => (
-                              <option key={loc.id} value={loc.id}>
-                                {loc.nombre}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
+              <button
+                type="button"
+                onClick={() => setShowNewAddressForm(true)}
+                className="w-full border-2 border-dashed border-orange-300 rounded-md py-2 text-orange-500 hover:bg-orange-50"
+              >
+                + Agregar nuevo domicilio
+              </button>
+            </div>
+          </>
+        )}
 
-                      <div className="flex gap-4 pt-2">
-                        <button
-                          onClick={async () => {
-                            try {
-                              console.log("DOMICILIO A ENVIAR:", {
-                                calle: newAddress.calle,
-                                numero: parseInt(newAddress.numero),
-                                cp: newAddress.cp,
-                                localidad: {
-                                  id: parseInt(newAddress.localidadId)
-                                }
-                              });
+        {showNewAddressForm && (
+          <div className="space-y-4 pt-6 border-t mt-6">
+            <h3 className="font-semibold text-lg">Nuevo domicilio</h3>
 
-                              const res = await fetch(`http://localhost:8080/api/domicilios/cliente/${auth.id}`, {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  calle: newAddress.calle,
-                                  numero: parseInt(newAddress.numero),
-                                  cp: newAddress.cp,
-                                  localidad: {
-                                    id: parseInt(newAddress.localidadId)
-                                  }
-                                }),
-                              });
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm block text-gray-700 mb-1">Calle</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={newAddress.calle}
+                  onChange={(e) => setNewAddress({ ...newAddress, calle: e.target.value })}
+                  placeholder="Ej: San Martín"
+                />
+              </div>
+              <div>
+                <label className="text-sm block text-gray-700 mb-1">Número</label>
+                <input
+                  type="number"
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={newAddress.numero}
+                  onChange={(e) => setNewAddress({ ...newAddress, numero: e.target.value })}
+                  placeholder="Ej: 123"
+                />
+              </div>
+              <div>
+                <label className="text-sm block text-gray-700 mb-1">Código Postal</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={newAddress.cp}
+                  onChange={(e) => setNewAddress({ ...newAddress, cp: e.target.value })}
+                  placeholder="Ej: 5500"
+                />
+              </div>
+              <div>
+                <label className="text-sm block text-gray-700 mb-1">Localidad</label>
+                <select
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={newAddress.localidadId}
+                  onChange={(e) => setNewAddress({ ...newAddress, localidadId: e.target.value })}
+                >
+                  <option value="">Seleccioná una</option>
+                  {localidades.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
+            <div className="flex gap-4 pt-2">
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`http://localhost:8080/api/domicilios/cliente/${auth.id}`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        calle: newAddress.calle,
+                        numero: parseInt(newAddress.numero),
+                        cp: newAddress.cp,
+                        localidad: {
+                          id: parseInt(newAddress.localidadId)
+                        }
+                      }),
+                    });
 
-                              if (!res.ok) throw new Error("Error al guardar domicilio");
-                              const saved = await res.json();
+                    if (!res.ok) throw new Error("Error al guardar domicilio");
+                    const saved = await res.json();
 
-                              setAddresses((prev) => [...prev, saved]);
-                              setSelectedAddressId(saved.id);
-                              autopopulate(saved);
-                              setShowNewAddressForm(false);
-                              setNewAddress({ calle: "", numero: "", cp: "", localidadId: "" });
-                            } catch (err) {
-                              console.error(err);
-                              alert("Error al guardar el domicilio. Verificá los datos.");
-                            }
-                          }}
-                          className="bg-orange-500 text-white px-4 py-2 rounded-md"
-                        >
-                          Guardar domicilio
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowNewAddressForm(false);
-                            setNewAddress({ calle: "", numero: "", cp: "", localidadId: "" });
-                          }}
-                          className="border border-gray-300 px-4 py-2 rounded-md"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                    setAddresses((prev) => [...prev, saved]);
+                    setSelectedAddressId(saved.id);
+                    autopopulate(saved);
+                    setShowNewAddressForm(false);
+                    setNewAddress({ calle: "", numero: "", cp: "", localidadId: "" });
+                  } catch (err) {
+                    console.error(err);
+                    alert("Error al guardar el domicilio. Verificá los datos.");
+                  }
+                }}
+                className="bg-orange-500 text-white px-4 py-2 rounded-md"
+              >
+                Guardar domicilio
+              </button>
+              <button
+                onClick={() => {
+                  setShowNewAddressForm(false);
+                  setNewAddress({ calle: "", numero: "", cp: "", localidadId: "" });
+                }}
+                className="border border-gray-300 px-4 py-2 rounded-md"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+      </>
+    )}
 
-                  <button
-                    onClick={goToNextStep}
-                    className="disabled:bg-gray-400 mt-8 w-full bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"                    
-                    disabled={
-                      (deliveryType === TipoEnvio.DELIVERY && !selectedAddressId) ||
-                      showNewAddressForm
-                    }
-                  >
-                    Continuar a Pago
-                  </button>
-                </>
-              )}
+    <button
+      onClick={goToNextStep}
+      className="disabled:bg-gray-400 mt-8 w-full bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
+      disabled={
+        (deliveryType === TipoEnvio.DELIVERY && !selectedAddressId) || showNewAddressForm
+      }
+    >
+      Continuar a Pago
+    </button>
+  </>
+)}
+
 
 
 
