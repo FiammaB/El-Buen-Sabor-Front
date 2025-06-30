@@ -68,7 +68,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         return;
       }
 
-      const fullName = `${nombre} ${apellido}`.trim();
+      const fullName = `${apellido}`.trim();
       login(id, rol, fullName || "Sin Nombre", userEmail, telefono);
 
       if (onSuccess) {

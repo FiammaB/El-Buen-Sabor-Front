@@ -57,6 +57,10 @@ import VerPedidoPage from "./components/Delivery/VerPedidoPage.tsx";
 // 📦 Pedidos del Cliente
 import HistorialPedidos from './components/Cliente/HistorialPedidos.tsx'; // Importa el componente del historial
 import PedidoDetalle from './components/Pedidos/PedidoDetalle.tsx';
+import ClienteListPage from "./components/Admin/ClienteListPage.tsx";
+
+
+
 function App() {
   return (
     <AuthProvider>
@@ -157,6 +161,7 @@ function App() {
             <Route path="control-stock" element={<ControlStockPage />} />
             <Route path="ranking" element={<RankingProductosPage />} />
             <Route path="reporte-clientes" element={<ReporteClientesPage />} />
+            <Route path="clientes" element={<ClienteListPage />} />
           </Route>
 
           {/* ✅ NUEVA RUTA: REGISTRO DE EMPLEADOS */}
