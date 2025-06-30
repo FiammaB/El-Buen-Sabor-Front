@@ -24,8 +24,8 @@ export default function RegisterPage(props: RegisterProps) {
     (rolDestino === "COCINERO"
       ? "/api/usuarios/registrar-cocinero"
       : rolDestino === "CAJERO"
-      ? "/api/usuarios/registrar-cajero"
-      : "/api/auth/register");
+        ? "/api/usuarios/registrar-cajero"
+        : "/api/auth/register");
 
   // Formulario y errores
   const [formData, setFormData] = useState({
@@ -113,7 +113,7 @@ export default function RegisterPage(props: RegisterProps) {
         fechaNacimiento: "2000-01-01", // 🔒 Por ahora fijo
       };
 
-      await axios.post(`http://localhost:8080${endpoint}`, payload, {
+      const res = await axios.post(`http://localhost:8080${endpoint}`, payload, {
         headers: {
           Authorization: rolDestino !== "CLIENTE"
             ? `Bearer ${localStorage.getItem("token")}`
@@ -122,10 +122,20 @@ export default function RegisterPage(props: RegisterProps) {
       });
 
       if (rolDestino === "CLIENTE") {
-        login("CLIENTE", `${formData.firstName} ${formData.lastName}`, formData.email, formData.phone);
+        const usuario = res.data;
+
+        login(
+          usuario.id,                          // 🆔 ID que devuelve el backend
+          usuario.rol,                         // 🎭 Rol ("CLIENTE")
+          `${usuario.nombre} ${usuario.apellido}`, // 🧑 Nombre completo
+          usuario.email,
+          usuario.telefono
+        );
+
         alert("¡Registro exitoso!");
         navigate("/cliente");
-      } else {
+      }
+      else {
         alert(`${rolDestino === "COCINERO" ? "Cocinero" : "Cajero"} registrado correctamente`);
         setFormData({
           firstName: "",
@@ -137,12 +147,23 @@ export default function RegisterPage(props: RegisterProps) {
           acceptTerms: false,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error en registro:", error);
-      setErrors((prev) => ({
-        ...prev,
-        general: `Error al registrar ${rolDestino.toLowerCase()}`,
-      }));
+
+      // ✅ Detectar si el error viene del backend y es por email duplicado
+      const mensaje = error?.response?.data;
+      if (typeof mensaje === "string" && mensaje.includes("usuario registrado con ese email")) {
+        setErrors((prev) => ({
+          ...prev,
+          email: "Ese correo ya está registrado. Probá con otro.",
+        }));
+      } else {
+        // ⛔ Otro error (servidor, red, etc.)
+        setErrors((prev) => ({
+          ...prev,
+          general: `Error al registrar ${rolDestino.toLowerCase()}`,
+        }));
+      }
     } finally {
       setIsLoading(false);
     }
