@@ -25,8 +25,10 @@ import { AuthProvider } from './components/Auth/Context/AuthContext.tsx';
 import ProtectedRoute from './components/Auth/ProtectedRouter.tsx';
 
 // 🎁 Promociones y Reportes
-import PromocionPage from "./components/promocion/PromocionPage";
-import PromocionCreatePage from "./components/promocion/PromocionCreatePage.tsx";
+import PromocionList from './components/promocion/PromocionList'; // <-- Importa el PromocionList actualizado
+import PromocionForm from './components/promocion/PromocionForm'; // <-- Asegúrate que esta sea la ruta correcta a tu formulario
+
+
 import ReporteClientesPage from "./components/Reportes/ReporteClientesPage.tsx";
 import RankingProductosPage from "./components/RankingProductos/RankingProductosPage";
 
@@ -70,6 +72,7 @@ function App() {
           <Route path="/order-failed" element={<OrderFailed />} />
           <Route path="/producto/:id" element={<ProductDetailPage />} />
           <Route path="/explore" element={<ExplorarPage />} />
+          <Route path="/promociones" element={<PromocionList />} />
 
           {/* 🔐 LOGIN / REGISTER */}
           <Route path="/login" element={<LoginPage />} />
@@ -79,6 +82,7 @@ function App() {
           <Route path="/recuperar" element={<RecoverPasswordForm />} />
           <Route path="/verificar-codigo" element={<VerifyCodeForm />} />
           <Route path="/cambiar-password" element={<ChangePasswordForm />} />
+
 
 
           {/* 🧑 PERFIL MULTIROL */}
@@ -108,13 +112,31 @@ function App() {
             }
           />
 
-          {/* 🎉 PROMOCIONES Y REPORTES */}
-          <Route path="/promociones" element={<PromocionPage />} />
-          <Route path="/promociones/crear" element={
-            <ProtectedRoute role="ADMINISTRADOR">
-              <PromocionCreatePage />
-            </ProtectedRoute>
-          } />
+          {/* 🎉 Rutas del ABM de PROMOCIONES (Protegidas para ADMINISTRADOR) */}
+          <Route
+            path="/admin/promociones"
+            element={
+              <ProtectedRoute role="ADMINISTRADOR">
+                <PromocionList /> {/* Esta es la lista general para ABM */}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/promociones/new"
+            element={
+              <ProtectedRoute role="ADMINISTRADOR">
+                <PromocionForm /> {/* Formulario para crear */}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/promociones/edit/:id"
+            element={
+              <ProtectedRoute role="ADMINISTRADOR">
+                <PromocionForm /> {/* Formulario para editar, el ID se pasa por parámetro */}
+              </ProtectedRoute>
+            }
+          />
 
           {/* 👑 PANEL ADMINISTRADOR */}
           <Route
