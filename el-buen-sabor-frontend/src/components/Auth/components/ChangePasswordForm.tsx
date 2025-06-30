@@ -6,9 +6,9 @@ export default function ChangePasswordForm() {
   const email = localStorage.getItem("email-recuperacion") || "";
   const codigo = localStorage.getItem("codigo-recuperacion") || "";
 
-  const [password, setPassword] = useState("");
-  const [confirmar, setConfirmar] = useState("");
-  const [mensaje, setMensaje] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmar, setConfirmar] = useState("");
+    const [mensaje, setMensaje] = useState("");
 
   // 🔐 Validación básica de contraseña segura
   const esPasswordSegura = (password: string) => {
