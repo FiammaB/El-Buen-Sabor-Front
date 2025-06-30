@@ -59,6 +59,14 @@ export default function CategoriaInsumoPage() {
         cat.denominacion?.toLowerCase().includes(search.toLowerCase())
     );
 
+    function normalizarTexto(str: string) {
+        return str
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+    }
+
     const handleBaja = async (id: number, baja: boolean) => {
         try {
             await categoriaService.toggleBaja(id, baja);
@@ -97,6 +105,7 @@ export default function CategoriaInsumoPage() {
                     reloadCategorias={fetchCategorias}
                     onClose={() => setShowForm(false)}
                     editCategoria={editCategoria}
+                    categoriasExistentes={categorias} // <-- agregá esto
                 />
             )}
 

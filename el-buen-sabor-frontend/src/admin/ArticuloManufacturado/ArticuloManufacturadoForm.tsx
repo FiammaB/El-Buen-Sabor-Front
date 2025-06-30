@@ -27,6 +27,7 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
     const [loadingMasterData, setLoadingMasterData] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const categoriaService = useMemo(() => new CategoriaService(), []);
+    const [precioEditado, setPrecioEditado] = useState(false);
 
 
     const articuloService = useMemo(() => new ArticuloService(), []);
@@ -80,13 +81,20 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
     const [nombreDuplicado, setNombreDuplicado] = useState(false);
 
     useEffect(() => {
+        function normalizar(str: string) {
+            return str
+                .trim()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+        }
         if (!formData.denominacion || !articulosManufacturados) {
             setNombreDuplicado(false);
             return;
         }
         const existe = articulosManufacturados
             .filter(a => !formData.id || a.id !== formData.id)
-            .some(a => a.denominacion.trim().toLowerCase() === formData.denominacion.trim().toLowerCase());
+            .some(a => normalizar(a.denominacion) === normalizar(formData.denominacion));
         setNombreDuplicado(existe);
     }, [formData.denominacion, formData.id, articulosManufacturados]);
 
@@ -97,6 +105,9 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             ...prev,
             [name]: name === 'precioVenta' || name === 'tiempoEstimadoMinutos' ? Number(value) : value,
         }));
+        if (name === 'precioVenta') {
+            setPrecioEditado(true); // ahora el usuario lo tocó
+        }
     };
 
     // Subida de imagen a tu backend
@@ -162,6 +173,25 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             const insumo = insumos.find(i => i.id === detalle.articuloInsumoId);
             return totalCosto + (detalle.cantidad * (insumo?.precioCompra || 0));
         }, 0);
+    };
+
+    useEffect(() => {
+        if (!precioEditado) {
+            setFormData(prev => ({
+                ...prev,
+                precioVenta: calculatePrecioVenta()
+            }));
+        }
+        // eslint-disable-next-line
+    }, [formData.detalles, insumos]);
+
+    const calculatePrecioVenta = (): number => {
+        // Fórmula: SUMA(ing. precioCompra * cantidad) * 1.7
+        const costoIngredientes = formData.detalles.reduce((acc, detalle) => {
+            const insumo = insumos.find(i => i.id === detalle.articuloInsumoId);
+            return acc + ((insumo?.precioCompra ?? 0) * detalle.cantidad);
+        }, 0);
+        return Math.round(costoIngredientes * 1.7 * 100) / 100; // redondea a 2 decimales
     };
 
     // ---- Envío del formulario ----
@@ -265,10 +295,25 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                         </div>
                     )}
                 </div>
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Precio Venta:</label>
-                    <input type="number" name="precioVenta" value={formData.precioVenta} onChange={handleChange} required min="0.01" step="0.01" style={{ width: '100%', padding: '8px' }} />
+                <div style={{ fontSize: 12, color: "#888" }}>
+                    {precioEditado
+                        ? "Precio manual. Si borra el campo, se recalcula automáticamente."
+                        : "Precio automático: suma de ingredientes x 1.7"}
                 </div>
+                <input
+                    type="number"
+                    name="precioVenta"
+                    value={formData.precioVenta}
+                    onChange={handleChange}
+                    required
+                    min="0.01"
+                    step="0.01"
+                    style={{ width: '100%', padding: '8px' }}
+                    onBlur={() => {
+
+                        if (!formData.precioVenta) setPrecioEditado(false);
+                    }}
+                />
                 <div style={{ marginBottom: '15px' }}>
                     <label>Descripción:</label>
                     <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} style={{ width: '100%', padding: '8px' }} />
