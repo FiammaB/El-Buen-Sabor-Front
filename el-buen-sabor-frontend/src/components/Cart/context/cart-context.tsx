@@ -150,7 +150,9 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         const rawPurchasableItem = item.purchasableItem;
 
         if (typeof rawPurchasableItem === 'object' && rawPurchasableItem !== null) {
+          console.log("If 1")
           if ('tipo' in rawPurchasableItem && (rawPurchasableItem.tipo === 'articulo' || rawPurchasableItem.tipo === 'promocion')) {
+            console.log("If 2")
             if (rawPurchasableItem.tipo === 'articulo') {
               typedItem = Object.setPrototypeOf(rawPurchasableItem, Articulo.prototype) as Articulo & { tipo: 'articulo' };
             } else {

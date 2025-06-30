@@ -33,7 +33,6 @@ export default function PerfilPage() {
           id: usuario.id,
           email: usuario.email || "",
           nombre: usuario.nombre || "",
-          apellido: usuario.apellido || "",
           telefono: usuario.telefono || "",
           fechaNacimiento: usuario.fechaNacimiento || "",
         }));
@@ -116,7 +115,7 @@ export default function PerfilPage() {
             <label className="block mb-1 text-sm">Apellido</label>
             <input
               name="apellido"
-              value={form.apellido}
+              value={username || ""}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2"
             />

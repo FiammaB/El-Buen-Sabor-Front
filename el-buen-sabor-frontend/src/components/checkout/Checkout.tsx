@@ -18,6 +18,22 @@ import type { Articulo } from "../../models/Articulos/Articulo";
 import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
 import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO";
 
+interface Localidad {
+  id: number;
+  nombre: string;
+}
+
+type Address = {
+  id: number;
+  calle: string;
+  numero: number;
+  cp: string;
+  localidad: {
+    id: number;
+    nombre?: string;
+  };
+};
+
 
 // MercadoPago SDK script loader
 const loadMercadoPagoScript = () => {
@@ -47,6 +63,18 @@ export default function CheckoutPage() {
   const [isComplete, setIsComplete] = useState(false)
   const [isMercadoPagoReady, setIsMercadoPagoReady] = useState(false)
 
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+
+  const [localidades, setLocalidades] = useState<Localidad[]>([]);
+  const [newAddress, setNewAddress] = useState({
+    calle: "",
+    numero: "",
+    cp: "",
+    localidadId: ""
+  });
+
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
     email: "",
@@ -56,11 +84,62 @@ export default function CheckoutPage() {
     zipCode: "",
   })
 
-  console.log(useAuth())
-  const { username, email, telefono } = useAuth();
-
   const auth = useAuth();
   console.log("CONTEXT EN CHECKOUT", auth);
+
+  useEffect(() => {
+    try {
+      console.log("Id al traer el dom ", auth.id)
+      const fetchAddresses = async () => {
+        try {
+          const res = await fetch(`http://localhost:8080/api/domicilios/cliente/${auth.id}`);
+          const data = await res.json();
+          console.log("Domicilios recibidos:", data);
+          if (Array.isArray(data)) {
+            setAddresses(data);
+          } else {
+            setAddresses([]); // seguridad por si viene null o un objeto
+          }
+        } catch (error) {
+          console.error("Error al obtener domicilios:", error);
+          setAddresses([]);
+        }
+      };
+
+      fetchAddresses();
+    } catch (e) {
+      console.log(e)
+    }
+  }, [auth?.id]);
+
+
+  // Obtenemos localidades
+  useEffect(() => {
+    const fetchLocalidades = async () => {
+      try {
+        const res = await fetch("http://localhost:8080/api/localidades");
+        const data = await res.json();
+        setLocalidades(data);
+        console.log("Localidades", data)
+      } catch (err) {
+        console.error("Error al traer localidades:", err);
+      }
+    };
+    fetchLocalidades();
+  }, []);
+
+  const autopopulate = (domicilio: any) => {
+    setCustomerInfo({
+      ...customerInfo,
+      address: `${domicilio.calle} ${domicilio.numero}`,
+      city: domicilio.localidad?.nombre ?? "",
+      zipCode: domicilio.cp ?? "",
+    });
+  };
+
+
+  console.log(useAuth())
+  const { username, email, telefono } = useAuth();
 
   console.log(email, telefono)
 
@@ -136,7 +215,7 @@ export default function CheckoutPage() {
         clienteId: auth.id || 1, // Usar el ID real del cliente logueado desde el contexto de autenticación
         // Domicilio ID y Sucursal ID: Esto dependerá de cómo manejes los domicilios/sucursales.
         // Esto es solo un placeholder, necesitarías la lógica real para obtener el ID de domicilio/sucursal.
-        domicilioId: deliveryType === TipoEnvio.DELIVERY ? 1 : undefined, // solo si es delivery, y obtener el ID real
+        domicilioId: deliveryType === TipoEnvio.DELIVERY ? selectedAddressId ?? undefined : undefined,
         sucursalId: deliveryType === TipoEnvio.RETIRO_EN_LOCAL ? 1 : undefined, // solo si es retiro, y obtener el ID real
         detalles: detallesPedido,
         id: 0
@@ -308,115 +387,167 @@ export default function CheckoutPage() {
               )}
 
               {currentStep === "delivery" && (
-                <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-gray-900">Método de Entrega</h2>
+                <>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div
-                      className={`relative border-2 rounded-md p-4 cursor-pointer hover:bg-gray-50 transition-all ${deliveryType === TipoEnvio.DELIVERY ? "border-orange-500" : "border-gray-200"
-                        }`}
-                      onClick={() => setDeliveryType(TipoEnvio.DELIVERY)}
-                    >
-                      <input
-                        type="radio"
-                        id="delivery"
-                        name="deliveryType"
-                        className="sr-only"
-                        checked={deliveryType === TipoEnvio.DELIVERY}
-                        onChange={() => setDeliveryType(TipoEnvio.DELIVERY)}
-                      />
-                      <div className="flex flex-col items-center">
-                        <Truck className="mb-3 h-6 w-6" />
-                        <span className="font-medium">Delivery a domicilio</span>
-                        <span className="text-sm text-gray-500">25-35 minutos</span>
-                        <span className="text-sm text-orange-500 font-medium mt-2">
-                          {totalAmount >= 25 ? "Envío gratis" : `$${deliveryFee.toFixed(2)}`}
-                        </span>
-                      </div>
-                    </div>
+                  {!showNewAddressForm && (
+                    <>
+                      <h3 className="font-semibold">Elegí tu domicilio</h3>
 
-                    <div
-                      className={`relative border-2 rounded-md p-4 cursor-pointer hover:bg-gray-50 transition-all ${deliveryType === TipoEnvio.RETIRO_EN_LOCAL ? "border-orange-500" : "border-gray-200"
-                        }`}
-                      onClick={() => setDeliveryType(TipoEnvio.RETIRO_EN_LOCAL)}
-                    >
-                      <input
-                        type="radio"
-                        id="pickup"
-                        name="deliveryType"
-                        className="sr-only"
-                        checked={deliveryType === TipoEnvio.RETIRO_EN_LOCAL}
-                        onChange={() => setDeliveryType(TipoEnvio.RETIRO_EN_LOCAL)}
-                      />
-                      <div className="flex flex-col items-center">
-                        <MapPin className="mb-3 h-6 w-6" />
-                        <span className="font-medium">Retiro en sucursal</span>
-                        <span className="text-sm text-gray-500">15-20 minutos</span>
-                        <span className="text-sm text-green-500 font-medium mt-2">Gratis</span>
-                      </div>
-                    </div>
-                  </div>
+                      <div className="space-y-3">
+                        {addresses.map((d) => (
+                          <label
+                            key={d.id}
+                            className={`block border-2 rounded-md p-4 cursor-pointer ${selectedAddressId === d.id ? "border-orange-500" : "border-gray-200"
+                              }`}
+                          >
+                            <input
+                              type="radio"
+                              className="sr-only"
+                              checked={selectedAddressId === d.id}
+                              onChange={() => {
+                                setSelectedAddressId(d.id);
+                                autopopulate(d);
+                              }}
+                            />
+                            <span className="block font-medium">{`${d.calle} ${d.numero}`}</span>
+                            <span className="text-sm text-gray-500">{`${d.localidad?.nombre ?? ""} (${d.cp})`}</span>
+                          </label>
+                        ))}
 
-                  {deliveryType === TipoEnvio.DELIVERY && (
-                    <div className="space-y-4 pt-4">
-                      <h3 className="font-semibold">Dirección de entrega</h3>
-                      <div className="space-y-2">
-                        <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                          Dirección
-                        </label>
-                        <input
-                          id="address"
-                          name="address"
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                          placeholder="Calle y número"
-                          value={customerInfo.address}
-                          onChange={handleInputChange}
-                          required
-                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewAddressForm(true)}
+                          className="w-full border-2 border-dashed border-orange-300 rounded-md py-2 text-orange-500 hover:bg-orange-50"
+                        >
+                          + Agregar nuevo domicilio
+                        </button>
                       </div>
+                    </>
+                  )}
+
+                  {showNewAddressForm && (
+                    <div className="space-y-4 pt-6 border-t mt-6">
+                      <h3 className="font-semibold text-lg">Nuevo domicilio</h3>
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                            Ciudad
-                          </label>
+                        <div>
+                          <label className="text-sm block text-gray-700 mb-1">Calle</label>
                           <input
-                            id="city"
-                            name="city"
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                            placeholder="Ciudad"
-                            value={customerInfo.city}
-                            onChange={handleInputChange}
-                            required
+                            type="text"
+                            className="w-full px-3 py-2 border rounded-md"
+                            value={newAddress.calle}
+                            onChange={(e) => setNewAddress({ ...newAddress, calle: e.target.value })}
+                            placeholder="Ej: San Martín"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700">
-                            Código Postal
-                          </label>
+                        <div>
+                          <label className="text-sm block text-gray-700 mb-1">Número</label>
                           <input
-                            id="zipCode"
-                            name="zipCode"
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                            placeholder="5500"
-                            value={customerInfo.zipCode}
-                            onChange={handleInputChange}
-                            required
+                            type="number"
+                            className="w-full px-3 py-2 border rounded-md"
+                            value={newAddress.numero}
+                            onChange={(e) => setNewAddress({ ...newAddress, numero: e.target.value })}
+                            placeholder="Ej: 123"
                           />
                         </div>
+                        <div>
+                          <label className="text-sm block text-gray-700 mb-1">Código Postal</label>
+                          <input
+                            type="text"
+                            className="w-full px-3 py-2 border rounded-md"
+                            value={newAddress.cp}
+                            onChange={(e) => setNewAddress({ ...newAddress, cp: e.target.value })}
+                            placeholder="Ej: 5500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm block text-gray-700 mb-1">Localidad</label>
+                          <select
+                            className="w-full px-3 py-2 border rounded-md"
+                            value={newAddress.localidadId}
+                            onChange={(e) => setNewAddress({ ...newAddress, localidadId: e.target.value })}
+                          >
+                            <option value="">Seleccioná una</option>
+                            {localidades.map((loc) => (
+                              <option key={loc.id} value={loc.id}>
+                                {loc.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4 pt-2">
+                        <button
+                          onClick={async () => {
+                            try {
+                              console.log("DOMICILIO A ENVIAR:", {
+                                calle: newAddress.calle,
+                                numero: parseInt(newAddress.numero),
+                                cp: newAddress.cp,
+                                localidad: {
+                                  id: parseInt(newAddress.localidadId)
+                                }
+                              });
+
+                              const res = await fetch(`http://localhost:8080/api/domicilios/cliente/${auth.id}`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  calle: newAddress.calle,
+                                  numero: parseInt(newAddress.numero),
+                                  cp: newAddress.cp,
+                                  localidad: {
+                                    id: parseInt(newAddress.localidadId)
+                                  }
+                                }),
+                              });
+
+
+                              if (!res.ok) throw new Error("Error al guardar domicilio");
+                              const saved = await res.json();
+
+                              setAddresses((prev) => [...prev, saved]);
+                              setSelectedAddressId(saved.id);
+                              autopopulate(saved);
+                              setShowNewAddressForm(false);
+                              setNewAddress({ calle: "", numero: "", cp: "", localidadId: "" });
+                            } catch (err) {
+                              console.error(err);
+                              alert("Error al guardar el domicilio. Verificá los datos.");
+                            }
+                          }}
+                          className="bg-orange-500 text-white px-4 py-2 rounded-md"
+                        >
+                          Guardar domicilio
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowNewAddressForm(false);
+                            setNewAddress({ calle: "", numero: "", cp: "", localidadId: "" });
+                          }}
+                          className="border border-gray-300 px-4 py-2 rounded-md"
+                        >
+                          Cancelar
+                        </button>
                       </div>
                     </div>
                   )}
 
-                  <div className="pt-4">
-                    <button
-                      onClick={goToNextStep}
-                      className="w-full bg-orange-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-orange-600 transition duration-200"
-                    >
-                      Continuar a Pago
-                    </button>
-                  </div>
-                </div>
+                  <button
+                    onClick={goToNextStep}
+                    className="disabled:bg-gray-400 mt-8 w-full bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"                    
+                    disabled={
+                      (deliveryType === TipoEnvio.DELIVERY && !selectedAddressId) ||
+                      showNewAddressForm
+                    }
+                  >
+                    Continuar a Pago
+                  </button>
+                </>
               )}
+
+
 
               {currentStep === "payment" && (
                 <div className="space-y-6">
