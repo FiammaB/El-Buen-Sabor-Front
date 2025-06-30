@@ -19,6 +19,7 @@
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.58.1",
     "react-router-dom": "^7.6.1",
+    "recharts": "^3.0.2",
     "sweetalert2": "^11.22.1",
     "sweetalert2-react-content": "^5.1.0",
     "tailwindcss": "^4.1.8",

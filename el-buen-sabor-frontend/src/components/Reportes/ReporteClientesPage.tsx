@@ -2,10 +2,13 @@ import React, { useState } from "react";
 import { getReporteClientes } from "../../services/ClienteReporteService";
 import type { ClienteReporteDTO } from "../../models/DTO/ClienteReporteDTO";
 import * as XLSX from "xlsx";
-
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
-import { useNavigate } from "react-router-dom"; // <-- Asegúrate de importar useNavigate
+
+import {
+    BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
+
 
 const MySwal = withReactContent(Swal);
 
@@ -15,7 +18,9 @@ const ReporteClientesPage: React.FC = () => {
     const [ordenarPor, setOrdenarPor] = useState("cantidad");
     const [clientes, setClientes] = useState<ClienteReporteDTO[]>([]);
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate(); // <-- Inicializa useNavigate
+
+
+
 
     const cargarReporte = async () => {
         if (!desde || !hasta) {
@@ -45,7 +50,6 @@ const ReporteClientesPage: React.FC = () => {
                     text: 'El reporte de clientes se cargó correctamente.',
                 });
             }
-
         } catch (error) {
             console.error("Error al cargar el reporte de clientes:", error);
             MySwal.fire({
@@ -155,40 +159,86 @@ const ReporteClientesPage: React.FC = () => {
                 )}
 
                 {!loading && clientes.length > 0 && (
-                    <div className="tabla-resultados bg-gray-50 rounded-lg p-6 shadow-inner">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Resultados del Reporte</h3>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full bg-white rounded-lg overflow-hidden">
-                                <thead className="bg-gray-100">
-                                    <tr>
-                                        <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
-                                        <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Apellido</th>
-                                        <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cantidad de Pedidos</th>
-                                        <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Gastado</th>
-                                        <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {clientes.map((c) => (
-                                        <tr key={c.idCliente} className="hover:bg-gray-50">
-                                            <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{c.nombre}</td>
-                                            <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{c.apellido}</td>
-                                            <td className="py-3 px-4 whitespace-nowrap text-center text-sm font-medium text-blue-600">{c.cantidadPedidos}</td>
-                                            <td className="py-3 px-4 whitespace-nowrap text-sm font-medium text-green-700">${c.totalGastado?.toFixed(2)}</td>
-                                            <td className="py-3 px-4 whitespace-nowrap text-sm">
-                                                <button
-                                                    className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors text-xs"
-                                                    onClick={() => navigate(`/admin/clientes/${c.idCliente}/pedidos`)} // <-- CAMBIO: Ruta corregida
-                                                >
-                                                    Ver Pedidos
-                                                </button>
-                                            </td>
+                    <>
+                        <div className="tabla-resultados bg-gray-50 rounded-lg p-6 shadow-inner">
+                            <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Resultados del Reporte</h3>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                                    <thead className="bg-gray-100">
+                                        <tr>
+                                            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
+                                            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Apellido</th>
+                                            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cantidad de Pedidos</th>
+                                            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Gastado</th>
+                                            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {clientes.map((c) => (
+                                            <tr key={c.idCliente} className="hover:bg-gray-50">
+                                                <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{c.nombre}</td>
+                                                <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{c.apellido}</td>
+                                                <td className="py-3 px-4 whitespace-nowrap text-center text-sm font-medium text-blue-600">{c.cantidadPedidos}</td>
+                                                <td className="py-3 px-4 whitespace-nowrap text-sm font-medium text-green-700">${c.totalGastado?.toFixed(2)}</td>
+                                                <td className="py-3 px-4 whitespace-nowrap text-sm">
+                                                    <button
+                                                        className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors text-xs"
+                                                        onClick={() => {
+                                                            MySwal.fire({
+                                                                icon: 'info',
+                                                                title: 'Funcionalidad en desarrollo',
+                                                                text: 'Próximamente vas a poder ver el detalle de pedidos por cliente.',
+                                                            });
+                                                        }}
+                                                    >
+                                                        Ver Pedidos
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
+
+                        <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                            <div style={{ width: 500, height: 300 }}>
+                                <h4 style={{ textAlign: "center" }}>Cantidad de pedidos por cliente</h4>
+                                <ResponsiveContainer>
+                                    <BarChart data={clientes}>
+                                        <XAxis dataKey="nombre" />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="cantidadPedidos" fill="#8884d8" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+
+                            <div style={{ width: 400, height: 300 }}>
+                                <h4 style={{ textAlign: "center" }}>Proporción del total gastado</h4>
+                                <ResponsiveContainer>
+                                    <PieChart>
+                                        <Pie
+                                            data={clientes}
+                                            dataKey="totalGastado"
+                                            nameKey="nombre"
+                                            cx="50%"
+                                            cy="50%"
+                                            outerRadius={100}
+                                            fill="#82ca9d"
+                                            label
+                                        >
+                                            {clientes.map((_, index) => (
+                                                <Cell key={index} fill={["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#8dd1e1"][index % 5]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </>
                 )}
 
                 {!loading && clientes.length === 0 && (desde || hasta) && (
@@ -200,6 +250,7 @@ const ReporteClientesPage: React.FC = () => {
                     <div className="text-center py-12 text-gray-500">
                         <p>Ingresa un rango de fechas y haz clic en "Buscar Reporte" para ver los clientes.</p>
                     </div>
+
                 )}
             </div>
         </div>
