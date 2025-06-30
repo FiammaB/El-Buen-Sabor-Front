@@ -1,10 +1,14 @@
+// src/pages/Cart/CartPage.tsx
+
 import { useEffect, useState } from 'react'
 import {
     ArrowLeft, Plus, Minus, Trash2, ShoppingBag,
     CreditCard, Truck, Shield
 } from 'lucide-react'
-import { useCart } from "../context/cart-context"
+import { useCart } from "../../Cart/context/cart-context" // Asegúrate de que esta ruta sea correcta
 import type { ArticuloManufacturado } from '../../../models/Articulos/ArticuloManufacturado';
+import type { Articulo } from '../../../models/Articulos/Articulo'; // Importar Articulo para tipado
+import type { IPromocionDTO } from '../../../models/DTO/IPromocionDTO'; // Importar IPromocionDTO para tipado
 
 export default function CartPage() {
     const {
@@ -19,32 +23,62 @@ export default function CartPage() {
 
     const [relatedProducts, setRelatedProducts] = useState<ArticuloManufacturado[]>([])
 
+    // Costo de envío, ahora 0 si el total es igual o mayor a 25
     const deliveryFee = totalAmount >= 25 ? 0 : 3.99
     const finalTotal = totalAmount + deliveryFee
 
     useEffect(() => {
         const fetchRelated = async () => {
-            if (items.length === 0) return;
+            if (items.length === 0) {
+                setRelatedProducts([]); // Limpiar productos relacionados si el carrito está vacío
+                return;
+            }
 
-            const categoriaId = items[0].articulo.categoria?.id;
-            if (!categoriaId) return;
+            // Obtener la categoría del primer artículo manufacturado en el carrito
+            // Esto es para la sección "Te podría interesar" que sugiere productos de la misma categoría.
+            // Si el primer ítem es una promoción o un insumo, quizás no tengamos una categoría relevante.
+
+            // Type guard para ArticuloManufacturado
+            function isArticuloManufacturado(item: any): item is ArticuloManufacturado {
+                return (
+                    item &&
+                    item.tipo === 'articulo' &&
+                    typeof item.tiempoEstimadoMinutos === 'number'
+                );
+            }
+
+            const firstManufacturedArticulo = items.find(item =>
+                isArticuloManufacturado(item.purchasableItem)
+            )?.purchasableItem as ArticuloManufacturado | undefined;
+
+            const categoriaId = firstManufacturedArticulo?.categoria?.id;
+
+            if (!categoriaId) {
+                setRelatedProducts([]); // Si no hay categoría de artículo manufacturado, no mostramos relacionados
+                return;
+            }
 
             try {
                 const res = await fetch(`http://localhost:8080/api/articuloManufacturado/filtrar?categoriaId=${categoriaId}&baja=false`);
-                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                const data: ArticuloManufacturado[] = await res.json();
 
-                const productosFiltrados = data.filter((p: any) =>
-                    !items.some((item) => item.articulo.id === p.id)
+                // Filtrar productos que ya están en el carrito
+                const productosFiltrados = data.filter((p: ArticuloManufacturado) =>
+                    !items.some((itemInCart) => itemInCart.id === p.id)
                 );
 
                 setRelatedProducts(productosFiltrados);
             } catch (err) {
                 console.error("Error al cargar productos relacionados:", err);
+                setRelatedProducts([]);
             }
         };
 
         fetchRelated();
-    }, [items]);
+    }, [items]); // Vuelve a ejecutar cuando los ítems del carrito cambien
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -95,58 +129,89 @@ export default function CartPage() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    {items.map((item) => (
-                                        <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-100 rounded-xl">
-                                            <img
-                                                src={
-                                                    item.articulo.imagen?.denominacion
-                                                        ? `http://localhost:8080/${item.articulo.imagen.denominacion}`
-                                                        : "/placeholder.svg?height=80&width=80"
-                                                }
-                                                alt={item.articulo.denominacion}
-                                            />
+                                    {items.map((item) => {
+                                        const { purchasableItem } = item; // Extraemos el item comprable
+                                        let imageUrl: string = "/placeholder.svg?height=80&width=80";
+                                        let itemName: string = "Item desconocido";
+                                        let itemCategoryOrType: string = ""; // Cambiado para ser más general
+                                        let itemPrice: number = 0;
+                                        let itemDescription: string = "";
 
+                                        // Determinar detalles según el tipo de item
+                                        if (purchasableItem.tipo === 'articulo') {
+                                            const articulo = purchasableItem as Articulo;
+                                            // Asumiendo que las imágenes de artículos no necesitan el localhost:8080/ prefijo si están en public
+                                            // Si tus imágenes de artículo sí necesitan el prefijo, mantén el `http://localhost:8080/`
+                                            imageUrl = articulo.imagen?.denominacion || imageUrl;
+                                            itemName = articulo.denominacion;
+                                            itemCategoryOrType = articulo.categoria?.denominacion || "Artículo";
+                                            itemPrice = articulo.precioVenta || 0;
+                                            // Solo ArticuloManufacturado tiene 'descripcion'
+                                            if ('descripcion' in articulo) {
+                                                itemDescription = (articulo as ArticuloManufacturado).descripcion || '';
+                                            }
+                                        } else if (purchasableItem.tipo === 'promocion') {
+                                            const promocion = purchasableItem as IPromocionDTO;
+                                            // Asumiendo que las imágenes de promociones sí necesitan el localhost:8080/ prefijo
+                                            imageUrl = promocion.imagen?.denominacion ? `http://localhost:8080/${promocion.imagen.denominacion}` : imageUrl;
+                                            itemName = promocion.denominacion;
+                                            itemCategoryOrType = "Promoción";
+                                            itemPrice = promocion.precioPromocional || 0;
+                                            itemDescription = promocion.descripcionDescuento || '';
+                                        }
 
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-gray-900 mb-1">{item.articulo.denominacion}</h3>
-                                                <p className="text-sm text-gray-500 mb-2">
-                                                    {item.articulo.categoria?.denominacion || "Producto especial"}
-                                                </p>
-                                                <p className="text-orange-500 font-bold">${item.articulo.precioVenta != null ? item.articulo.precioVenta.toFixed(2) : '0.00'}</p>
+                                        return (
+                                            <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-100 rounded-xl">
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={itemName}
+                                                    className="w-20 h-20 object-cover rounded-xl"
+                                                />
+
+                                                <div className="flex-1">
+                                                    <h3 className="font-semibold text-gray-900 mb-1">{itemName}</h3>
+                                                    <p className="text-sm text-gray-500 mb-2">
+                                                        {itemCategoryOrType}
+                                                        {itemDescription && itemDescription.length > 0 && (
+                                                            <span className="block text-xs text-gray-400 line-clamp-1">{itemDescription}</span>
+                                                        )}
+                                                    </p>
+                                                    <p className="text-orange-500 font-bold">${itemPrice.toFixed(2)}</p>
+                                                </div>
+
+                                                <div className="flex items-center space-x-3">
+                                                    <button
+                                                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                        className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition duration-200"
+                                                    >
+                                                        <Minus className="w-4 h-4" />
+                                                    </button>
+
+                                                    <span className="w-12 text-center font-semibold text-lg">{item.quantity}</span>
+
+                                                    <button
+                                                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                        className="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition duration-200"
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+
+                                                <div className="text-right">
+                                                    <p className="font-bold text-lg text-gray-900">
+                                                        ${typeof item.subtotal === "number" ? item.subtotal.toFixed(2) : "0.00"}
+                                                    </p>
+
+                                                    <button
+                                                        onClick={() => removeFromCart(item.id)}
+                                                        className="text-red-500 hover:text-red-600 text-sm mt-1 transition duration-200"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             </div>
-
-                                            <div className="flex items-center space-x-3">
-                                                <button
-                                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                    className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition duration-200"
-                                                >
-                                                    <Minus className="w-4 h-4" />
-                                                </button>
-
-                                                <span className="w-12 text-center font-semibold text-lg">{item.quantity}</span>
-
-                                                <button
-                                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                    className="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition duration-200"
-                                                >
-                                                    <Plus className="w-4 h-4" />
-                                                </button>
-                                            </div>
-
-                                            <div className="text-right">
-                                                <p className="font-bold text-lg text-gray-900">
-                                                    ${typeof item.subtotal === "number" ? item.subtotal.toFixed(2) : "0.00"}
-                                                </p>
-
-                                                <button
-                                                    onClick={() => removeFromCart(item.id)}
-                                                    className="text-red-500 hover:text-red-600 text-sm mt-1 transition duration-200"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -155,19 +220,21 @@ export default function CartPage() {
                                 <div className="bg-white rounded-2xl shadow-sm p-6">
                                     <h3 className="text-lg font-bold text-gray-900 mb-4">Te podría interesar</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {relatedProducts.map((item) => (
-                                            <div key={item.id} className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg">
+                                        {relatedProducts.map((product) => ( // Cambiado 'item' a 'product' para evitar conflicto
+                                            <div key={product.id} className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg">
                                                 <img
-                                                    src={item.imagen?.denominacion || '/placeholder.svg?height=60&width=60'}
-                                                    alt={item.denominacion}
+                                                    src={product.imagen?.denominacion ? `http://localhost:8080/${product.imagen.denominacion}` : '/placeholder.svg?height=60&width=60'}
+                                                    alt={product.denominacion}
                                                     className="w-15 h-15 object-cover rounded-lg"
                                                 />
                                                 <div className="flex-1">
-                                                    <h4 className="font-medium text-gray-900 text-sm">{item.denominacion}</h4>
-                                                    <p className="text-orange-500 font-bold text-sm">${item.precioVenta}</p>
+                                                    <h4 className="font-medium text-gray-900 text-sm">{product.denominacion}</h4>
+                                                    <p className="text-orange-500 font-bold text-sm">${product.precioVenta.toFixed(2)}</p>
                                                 </div>
                                                 <button
-                                                    onClick={() => addToCart(item)}
+                                                    // Asegúrate que el 'addToCart' pueda recibir ArticuloManufacturado
+                                                    // Ya lo hicimos en el context, así que esto debería estar bien.
+                                                    onClick={() => addToCart(product)}
                                                     className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition duration-200"
                                                 >
                                                     <Plus className="w-4 h-4" />

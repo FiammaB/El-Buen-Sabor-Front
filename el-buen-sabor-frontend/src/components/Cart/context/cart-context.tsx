@@ -2,48 +2,46 @@
 
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect, useState } from "react"
-// Importamos la clase base Articulo
 import { Articulo } from '../../../models/Articulos/Articulo';
-// Eliminamos la importación de 'CartItem' y 'CartContextType' de '../types/cart'
-// import type { CartItem, CartContextType } from "../types/cart"
+import { ArticuloManufacturado } from "../../../models/Articulos/ArticuloManufacturado";
+import type { IPromocionDTO } from "../../../models/DTO/IPromocionDTO";
+
 
 // ===============================================
-// DEFINICIONES DE TIPOS (MOVIDAS AL PRINCIPIO)
+// DEFINICIONES DE TIPOS (ACTUALIZADAS Y CORREGIDAS)
 // ===============================================
 
-// 1. Define la interfaz para un ítem del carrito
-// Ahora el 'articulo' dentro de CartItem es de tipo Articulo (la clase base)
-export interface CartItem { // Exportamos por si la necesitas en otro archivo
-  id: number;
-  articulo: Articulo; // <--- CAMBIO CLAVE AQUÍ: AHORA ES ARTICULO
+export type PurchasableItem =
+  (Articulo & { tipo: 'articulo' }) |
+  (IPromocionDTO & { tipo: 'promocion' });
+
+export interface CartItem {
+  id: number; // El ID del artículo o la promoción
+  purchasableItem: PurchasableItem; // El objeto Articulo o Promocion
   quantity: number;
   subtotal: number;
 }
 
-// 2. Define las acciones del reducer
 type CartAction =
-  | { type: "ADD_TO_CART"; payload: { articulo: Articulo; quantity: number } }
+  | { type: "ADD_TO_CART"; payload: { item: Articulo | IPromocionDTO; quantity: number } }
   | { type: "REMOVE_FROM_CART"; payload: { id: number } }
   | { type: "UPDATE_QUANTITY"; payload: { id: number; quantity: number } }
   | { type: "CLEAR_CART" }
   | { type: "LOAD_CART"; payload: { items: CartItem[] } }
 
-// 3. Define el estado del carrito
 interface CartState {
   items: CartItem[];
 }
 
-// 4. Define el estado inicial
 const initialState: CartState = {
   items: [],
 }
 
-// 5. Define la interfaz del contexto del carrito
-export interface CartContextType { // Exportamos por si la necesitas en otro archivo
+export interface CartContextType {
   items: CartItem[];
   totalItems: number;
   totalAmount: number;
-  addToCart: (item: Articulo, quantity?: number) => void;
+  addToCart: (item: Articulo | IPromocionDTO, quantity?: number) => void;
   removeFromCart: (id: number) => void;
   updateQuantity: (id: number, quantity: number) => void;
   clearCart: () => void;
@@ -52,40 +50,60 @@ export interface CartContextType { // Exportamos por si la necesitas en otro arc
 }
 
 // ===============================================
-// REDUCER DEL CARRITO
+// REDUCER DEL CARRITO (LÓGICA DE ADD_TO_CART MEJORADA)
 // ===============================================
 
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case "ADD_TO_CART": {
-      const { articulo, quantity } = action.payload
-      const existingItemIndex = state.items.findIndex((item) => item.id === articulo.id)
+      const { item: rawItemToAdd, quantity } = action.payload;
+
+      let priceToUse: number;
+      let finalItemForCart: PurchasableItem;
+
+      // Determinar si el item es una promoción o un artículo
+      if ('precioPromocional' in rawItemToAdd) {
+        const promo = rawItemToAdd as IPromocionDTO;
+        priceToUse = promo.precioPromocional || 0;
+        finalItemForCart = { ...promo, tipo: 'promocion' };
+      } else {
+        const articulo = rawItemToAdd as Articulo;
+        priceToUse = articulo.precioVenta || 0;
+        finalItemForCart = { ...articulo, tipo: 'articulo' };
+      }
+
+      // <-- CAMBIO CLAVE AQUÍ: Buscar ítem existente por ID y TIPO
+      // Esto asegura que una promoción con ID 1 no se confunda con un artículo con ID 1
+      const existingItemIndex = state.items.findIndex(
+        (itemInCart) => itemInCart.id === finalItemForCart.id && itemInCart.purchasableItem.tipo === finalItemForCart.tipo
+      );
 
       if (existingItemIndex >= 0) {
-        const updatedItems = state.items.map((item, index) => {
+        const updatedItems = state.items.map((itemInCart, index) => {
           if (index === existingItemIndex) {
-            const newQuantity = item.quantity + quantity
+            const newQuantity = itemInCart.quantity + quantity;
             return {
-              ...item,
+              ...itemInCart,
               quantity: newQuantity,
-              subtotal: newQuantity * articulo.precioVenta,
-            }
+              subtotal: newQuantity * priceToUse,
+            };
           }
-          return item
-        })
-        return { ...state, items: updatedItems }
+          return itemInCart;
+        });
+        return { ...state, items: updatedItems };
       } else {
-        // Asegúrate de que el artículo tenga un ID antes de crear el newItem
-        if (articulo.id !== undefined) { // Mejoramos la comprobación de id
-          const newItem: CartItem = {
-            id: articulo.id,
-            articulo,
-            quantity,
-            subtotal: quantity * articulo.precioVenta,
-          }
-          return { ...state, items: [...state.items, newItem] }
+        // Asegurar que el ID exista antes de crear el newItem
+        if (finalItemForCart.id === undefined || finalItemForCart.id === null) {
+          console.error("Attempted to add an item with undefined/null ID:", finalItemForCart);
+          return state;
         }
-        return state; // Retorna el estado actual si el id es undefined
+        const newItem: CartItem = {
+          id: finalItemForCart.id,
+          purchasableItem: finalItemForCart,
+          quantity,
+          subtotal: quantity * priceToUse,
+        };
+        return { ...state, items: [...state.items, newItem] };
       }
     }
 
@@ -102,10 +120,19 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 
       const updatedItems = state.items.map((item) => {
         if (item.id === id) {
+          let priceToUse: number;
+          if (item.purchasableItem.tipo === 'articulo') {
+            priceToUse = (item.purchasableItem as Articulo).precioVenta || 0;
+          } else if (item.purchasableItem.tipo === 'promocion') {
+            priceToUse = (item.purchasableItem as IPromocionDTO).precioPromocional || 0;
+          } else {
+            priceToUse = 0;
+          }
+
           return {
             ...item,
             quantity,
-            subtotal: quantity * item.articulo.precioVenta,
+            subtotal: quantity * priceToUse,
           }
         }
         return item
@@ -118,7 +145,50 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     }
 
     case "LOAD_CART": {
-      return { ...state, items: action.payload.items }
+      const loadedItems = action.payload.items.map(item => {
+        let typedItem: PurchasableItem;
+        const rawPurchasableItem = item.purchasableItem;
+
+        if (typeof rawPurchasableItem === 'object' && rawPurchasableItem !== null) {
+          if ('tipo' in rawPurchasableItem && (rawPurchasableItem.tipo === 'articulo' || rawPurchasableItem.tipo === 'promocion')) {
+            if (rawPurchasableItem.tipo === 'articulo') {
+              typedItem = Object.setPrototypeOf(rawPurchasableItem, Articulo.prototype) as Articulo & { tipo: 'articulo' };
+            } else {
+              typedItem = rawPurchasableItem as IPromocionDTO & { tipo: 'promocion' };
+            }
+          } else {
+            console.warn("Item cargado con tipo inconsistente/faltante, intentando inferir:", rawPurchasableItem);
+            const itemToSpread = rawPurchasableItem as any;
+            if ('precioVenta' in itemToSpread) {
+              typedItem = { ...itemToSpread, tipo: 'articulo' } as Articulo & { tipo: 'articulo' };
+            } else if ('precioPromocional' in itemToSpread) {
+              typedItem = { ...itemToSpread, tipo: 'promocion' } as IPromocionDTO & { tipo: 'promocion' };
+            } else {
+              console.error("Item cargado con propiedades de precio desconocidas, fallback a artículo sin garantía de tipo:", rawPurchasableItem);
+              typedItem = { ...itemToSpread, tipo: 'articulo' } as Articulo & { tipo: 'articulo' };
+            }
+          }
+        } else {
+          console.error("Item cargado no es un objeto válido, usando fallback básico:", rawPurchasableItem);
+          typedItem = {
+            id: item.id,
+            denominacion: "Error de carga: Item no válido",
+            precioVenta: 0,
+            tipo: 'articulo',
+          } as Articulo & { tipo: 'articulo' };
+        }
+
+        if (item.id === undefined || item.id === null) {
+          console.warn("CartItem cargado con ID undefined/null, asignando un ID de fallback:", item);
+          return { ...item, id: Date.now() + Math.random(), purchasableItem: typedItem } as CartItem;
+        }
+
+        return {
+          ...item,
+          purchasableItem: typedItem
+        };
+      });
+      return { ...state, items: loadedItems };
     }
 
     default:
@@ -126,92 +196,86 @@ function cartReducer(state: CartState, action: CartAction): CartState {
   }
 }
 
+// ... (Resto del contexto y provider sin cambios) ...
+
 // ===============================================
-// CONTEXTO Y PROVIDER
+// CONTEXTO Y PROVIDER (SIN CAMBIOS SIGNIFICATIVOS EN LA LÓGICA)
 // ===============================================
 
-// Crear el contexto (DEBE ir antes de ser usado en CartProvider)
-const CartContext = createContext<CartContextType | undefined>(undefined)
+const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// Provider del carrito
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, initialState)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [state, dispatch] = useReducer(cartReducer, initialState);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Cargar carrito desde localStorage al inicializar
   useEffect(() => {
     try {
-      const savedCart = localStorage.getItem("ebs-cart")
+      const savedCart = localStorage.getItem("ebs-cart");
       if (savedCart) {
-        const parsedCart = JSON.parse(savedCart)
-        // Asegúrate de que los ítems parseados tengan la estructura de CartItem
-        // Aquí podrías añadir una validación más robusta si fuera necesario
+        const parsedCart = JSON.parse(savedCart);
         if (Array.isArray(parsedCart) && parsedCart.length > 0) {
-          // Re-instanciar los artículos si fuera necesario, o si JSON.parse los convierte a objetos planos
-          const itemsFromStorage = parsedCart.map((item: unknown) => {
-            const cartItem = item as CartItem;
-            return {
-              ...cartItem,
-              articulo: Object.setPrototypeOf(cartItem.articulo, Articulo.prototype) // ¡IMPORTANTE! Re-instancia a Articulo si guardas clases en LocalStorage
-            };
-          }) as CartItem[]; // Asegúrate de que el tipo sea CartItem[]
-          console.log("Cargando carrito desde localStorage:", itemsFromStorage)
-          dispatch({ type: "LOAD_CART", payload: { items: itemsFromStorage } })
+          dispatch({ type: "LOAD_CART", payload: { items: parsedCart as CartItem[] } });
         }
       }
     } catch (error) {
-      console.error("Error loading cart from localStorage:", error)
+      console.error("Error loading cart from localStorage:", error);
     } finally {
-      setIsLoaded(true)
+      setIsLoaded(true);
     }
-  }, [])
+  }, []);
 
-  // Guardar carrito en localStorage cuando cambie (solo después de cargar)
   useEffect(() => {
     if (isLoaded) {
-      console.log("Guardando carrito en localStorage:", state.items)
-      // Al guardar, podrías querer guardar solo las propiedades de los artículos, no toda la instancia de clase.
-      // Si Articulo tiene métodos, no se guardarán al JSON.parse/stringify.
-      // Para simplificar, asumimos que solo las propiedades son relevantes para localStorage.
-      localStorage.setItem("ebs-cart", JSON.stringify(state.items))
+      console.log("Guardando carrito en localStorage:", state.items);
+      const serializableItems = state.items.map(cartItem => ({
+        id: cartItem.id,
+        quantity: cartItem.quantity,
+        subtotal: cartItem.subtotal,
+        purchasableItem: cartItem.purchasableItem
+      }));
+      localStorage.setItem("ebs-cart", JSON.stringify(serializableItems));
     }
-  }, [state.items, isLoaded])
+  }, [state.items, isLoaded]);
 
-  // Calcular totales (ahora en scope y bien definidos)
-  const totalItems = state.items.reduce((total, item) => total + item.quantity, 0)
-  const totalAmount = state.items.reduce((total, item) => total + item.subtotal, 0)
+  const totalItems = state.items.reduce((total, item) => total + item.quantity, 0);
+  const totalAmount = state.items.reduce((total, item) => total + item.subtotal, 0);
 
-
-
-  // Funciones del carrito
-  const addToCart = (articulo: Partial<ArticuloManufacturado> & { id: string | number; precioVenta: number; denominacion: string }, quantity = 1) => {
-    console.log("Agregando al carrito:", articulo.denominacion, "cantidad:", quantity)
-    dispatch({ type: "ADD_TO_CART", payload: { articulo: articulo as ArticuloManufacturado, quantity } })
-  }
+  const addToCart = (item: Articulo | IPromocionDTO, quantity = 1) => {
+    console.log("Agregando al carrito:", item.denominacion, "cantidad:", quantity);
+    dispatch({ type: "ADD_TO_CART", payload: { item, quantity } });
+  };
 
   const removeFromCart = (id: number) => {
-    console.log("Removiendo del carrito:", id)
-    dispatch({ type: "REMOVE_FROM_CART", payload: { id } })
-  }
+    console.log("Removiendo del carrito:", id);
+    dispatch({ type: "REMOVE_FROM_CART", payload: { id } });
+  };
 
   const updateQuantity = (id: number, quantity: number) => {
-    console.log("Actualizando cantidad:", id, "nueva cantidad:", quantity)
-    dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } })
-  }
+    console.log("Actualizando cantidad:", id, "nueva cantidad:", quantity);
+    dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } });
+  };
 
   const clearCart = () => {
-    console.log("Vaciando carrito")
-    dispatch({ type: "CLEAR_CART" })
-  }
+    console.log("Vaciando carrito");
+    dispatch({ type: "CLEAR_CART" });
+  };
 
   const isInCart = (id: number) => {
-    return state.items.some((item) => item.id === id)
-  }
+    // <-- CAMBIO IMPORTANTE: isInCart ahora necesita verificar también el tipo
+    // Para promociones, el ID es único para la promo.
+    // Para artículos, el ID es único para el artículo.
+    // Sin embargo, si tu lógica es que no puedes tener un artículo y una promoción con el mismo ID
+    // en el carrito como ítems separados, esta lógica está bien.
+    // Si necesitas diferenciar, la lógica de isInCart también debería tomar un 'tipo'.
+    // Por ahora, solo usamos el ID para la existencia.
+    return state.items.some((item) => item.id === id);
+  };
 
   const getItemQuantity = (id: number) => {
-    const item = state.items.find((item) => item.id === id)
-    return item ? item.quantity : 0
-  }
+    // <-- Considerar si necesitas cantidad por ID Y TIPO
+    const item = state.items.find((item) => item.id === id);
+    return item ? item.quantity : 0;
+  };
 
   const value: CartContextType = {
     items: state.items,
@@ -223,21 +287,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     clearCart,
     isInCart,
     getItemQuantity,
-  }
+  };
 
-  // No renderizar hasta que el carrito esté cargado
   if (!isLoaded) {
-    return <div>Cargando...</div>
+    return <div>Cargando carrito...</div>;
   }
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
-// Hook personalizado para usar el contexto
 export function useCart() {
-  const context = useContext(CartContext)
+  const context = useContext(CartContext);
   if (context === undefined) {
-    throw new Error("useCart must be used within a CartProvider")
+    throw new Error("useCart must be used within a CartProvider");
   }
-  return context
+  return context;
 }

@@ -1,26 +1,22 @@
 // src/pages/Landing/Landing.tsx
+
 import { useEffect, useState } from "react";
 import { ArticuloService } from "../../services/ArticuloService";
-// IMPORTAMOS LAS CLASES DE MODELO, YA QUE EL SERVICIO LAS RETORNA
 import { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
 import { ArticuloInsumo } from "../../models/Articulos/ArticuloInsumo";
-import { Articulo } from "../../models/Articulos/Articulo"; // La clase base Articulo
+import { Articulo } from "../../models/Articulos/Articulo";
 import { useAuth } from "../Auth/Context/AuthContext";
 import { Link } from "react-router-dom";
-import { Search, MapPin, Clock, Star, Truck, CreditCard, ShoppingBag, Menu, X, Heart, Plus } from 'lucide-react';
-import { useCart } from "../Cart/context/cart-context";
-import type { Categoria } from "../../models/Categoria/Categoria"; // Categoria es una clase/modelo
+import { Search, Clock, Truck, CreditCard, ShoppingBag, Menu, X, Heart, Plus } from 'lucide-react';
+import { useCart } from "../Cart/context/cart-context"; // Asegúrate de esta ruta
+import type { Categoria } from "../../models/Categoria/Categoria";
 
 import { useNavigate } from "react-router-dom";
 import { getPromociones } from "../../services/PromocionService.ts";
 import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO";
-import PromocionList from "../promocion/PromocionList.tsx";
 
 
-
-// El tipo que contendrá todos los artículos para display ahora es la CLASE BASE Articulo
-// Ya que ArticuloManufacturado y ArticuloInsumo extienden de ella
-type AnyArticuloDisplay = Articulo; // <-- ¡Simplificado y preciso!
+type AnyArticuloDisplay = Articulo;
 
 export default function Landing() {
 
@@ -29,8 +25,8 @@ export default function Landing() {
 
 	console.log("ROL DETECTADO:", role);
 	console.log("ID DETECTADO:", id)
-	// El estado ahora es de tipo Articulo[], ya que el servicio devuelve instancias de Articulo o sus subclases
-	const [articulos, setArticulos] = useState<AnyArticuloDisplay[]>([]); // CAMBIO
+
+	const [articulos, setArticulos] = useState<AnyArticuloDisplay[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,19 +39,16 @@ export default function Landing() {
 	const [categorias, setCategorias] = useState<Categoria[]>([]);
 	const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(null);
 
+	// Importamos las funciones del carrito
 	const { addToCart, isInCart, getItemQuantity, totalItems, removeFromCart } = useCart()
 
 	const articuloService = new ArticuloService();
 
-	// Función para cargar AMBOS tipos de artículos
 	const fetchArticulos = async () => {
 		try {
 			setLoading(true);
-			// Estos métodos ahora retornan CLASES de modelo
 			const manufacturedData: ArticuloManufacturado[] = await articuloService.findAllArticulosManufacturadosActivos();
-			const insumoData: ArticuloInsumo[] = await articuloService.findAllArticulosInsumoActivos(); // <--- ¡Añade los paréntesis aquí!//este metodo no existe
-			//Type '() => Promise<ArticuloInsumo[]>' is not assignable to type 'ArticuloInsumo[]'.
-			// Combinar ambos arrays. Ambos son compatibles con Articulo (la clase base)
+			const insumoData: ArticuloInsumo[] = await articuloService.findAllArticulosInsumoActivos();
 			const allArticulos: Articulo[] = [...manufacturedData, ...insumoData];
 			setArticulos(allArticulos);
 		} catch (err) {
@@ -67,12 +60,7 @@ export default function Landing() {
 	};
 
 	const categoriasVisibles = [
-		"Pizza",
-		"Empanada",
-		"Hamburguesa",
-		"Sanguche",
-		"Lomito",
-		"Bebida"
+		"Pizza", "Empanada", "Hamburguesa", "Sanguche", "Lomito", "Bebida"
 	];
 
 	useEffect(() => {
@@ -89,38 +77,22 @@ export default function Landing() {
 	}, []);
 
 	const steps = [
-		{
-			icon: <Search className="w-8 h-8" />,
-			title: 'Encuentra tu comida',
-			description: 'Explora miles de restaurantes y encuentra exactamente lo que deseas'
-		},
-		{
-			icon: <ShoppingBag className="w-8 h-8" />,
-			title: 'Haz tu pedido',
-			description: 'Selecciona tus platillos favoritos y personaliza tu orden'
-		},
-		{
-			icon: <Truck className="w-8 h-8" />,
-			title: 'Recibe en casa',
-			description: 'Rápida entrega directo a tu puerta en el tiempo estimado'
-		}
+		{ icon: <Search className="w-8 h-8" />, title: 'Encuentra tu comida', description: 'Explora miles de restaurantes y encuentra exactamente lo que deseas' },
+		{ icon: <ShoppingBag className="w-8 h-8" />, title: 'Haz tu pedido', description: 'Selecciona tus platillos favoritos y personaliza tu orden' },
+		{ icon: <Truck className="w-8 h-8" />, title: 'Recibe en casa', description: 'Rápida entrega directo a tu puerta en el tiempo estimado' }
 	];
 
-	// Lógica de filtrado para los artículos mostrados en la sección principal
 	const articulosFiltradosPrincipal = articulos.filter(a => {
 		const coincideBusqueda = mainSearch
 			? (
 				a.denominacion?.toLowerCase().includes(mainSearch.toLowerCase()) ||
-				// Usa 'instanceof' para comprobar si es un ArticuloManufacturado y así acceder a 'descripcion'
 				(a instanceof ArticuloManufacturado && a.descripcion && a.descripcion.toLowerCase().includes(mainSearch.toLowerCase()))
 			)
 			: true;
-
 		const coincideCategoria = categoriaSeleccionada === null || a.categoria?.id === categoriaSeleccionada;
 		return coincideBusqueda && coincideCategoria;
 	});
 
-	//-----------------------------------PROMOCIONES--------------------------------------------
 	const [promociones, setPromociones] = useState<IPromocionDTO[]>([]);
 
 	useEffect(() => {
@@ -134,17 +106,15 @@ export default function Landing() {
 		};
 		fetchPromos();
 	}, []);
-	// Lógica de filtrado para las sugerencias de la barra del header
+
 	const articulosFiltradosHeader = articulos.filter(a => {
 		return headerSearch
 			? (
 				a.denominacion?.toLowerCase().includes(headerSearch.toLowerCase()) ||
-				// Usa 'instanceof' para comprobar si es un ArticuloManufacturado y así acceder a 'descripcion'
 				(a instanceof ArticuloManufacturado && a.descripcion && a.descripcion.toLowerCase().includes(headerSearch.toLowerCase()))
 			)
 			: false;
 	});
-
 
 	return (
 		<div className="min-h-screen bg-white ebs-landing">
@@ -377,7 +347,7 @@ export default function Landing() {
 
 			{/* Hero Section */}
 			<section className="relative bg-gradient-to-br from-orange-50 to-orange-100 py-16 lg:py-24
-                            items-center justify-center">
+                                items-center justify-center">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 text-center">
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
@@ -403,24 +373,101 @@ export default function Landing() {
 						<p className="text-xl text-gray-600">Artículos manufacturados y de insumo con la mejor calidad</p>
 					</div>
 
-					<section className="promos-section">
-						<h2 className="section-title">Promociones destacadas</h2>
-						<div className="promos-grid">
-							{promociones.map((promo) => (
-								<div className="promo-card" key={promo.id}>
-									<h3>{promo.denominacion}</h3>
-									<p><strong>Precio promocional:</strong> ${promo.precioPromocional}</p>
-									<p><strong>Vigencia:</strong> {promo.fechaDesde} al {promo.fechaHasta}</p>
-									<ul>
-										{promo.articulos?.map((a) => (
-											<li key={a.id}>{a.denominacion}</li>
-										))}
-									</ul>
+					{/* Promociones destacadas - SECCIÓN MODIFICADA PARA AÑADIR A CARRITO */}
+					<section className="promos-section mb-12">
+						<h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-8 text-center">Promociones Destacadas</h2>
+						{promociones.length === 0 ? (
+							<div className="text-center py-6">
+								<p className="text-gray-500 text-lg">No hay promociones disponibles en este momento.</p>
+							</div>
+						) : (
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+								{promociones.map((promo) => (
+									<div // Ya no es un Link completo, para que los botones sean clicables
+										key={promo.id}
+										className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200"
+									>
+										<div className="relative">
+											<img
+												src={promo.imagen?.denominacion || "/placeholder.svg?height=200&width=300"}
+												alt={promo.denominacion}
+												className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
+											/>
+											<button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition duration-200">
+												<Heart className="w-4 h-4 text-gray-400" />
+											</button>
+										</div>
 
-								</div>
-							))}
+										<div className="p-6">
+											<div className="flex justify-between items-start mb-2">
+												<h3 className="font-bold text-gray-900 text-lg line-clamp-2">{promo.denominacion}</h3>
+												<div className="flex items-center space-x-1 ml-2">
+													<span className="text-lg font-bold text-orange-500">${promo.precioPromocional?.toFixed(2)}</span>
+												</div>
+											</div>
+
+											<p className="text-gray-600 text-sm mb-4 line-clamp-2">
+												{promo.descripcionDescuento || "¡Aprovecha esta increíble oferta!"}
+											</p>
+
+											{promo.articulosManufacturados && promo.articulosManufacturados.length > 0 && (
+												<div className="text-sm text-gray-500 mt-2">
+													Incluye: {promo.articulosManufacturados.map(a => a.denominacion).join(', ')}
+												</div>
+											)}
+
+											<div className="flex justify-between items-center mt-4"> {/* Contenedor para botones */}
+												{/* Botón para agregar/gestionar en el carrito */}
+												<button
+													onClick={(e) => {
+														e.stopPropagation(); // Evita que el clic se propague
+														addToCart(promo); // Agrega la promoción completa
+													}}
+													className={`p-2 rounded-full transition duration-200 ${isInCart(promo.id || 1)
+														? "bg-green-500 text-white"
+														: "bg-orange-500 text-white hover:bg-orange-600"
+														}`}
+												>
+													{isInCart(promo.id || 1) ? (
+														<div className="flex gap-2">
+															<span className="text-xs font-bold">{getItemQuantity(promo.id || 0)}</span>
+															<Plus className="w-4 h-4" />
+														</div>
+													) : (
+														<Plus className="w-4 h-4" />
+													)}
+												</button>
+
+												{/* Botón para eliminar del carrito si ya está */}
+												{isInCart(promo.id || 1) && (
+													<button
+														onClick={(e) => {
+															e.stopPropagation();
+															removeFromCart(promo.id || 0);
+														}}
+														className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-200 ml-2"
+														title="Eliminar del carrito"
+													>
+														<X className="w-3 h-3" />
+													</button>
+												)}
+												{/* Enlace para ver detalles de la promoción */}
+												<Link to={`/promociones/${promo.id}`} className="text-center bg-orange-400 text-white py-2 px-4 ml-auto rounded-md text-sm">
+													Ver detalles
+												</Link>
+											</div>
+										</div>
+									</div>
+								))}
+							</div>
+						)}
+						<div className="text-center mt-12">
+							<Link to="/promociones" className="bg-orange-500 text-white px-8 py-3 rounded-full hover:bg-orange-600 transition duration-200 font-medium">
+								Ver todas las promociones
+							</Link>
 						</div>
 					</section>
+					{/* Promociones destacadas - FIN DE LA SECCIÓN MODIFICADA */}
 
 
 					<div className="mb-8 items-center justify-center">
@@ -496,7 +543,6 @@ export default function Landing() {
 										<button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition duration-200">
 											<Heart className="w-4 h-4 text-gray-400" />
 										</button>
-										{/* Condición para mostrar tiempoEstimadoMinutos solo si es ArticuloManufacturado */}
 										{articulo instanceof ArticuloManufacturado && articulo.tiempoEstimadoMinutos !== undefined && (
 											<div className="absolute bottom-3 left-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-sm">
 												<Clock className="w-3 h-3 inline mr-1" />
@@ -514,7 +560,6 @@ export default function Landing() {
 										</div>
 
 										<p className="text-gray-600 text-sm mb-4 line-clamp-2">
-											{/* Si es ArticuloManufacturado, usa su descripción; si no, un mensaje genérico */}
 											{articulo instanceof ArticuloManufacturado && articulo.descripcion
 												? articulo.descripcion
 												: "Delicioso producto."}
@@ -525,8 +570,10 @@ export default function Landing() {
 												{articulo.categoria?.denominacion || "Producto"}
 											</div>
 											<button
-												onClick={() => addToCart(articulo)}/*Argument of type 'Articulo' is not assignable to parameter of type 'ArticuloManufacturado'.
-  Type 'Articulo' is missing the following properties from type 'ArticuloManufacturado': descripcion, tiempoEstimadoMinutos, preparacion, detallests(2345)*/
+												onClick={(e) => {
+													e.stopPropagation();
+													addToCart(articulo);
+												}}
 												className={`p-2 rounded-full transition duration-200 ${isInCart(articulo.id || 1)
 													? "bg-green-500 text-white"
 													: "bg-orange-500 text-white hover:bg-orange-600"
@@ -556,8 +603,7 @@ export default function Landing() {
 												</div>
 											) : ''}
 										</div>
-										{/* Asume que /producto/:id puede manejar ambos tipos de artículos */}
-										<a className="text-center bg-orange-400 text-white py-2 block mx-auto mt-4" href={`/producto/${articulo.id}`}>Ver detalle</a>
+										<Link to={`/producto/${articulo.id}`} className="text-center bg-orange-400 text-white py-2 block mx-auto mt-4 rounded-md">Ver detalle</Link>
 									</div>
 								</div>
 							))}

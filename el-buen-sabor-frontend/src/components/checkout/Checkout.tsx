@@ -3,8 +3,8 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, CreditCard, MapPin, Truck, ShoppingBag, Check } from "lucide-react"
-import { useCart } from "../Cart/context/cart-context"
+import { ArrowLeft, CreditCard, MapPin, Truck, ShoppingBag, Check, Shield } from "lucide-react"
+import { useCart } from "../../components/Cart/context/cart-context" // Asegúrate que esta ruta sea correcta
 import { PedidoService } from "../../services/PedidoService"
 import { MercadoPagoService } from "../../services/MercadoPagoService"
 import { FormaPago, TipoEnvio } from "../../models/DTO/IPedidoDTO"
@@ -12,6 +12,12 @@ import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO"
 import { useNavigate } from "react-router-dom"
 import LoginForm from "../../components/Auth/components/LoginForm"
 import { useAuth } from "../Auth/Context/AuthContext";
+
+// Importaciones adicionales para tipado
+import type { Articulo } from "../../models/Articulos/Articulo";
+import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
+import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO";
+
 
 // MercadoPago SDK script loader
 const loadMercadoPagoScript = () => {
@@ -30,7 +36,7 @@ const loadMercadoPagoScript = () => {
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
-  const { items, totalItems, totalAmount, clearCart } = useCart()
+  const { items, totalItems, totalAmount, clearCart } = useCart() // 'items' del carrito es ahora CartItem[]
   const pedidoService = new PedidoService()
   const mercadoPagoService = new MercadoPagoService()
 
@@ -84,36 +90,66 @@ export default function CheckoutPage() {
     setIsProcessing(true)
 
     try {
+      // <-- CAMBIO IMPORTANTE AQUÍ: Construcción de los detalles del pedido
+      const detallesPedido = items.map((item) => {
+        let articuloId: number | undefined;
+        let subTotalCalculado: number = 0;
+        let precioUnitario: number = 0; // Para el cálculo del subTotal
+
+        if (item.purchasableItem.tipo === 'articulo') {
+          const articulo = item.purchasableItem as Articulo;
+          articuloId = articulo.id;
+          precioUnitario = articulo.precioVenta || 0;
+        } else if (item.purchasableItem.tipo === 'promocion') {
+          const promocion = item.purchasableItem as IPromocionDTO;
+          articuloId = promocion.id; // Usamos el ID de la promoción como si fuera un "articulo" en este contexto de pedido
+          precioUnitario = promocion.precioPromocional || 0;
+          // Opcional: Si tu backend necesita los IDs de los artículos individuales de la promoción,
+          // tendrías que enviar item.purchasableItem.articulosManufacturados.map(a => a.id)
+          // pero para un PedidoDetalle básico, el ID de la promoción es suficiente.
+        }
+
+        subTotalCalculado = Number((precioUnitario * item.quantity).toFixed(2));
+
+        // Si `articuloId` es undefined, esto podría causar problemas en el backend.
+        // Idealmente, todos los items en el carrito deberían tener un ID.
+        if (articuloId === undefined) {
+          console.error("Item en carrito sin ID definido, omitiendo en PedidoDetalle:", item);
+          return null; // Omitir este detalle o lanzar un error
+        }
+
+        return {
+          cantidad: item.quantity,
+          subTotal: subTotalCalculado,
+          articuloId: articuloId, // Esto es el ID del item (Articulo o Promocion)
+        };
+      }).filter(detail => detail !== null) as IPedidoDTO['detalles']; // Filtrar cualquier null si se omitieron items sin ID
+
+
       const pedido: IPedidoDTO = {
         fechaPedido: new Date().toISOString().split('T')[0], // "YYYY-MM-DD"
         estado: "A_CONFIRMAR",
         tipoEnvio: deliveryType, // Ej: "DELIVERY"
         formaPago: paymentMethod, // Ej: "MERCADO_PAGO"
-        total: Number(
-          items.reduce((acc, item) => acc + item.articulo.precioVenta * item.quantity, 0).toFixed(2)
-        ),
-        clienteId: 1, // ID real del cliente logueado
-        domicilioId: deliveryType === "DELIVERY" ? 1 : 1, // solo si es delivery
-        detalles: items.map((item) => ({
-          cantidad: item.quantity,
-          subTotal: Number((item.articulo.precioVenta * item.quantity).toFixed(2)),
-          articuloId: item.articulo.id,
-        })),
+        // El total debe ser el total final, incluyendo el costo de envío si es delivery
+        total: finalTotal, // Usar el finalTotal ya calculado
+        clienteId: auth.id || 1, // Usar el ID real del cliente logueado desde el contexto de autenticación
+        // Domicilio ID y Sucursal ID: Esto dependerá de cómo manejes los domicilios/sucursales.
+        // Esto es solo un placeholder, necesitarías la lógica real para obtener el ID de domicilio/sucursal.
+        domicilioId: deliveryType === TipoEnvio.DELIVERY ? 1 : undefined, // solo si es delivery, y obtener el ID real
+        sucursalId: deliveryType === TipoEnvio.RETIRO_EN_LOCAL ? 1 : undefined, // solo si es retiro, y obtener el ID real
+        detalles: detallesPedido,
         id: 0
       };
 
-      console.log("PEDIDO:", pedido)
+      console.log("PEDIDO A ENVIAR:", pedido)
 
       if (paymentMethod === FormaPago.MERCADO_PAGO) {
         try {
-          // Create MercadoPago preference
           const preferenceId = await mercadoPagoService.createPreference(pedido)
           console.log("PREF ID ", preferenceId);
 
-          // Store order in localStorage to retrieve after payment
           localStorage.setItem("pendingOrderData", JSON.stringify(pedido))
-
-          // console.log(JSON.parse(preferenceId));
 
           window.location.href = JSON.parse(preferenceId).initPoint;
 
@@ -124,13 +160,11 @@ export default function CheckoutPage() {
           return
         }
       } else {
-        // For cash payments, proceed with normal flow
         const response = await pedidoService.sendPedido(pedido)
         console.log("Pedido creado con éxito:", response)
         setIsComplete(true)
         clearCart()
 
-        // En una app real, redirigirías al usuario a una página de confirmación
         setTimeout(() => {
           navigate("/order-confirmation")
         }, 2000)
@@ -143,7 +177,13 @@ export default function CheckoutPage() {
     }
   }
 
-  if (currentStep === "information" && username) setCurrentStep("delivery");
+  // <-- CAMBIO IMPORTANTE AQUÍ: Si el usuario ya está logueado, pasar al paso de entrega
+  useEffect(() => {
+    if (username && currentStep === "information") {
+      setCurrentStep("delivery");
+    }
+  }, [username, currentStep]);
+
 
   const goToNextStep = () => {
     if (currentStep === "information") setCurrentStep("delivery")
@@ -512,14 +552,31 @@ export default function CheckoutPage() {
                     <div className="space-y-2">
                       <h3 className="font-semibold">Resumen de Productos</h3>
                       <div className="bg-gray-50 p-4 rounded-md space-y-3">
-                        {items.map((item) => (
-                          <div key={item.id} className="flex justify-between">
-                            <span>
-                              {item.quantity}x {item.articulo.denominacion}
-                            </span>
-                            <span className="font-medium">${item.subtotal.toFixed(2)}</span>
-                          </div>
-                        ))}
+                        {items.map((item) => {
+                          // <-- CAMBIO IMPORTANTE AQUÍ: Acceder a las propiedades del purchasableItem
+                          let itemDisplayName: string = item.purchasableItem.denominacion;
+                          let itemDisplayPrice: number;
+
+                          if (item.purchasableItem.tipo === 'articulo') {
+                            itemDisplayPrice = (item.purchasableItem as Articulo).precioVenta || 0;
+                          } else if (item.purchasableItem.tipo === 'promocion') {
+                            itemDisplayPrice = (item.purchasableItem as IPromocionDTO).precioPromocional || 0;
+                            // Opcional: Podrías añadir un texto como "(Promoción)" junto al nombre
+                            itemDisplayName = `${item.purchasableItem.denominacion} (Promo)`;
+                          } else {
+                            itemDisplayPrice = 0; // Fallback
+                          }
+
+                          return (
+                            <div key={item.id} className="flex justify-between">
+                              <span>
+                                {item.quantity}x {itemDisplayName}
+                              </span>
+                              {/* Mostrar el subtotal del item del carrito, que ya está calculado */}
+                              <span className="font-medium">${item.subtotal.toFixed(2)}</span>
+                            </div>
+                          );
+                        })}
                         <div className="border-t border-gray-200 my-2"></div>
                         <div className="flex justify-between">
                           <span>Subtotal</span>
@@ -557,33 +614,46 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Order Summary */}
+          {/* Order Summary (panel de la derecha) */}
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
               <h3 className="text-lg font-bold text-gray-900 mb-6">Resumen del pedido</h3>
 
               <div className="space-y-4 mb-6">
                 <div className="max-h-60 overflow-y-auto space-y-3">
-                  {items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
-                        <img
-                          src={
-                            item.articulo.imagen && item.articulo.imagen.denominacion.length > 0
-                              ? item.articulo.imagen.denominacion
-                              : "/placeholder.svg?height=48&width=48"
-                          }
-                          alt={item.articulo.denominacion}
-                          className="w-full h-full object-cover"
-                        />
+                  {items.map((item) => {
+                    // <-- CAMBIO IMPORTANTE AQUÍ: Acceder a las propiedades a través de purchasableItem
+                    let imageUrl: string = "/placeholder.svg?height=48&width=48";
+                    let itemDisplayName: string = item.purchasableItem.denominacion;
+
+                    if (item.purchasableItem.tipo === 'articulo') {
+                      const articulo = item.purchasableItem as Articulo;
+                      // Asumiendo que la imagen del artículo está en .imagen.denominacion
+                      imageUrl = articulo.imagen?.denominacion || imageUrl;
+                    } else if (item.purchasableItem.tipo === 'promocion') {
+                      const promocion = item.purchasableItem as IPromocionDTO;
+                      // Asumiendo que la imagen de la promoción está en .imagen.denominacion
+                      // Y que podría necesitar el prefijo de localhost:8080 si se sirve desde el backend
+                      imageUrl = promocion.imagen?.denominacion ? `http://localhost:8080/${promocion.imagen.denominacion}` : imageUrl;
+                    }
+
+                    return (
+                      <div key={item.id} className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
+                          <img
+                            src={imageUrl} // Usamos la URL determinada
+                            alt={itemDisplayName} // Usamos el nombre determinado
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{itemDisplayName}</p>
+                          <p className="text-xs text-gray-500">Cantidad: {item.quantity}</p>
+                        </div>
+                        <div className="font-medium">${item.subtotal.toFixed(2)}</div>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{item.articulo.denominacion}</p>
-                        <p className="text-xs text-gray-500">Cantidad: {item.quantity}</p>
-                      </div>
-                      <div className="font-medium">${item.subtotal.toFixed(2)}</div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="border-t border-gray-200 my-2"></div>
@@ -627,6 +697,10 @@ export default function CheckoutPage() {
                   <div className="flex items-center space-x-2 text-sm text-gray-500">
                     <Truck className="w-4 h-4" />
                     <span>Entrega estimada: 25-35 min</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-500">
+                    <Shield className="w-4 h-4" />//Cannot find name 'Shield'
+                    <span>Pago 100% seguro</span>
                   </div>
                 </div>
               )}
