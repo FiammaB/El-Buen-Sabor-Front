@@ -1,25 +1,17 @@
 // src/models/DTO/PromocionCreateDTO.ts
+// Asegúrate de que TipoPromocion también esté definido en algún lugar (ej. en IPromocionDTO.ts)
+// export type TipoPromocion = "HAPPY_HOUR" | "PROMOCION_GENERAL"; // Si es un string literal
+
 export interface PromocionCreateDTO {
     denominacion: string;
-    descripcionDescuento: string;
-    fechaDesde: string;
-    fechaHasta: string;
-    horaDesde: string;
-    horaHasta: string;
+    descripcionDescuento?: string; // Corresponde a descripcionDescuento en tu backend
+    fechaDesde: string; // ISO date string (YYYY-MM-DD)
+    fechaHasta: string; // ISO date string (YYYY-MM-DD)
+    horaDesde: string; // HH:MM:SS
+    horaHasta: string; // HH:MM:SS
     precioPromocional: number;
-    tipoPromocion: string;
-    articulosManufacturados: number[];
-    sucursales: number[];
-    cantidadMinima?: number;
-    porcentajeDescuento?: number;
-    montoMinimo?: number;
-    articuloRegaloId?: number;
-    imagenId?: number;
-    articuloManufacturadoIds: number[];
-    articulos: {
-        articuloId: number;
-        cantidad: number;
-    }[];
+    tipoPromocion: string; // String que representa el enum de Java (ej. "HAPPY_HOUR")
+    imagenId?: number | null; // ID de la imagen en Cloudinary, opcional
+    articuloManufacturadoIds: number[]; // IDs de los ArticulosManufacturados
+    sucursalIds?: number[]; // Opcional, si las promociones son por sucursal
 }
-
-
