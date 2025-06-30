@@ -11,7 +11,7 @@ export default function PedidosPage() {
   const navigate = useNavigate();
   const pedidoService = new PedidoService();
   const [pedidos, setPedidos] = useState<IPedidoDTO[]>([]);
-  const [openSlide, setOpenSlide] = useState<number | null>(null);
+  const [openSlideIds, setOpenSlideIds] = useState<Set<number>>(new Set());
   const [delayMinutes, setDelayMinutes] = useState<{[key: number]: number}>({});
 
   useEffect(() => {
@@ -61,6 +61,19 @@ export default function PedidosPage() {
       alert("No se pudo actualizar la hora");
     }
   };
+
+  const toggleSlide = (detalleId: number) => {
+    setOpenSlideIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(detalleId)) {
+        newSet.delete(detalleId);
+      } else {
+        newSet.add(detalleId);
+      }
+      return newSet;
+    });
+  };
+
 
   if (role !== "COCINERO") {
     return (
@@ -158,12 +171,14 @@ export default function PedidosPage() {
                           <tr key={idx} className="bg-gray-50">
                             <td colSpan={6} className="pl-8 py-2">
                 <span
-                    onClick={() => setOpenSlide(openSlide === det.articuloManufacturado!.id ? null : det.articuloManufacturado!.id)}
+                    onClick={() => toggleSlide(det.id!)}
                     className="cursor-pointer font-semibold text-blue-700 hover:underline"
                 >
-                  ▶ {det.articuloManufacturado?.denominacion} (x{det.cantidad})
+
+                   {det.articuloManufacturado?.denominacion} (x{det.cantidad})
                 </span>
-                              {openSlide === det.articuloManufacturado!.id && (
+
+                              {openSlideIds.has(det.id!) && (
                                   <div className="mt-2 ml-4 border-l-4 border-blue-400 pl-4 py-2 bg-white rounded shadow">
                                     <div>
                                       <strong>Preparación:</strong>{" "}
@@ -174,7 +189,8 @@ export default function PedidosPage() {
                                       <ul className="list-disc ml-5">
                                         {det.articuloManufacturado?.detalles?.map((d, i) => (
                                             <li key={i}>
-                                              {d.articuloInsumo.denominacion} <span className="text-gray-500">(x{d.cantidad})</span>
+                                              {d.articuloInsumo?.denominacion ?? "Insumo desconocido"}{" "}
+                                              <span className="text-gray-500">(x{d.cantidad})</span>
                                             </li>
                                         )) || <li>Sin insumos</li>}
                                       </ul>

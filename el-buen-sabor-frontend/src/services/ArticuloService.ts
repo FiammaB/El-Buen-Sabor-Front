@@ -37,14 +37,14 @@ export class ArticuloService {
 
     async getArticuloManufacturadoById(id: number): Promise<ArticuloManufacturado | null> {
         try {
-            const response = await axios.get<IArticuloManufacturadoResponseDTO>(`${API_BASE_URL}/manufacturados/${id}`);
-            return this.mapToArticuloManufacturado(response.data);
+            const response = await axios.get<IArticuloManufacturadoResponseDTO>(`/api/articuloManufacturado/${id}`);
+            return this.mapToArticuloManufacturado(response.data); // Asegúrate que esta función haga bien el mapping
         } catch (error) {
-            console.error('Error altraer el ariticulo Manufacturado:', error);
-
-            throw error;
+            console.error("Error obteniendo artículo manufacturado por ID:", error);
+            return null;
         }
     }
+
     async findAllArticulosInsumoActivos(): Promise<ArticuloInsumo[]> {
         try {
             const response = await axios.get<IArticuloInsumoResponseDTO[]>(`${API_INSUMO_BASE_URL}/insumos`);
@@ -119,7 +119,14 @@ export class ArticuloService {
 
 
     async actualizarPrecioCompra(id: number, precioCompra: number): Promise<void> {
-        await axios.put(`${API_INSUMO_BASE_URL}/actualizar-precio/${id}?precioCompra=${precioCompra}`); // Ajustado el orden de path variables
+        try {
+            await axios.put(`${API_INSUMO_BASE_URL}/${id}/actualizar-precio`, null, {
+                params: { precioCompra }
+            });
+        } catch (error) {
+            console.error("Error actualizando precio de compra", error);
+            throw error;
+        }
     }
 
     toggleBaja(id: number, baja: boolean): Promise<void> {

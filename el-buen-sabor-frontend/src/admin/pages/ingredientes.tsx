@@ -356,23 +356,30 @@ export default function Ingredientes() {
 
                 {/* Categoría */}
                 <select
-                  value={formData.categoria?.id ?? ""}
-                  onChange={(e) => {
-                    const id = parseInt(e.target.value);
-                    const cat = categoriasList.find((c) => c.id === id);
-                    setFormData({ ...formData, categoria: cat });
-                  }}
-                  className="border border-gray-300 rounded p-2"
+                    value={formData.categoria?.id ?? ""}
+                    onChange={(e) => {
+                      const id = parseInt(e.target.value);
+                      const cat = categoriasList.find((c) => c.id === id);
+                      setFormData({ ...formData, categoria: cat });
+                    }}
+                    className="border border-gray-300 rounded p-2"
                 >
                   <option value="" disabled>
                     Seleccione categoría
                   </option>
                   {categoriasList.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.denominacion}
-                    </option>
+                      <option
+                          key={c.id}
+                          value={c.id}
+                          disabled={c.baja === true}
+                          style={c.baja ? { color: "#aaa" } : {}}
+                      >
+                        {c.denominacion}
+                        {c.baja ? " (Dada de baja)" : ""}
+                      </option>
                   ))}
                 </select>
+
 
                 {/* Unidad */}
                 <select
