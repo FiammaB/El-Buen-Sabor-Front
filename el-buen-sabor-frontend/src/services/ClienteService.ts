@@ -20,4 +20,8 @@ export class ClienteService {
     async cambiarEstado(id: number, activo: boolean): Promise<void> {
         await axios.patch(`${API_URL}/${id}/estado`, { activo });
     }
+
+    async toggleBaja(id: number, baja: boolean): Promise<void> {
+        await axios.patch(`${API_URL}/${id}/baja?baja=${baja}`);
+    }
 }

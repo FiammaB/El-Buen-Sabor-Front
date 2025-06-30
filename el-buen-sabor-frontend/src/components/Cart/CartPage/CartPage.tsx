@@ -130,30 +130,26 @@ export default function CartPage() {
 
                                 <div className="space-y-4">
                                     {items.map((item) => {
-                                        const { purchasableItem } = item; // Extraemos el item comprable
+                                        const { purchasableItem } = item;
                                         let imageUrl: string = "/placeholder.svg?height=80&width=80";
                                         let itemName: string = "Item desconocido";
-                                        let itemCategoryOrType: string = ""; // Cambiado para ser más general
+                                        let itemCategoryOrType: string = "";
                                         let itemPrice: number = 0;
                                         let itemDescription: string = "";
 
-                                        // Determinar detalles según el tipo de item
                                         if (purchasableItem.tipo === 'articulo') {
                                             const articulo = purchasableItem as Articulo;
-                                            // Asumiendo que las imágenes de artículos no necesitan el localhost:8080/ prefijo si están en public
-                                            // Si tus imágenes de artículo sí necesitan el prefijo, mantén el `http://localhost:8080/`
-                                            imageUrl = articulo.imagen?.denominacion || imageUrl;
+                                            imageUrl = articulo.imagen?.denominacion || imageUrl; // Asume que ya es URL completa o relativa pública
                                             itemName = articulo.denominacion;
                                             itemCategoryOrType = articulo.categoria?.denominacion || "Artículo";
                                             itemPrice = articulo.precioVenta || 0;
-                                            // Solo ArticuloManufacturado tiene 'descripcion'
                                             if ('descripcion' in articulo) {
                                                 itemDescription = (articulo as ArticuloManufacturado).descripcion || '';
                                             }
                                         } else if (purchasableItem.tipo === 'promocion') {
                                             const promocion = purchasableItem as IPromocionDTO;
-                                            // Asumiendo que las imágenes de promociones sí necesitan el localhost:8080/ prefijo
-                                            imageUrl = promocion.imagen?.denominacion ? `http://localhost:8080/${promocion.imagen.denominacion}` : imageUrl;
+                                            // <-- CAMBIO CLAVE AQUÍ: Elimina el prefijo `http://localhost:8080/`
+                                            imageUrl = promocion.imagen?.denominacion || imageUrl; // Las URL de Cloudinary son completas
                                             itemName = promocion.denominacion;
                                             itemCategoryOrType = "Promoción";
                                             itemPrice = promocion.precioPromocional || 0;
@@ -220,10 +216,11 @@ export default function CartPage() {
                                 <div className="bg-white rounded-2xl shadow-sm p-6">
                                     <h3 className="text-lg font-bold text-gray-900 mb-4">Te podría interesar</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {relatedProducts.map((product) => ( // Cambiado 'item' a 'product' para evitar conflicto
+                                        {relatedProducts.map((product) => (
                                             <div key={product.id} className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg">
                                                 <img
-                                                    src={product.imagen?.denominacion ? `http://localhost:8080/${product.imagen.denominacion}` : '/placeholder.svg?height=60&width=60'}
+                                                    // <-- CAMBIO CLAVE AQUÍ: Lógica para la URL de la imagen (sin prefijo local)
+                                                    src={product.imagen?.denominacion || '/placeholder.svg?height=60&width=60'} // Las URL de Cloudinary son completas
                                                     alt={product.denominacion}
                                                     className="w-15 h-15 object-cover rounded-lg"
                                                 />
@@ -232,8 +229,6 @@ export default function CartPage() {
                                                     <p className="text-orange-500 font-bold text-sm">${product.precioVenta.toFixed(2)}</p>
                                                 </div>
                                                 <button
-                                                    // Asegúrate que el 'addToCart' pueda recibir ArticuloManufacturado
-                                                    // Ya lo hicimos en el context, así que esto debería estar bien.
                                                     onClick={() => addToCart(product)}
                                                     className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition duration-200"
                                                 >

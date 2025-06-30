@@ -3,8 +3,9 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
+// <-- CAMBIO CLAVE AQUÍ: Añade Shield a las importaciones
 import { ArrowLeft, CreditCard, MapPin, Truck, ShoppingBag, Check, Shield } from "lucide-react"
-import { useCart } from "../../components/Cart/context/cart-context" // Asegúrate que esta ruta sea correcta
+import { useCart } from "../../components/Cart/context/cart-context"
 import { PedidoService } from "../../services/PedidoService"
 import { MercadoPagoService } from "../../services/MercadoPagoService"
 import { FormaPago, TipoEnvio } from "../../models/DTO/IPedidoDTO"
@@ -52,7 +53,7 @@ const loadMercadoPagoScript = () => {
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
-  const { items, totalItems, totalAmount, clearCart } = useCart() // 'items' del carrito es ahora CartItem[]
+  const { items, totalItems, totalAmount, clearCart } = useCart()
   const pedidoService = new PedidoService()
   const mercadoPagoService = new MercadoPagoService()
 
@@ -98,7 +99,7 @@ export default function CheckoutPage() {
           if (Array.isArray(data)) {
             setAddresses(data);
           } else {
-            setAddresses([]); // seguridad por si viene null o un objeto
+            setAddresses([]);
           }
         } catch (error) {
           console.error("Error al obtener domicilios:", error);
@@ -113,7 +114,6 @@ export default function CheckoutPage() {
   }, [auth?.id]);
 
 
-  // Obtenemos localidades
   useEffect(() => {
     const fetchLocalidades = async () => {
       try {
@@ -143,7 +143,6 @@ export default function CheckoutPage() {
 
   console.log(email, telefono)
 
-  // Load MercadoPago SDK when component mounts
   useEffect(() => {
     const initMercadoPago = async () => {
       try {
@@ -169,11 +168,10 @@ export default function CheckoutPage() {
     setIsProcessing(true)
 
     try {
-      // <-- CAMBIO IMPORTANTE AQUÍ: Construcción de los detalles del pedido
       const detallesPedido = items.map((item) => {
         let articuloId: number | undefined;
         let subTotalCalculado: number = 0;
-        let precioUnitario: number = 0; // Para el cálculo del subTotal
+        let precioUnitario: number = 0;
 
         if (item.purchasableItem.tipo === 'articulo') {
           const articulo = item.purchasableItem as Articulo;
@@ -181,42 +179,34 @@ export default function CheckoutPage() {
           precioUnitario = articulo.precioVenta || 0;
         } else if (item.purchasableItem.tipo === 'promocion') {
           const promocion = item.purchasableItem as IPromocionDTO;
-          articuloId = promocion.id; // Usamos el ID de la promoción como si fuera un "articulo" en este contexto de pedido
+          articuloId = promocion.id;
           precioUnitario = promocion.precioPromocional || 0;
-          // Opcional: Si tu backend necesita los IDs de los artículos individuales de la promoción,
-          // tendrías que enviar item.purchasableItem.articulosManufacturados.map(a => a.id)
-          // pero para un PedidoDetalle básico, el ID de la promoción es suficiente.
         }
 
         subTotalCalculado = Number((precioUnitario * item.quantity).toFixed(2));
 
-        // Si `articuloId` es undefined, esto podría causar problemas en el backend.
-        // Idealmente, todos los items en el carrito deberían tener un ID.
         if (articuloId === undefined) {
           console.error("Item en carrito sin ID definido, omitiendo en PedidoDetalle:", item);
-          return null; // Omitir este detalle o lanzar un error
+          return null;
         }
 
         return {
           cantidad: item.quantity,
           subTotal: subTotalCalculado,
-          articuloId: articuloId, // Esto es el ID del item (Articulo o Promocion)
+          articuloId: articuloId,
         };
-      }).filter(detail => detail !== null) as IPedidoDTO['detalles']; // Filtrar cualquier null si se omitieron items sin ID
+      }).filter(detail => detail !== null) as IPedidoDTO['detalles'];
 
 
       const pedido: IPedidoDTO = {
-        fechaPedido: new Date().toISOString().split('T')[0], // "YYYY-MM-DD"
+        fechaPedido: new Date().toISOString().split('T')[0],
         estado: "A_CONFIRMAR",
-        tipoEnvio: deliveryType, // Ej: "DELIVERY"
-        formaPago: paymentMethod, // Ej: "MERCADO_PAGO"
-        // El total debe ser el total final, incluyendo el costo de envío si es delivery
-        total: finalTotal, // Usar el finalTotal ya calculado
-        clienteId: auth.id || 1, // Usar el ID real del cliente logueado desde el contexto de autenticación
-        // Domicilio ID y Sucursal ID: Esto dependerá de cómo manejes los domicilios/sucursales.
-        // Esto es solo un placeholder, necesitarías la lógica real para obtener el ID de domicilio/sucursal.
+        tipoEnvio: deliveryType,
+        formaPago: paymentMethod,
+        total: finalTotal,
+        clienteId: auth.id || 1,
         domicilioId: deliveryType === TipoEnvio.DELIVERY ? selectedAddressId ?? undefined : undefined,
-        sucursalId: deliveryType === TipoEnvio.RETIRO_EN_LOCAL ? 1 : undefined, // solo si es retiro, y obtener el ID real
+        sucursalId: deliveryType === TipoEnvio.RETIRO_EN_LOCAL ? 1 : undefined,
         detalles: detallesPedido,
         id: 0
       };
@@ -256,7 +246,6 @@ export default function CheckoutPage() {
     }
   }
 
-  // <-- CAMBIO IMPORTANTE AQUÍ: Si el usuario ya está logueado, pasar al paso de entrega
   useEffect(() => {
     if (username && currentStep === "information") {
       setCurrentStep("delivery");
@@ -686,9 +675,9 @@ export default function CheckoutPage() {
                     <div className="space-y-2">
                       <h3 className="font-semibold">Información Personal</h3>
                       <div className="bg-gray-50 p-4 rounded-md">
-                        <p><span className="font-medium">Nombre:</span> {username || "No especificado"}</p>
-                        <p><span className="font-medium">Email:</span> {email || "No especificado"}</p>
-                        <p><span className="font-medium">Teléfono:</span> {telefono || "No especificado"}</p>
+                        <p><span className="font-medium">Nombre:</span> {auth.username || "No especificado"}</p>
+                        <p><span className="font-medium">Email:</span> {auth.email || "No especificado"}</p>
+                        <p><span className="font-medium">Teléfono:</span> {auth.telefono || "No especificado"}</p>
                       </div>
                     </div>
 
@@ -698,13 +687,26 @@ export default function CheckoutPage() {
                         <p className="font-medium">
                           {deliveryType === TipoEnvio.DELIVERY ? "Delivery a domicilio" : "Retiro en sucursal"}
                         </p>
-                        {deliveryType === TipoEnvio.DELIVERY && (
+                        {deliveryType === TipoEnvio.DELIVERY && selectedAddressId && (
                           <>
-                            <p>{customerInfo.address || "No especificado"}</p>
-                            <p>
-                              {customerInfo.city || "No especificado"}, {customerInfo.zipCode || "No especificado"}
-                            </p>
+                            {/* Obtener los datos del domicilio seleccionado */}
+                            {(() => {
+                              const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
+                              return selectedAddress ? (
+                                <>
+                                  <p>{selectedAddress.calle} {selectedAddress.numero}</p>
+                                  <p>
+                                    {selectedAddress.localidad?.nombre ?? ""}, {selectedAddress.cp}
+                                  </p>
+                                </>
+                              ) : (
+                                <p>Domicilio no seleccionado o no encontrado.</p>
+                              );
+                            })()}
                           </>
+                        )}
+                        {deliveryType === TipoEnvio.RETIRO_EN_LOCAL && (
+                          <p>En sucursal El Buen Sabor (Dirección de sucursal aquí)</p>
                         )}
                       </div>
                     </div>
@@ -725,18 +727,19 @@ export default function CheckoutPage() {
                       <h3 className="font-semibold">Resumen de Productos</h3>
                       <div className="bg-gray-50 p-4 rounded-md space-y-3">
                         {items.map((item) => {
-                          // <-- CAMBIO IMPORTANTE AQUÍ: Acceder a las propiedades del purchasableItem
                           let itemDisplayName: string = item.purchasableItem.denominacion;
                           let itemDisplayPrice: number;
 
                           if (item.purchasableItem.tipo === 'articulo') {
-                            itemDisplayPrice = (item.purchasableItem as Articulo).precioVenta || 0;
+                            const articulo = item.purchasableItem as Articulo;
+                            itemDisplayPrice = articulo.precioVenta || 0;
+                            // No se necesita `itemDisplayName = articulo.denominacion;` porque ya está en `item.purchasableItem.denominacion`
                           } else if (item.purchasableItem.tipo === 'promocion') {
-                            itemDisplayPrice = (item.purchasableItem as IPromocionDTO).precioPromocional || 0;
-                            // Opcional: Podrías añadir un texto como "(Promoción)" junto al nombre
+                            const promocion = item.purchasableItem as IPromocionDTO;
+                            itemDisplayPrice = promocion.precioPromocional || 0;
                             itemDisplayName = `${item.purchasableItem.denominacion} (Promo)`;
                           } else {
-                            itemDisplayPrice = 0; // Fallback
+                            itemDisplayPrice = 0;
                           }
 
                           return (
@@ -744,7 +747,6 @@ export default function CheckoutPage() {
                               <span>
                                 {item.quantity}x {itemDisplayName}
                               </span>
-                              {/* Mostrar el subtotal del item del carrito, que ya está calculado */}
                               <span className="font-medium">${item.subtotal.toFixed(2)}</span>
                             </div>
                           );
@@ -794,27 +796,29 @@ export default function CheckoutPage() {
               <div className="space-y-4 mb-6">
                 <div className="max-h-60 overflow-y-auto space-y-3">
                   {items.map((item) => {
-                    // <-- CAMBIO IMPORTANTE AQUÍ: Acceder a las propiedades a través de purchasableItem
-                    let imageUrl: string = "/placeholder.svg?height=48&width=48";
+                    // <-- CAMBIO CLAVE AQUÍ: Lógica para la URL de la imagen (sin prefijo local)
+                    let imageUrl: string = "/placeholder.svg?height=48&width=48"; // Default
                     let itemDisplayName: string = item.purchasableItem.denominacion;
 
                     if (item.purchasableItem.tipo === 'articulo') {
                       const articulo = item.purchasableItem as Articulo;
-                      // Asumiendo que la imagen del artículo está en .imagen.denominacion
+                      // La denominación de la imagen del artículo puede ser una URL completa o relativa
+                      // Asumo que para artículos puede ser una ruta local o una URL de Cloudinary
+                      // Si es de Cloudinary, NO le pongas el prefijo localhost. Si es local, sí.
+                      // Aquí lo dejo sin prefijo, asumiendo que ya es una URL completa o relativa pública
                       imageUrl = articulo.imagen?.denominacion || imageUrl;
                     } else if (item.purchasableItem.tipo === 'promocion') {
                       const promocion = item.purchasableItem as IPromocionDTO;
-                      // Asumiendo que la imagen de la promoción está en .imagen.denominacion
-                      // Y que podría necesitar el prefijo de localhost:8080 si se sirve desde el backend
-                      imageUrl = promocion.imagen?.denominacion ? `http://localhost:8080/${promocion.imagen.denominacion}` : imageUrl;
+                      // Las URLs de Cloudinary son siempre completas. NO se les añade prefijo local.
+                      imageUrl = promocion.imagen?.denominacion || imageUrl; // <-- CAMBIO CLAVE: Elimina `http://localhost:8080/`
                     }
 
                     return (
                       <div key={item.id} className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
                           <img
-                            src={imageUrl} // Usamos la URL determinada
-                            alt={itemDisplayName} // Usamos el nombre determinado
+                            src={imageUrl}
+                            alt={itemDisplayName}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -871,7 +875,7 @@ export default function CheckoutPage() {
                     <span>Entrega estimada: 25-35 min</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <Shield className="w-4 h-4" />//Cannot find name 'Shield'
+                    <Shield className="w-4 h-4" />
                     <span>Pago 100% seguro</span>
                   </div>
                 </div>
