@@ -31,6 +31,7 @@ import PromocionForm from './components/promocion/PromocionForm';
 
 import ReporteClientesPage from "./components/Reportes/ReporteClientesPage.tsx";
 import RankingProductosPage from "./components/RankingProductos/RankingProductosPage";
+import AdminClientePedidosPage from './components/Admin/AdminClientePedidosPages'; // <-- NUEVO: Importa este componente
 
 // 👑 Panel Administrador
 import AdminLayout from "./components/Admin/AdminLayout.tsx";
@@ -56,7 +57,7 @@ import DeliveryAdminLayout from "./components/Delivery/DeliveryAdminLayout.tsx";
 import DeliveryPedidosPage from "./components/Delivery/DeliveryPedidosPage.tsx";
 import VerPedidoPage from "./components/Delivery/VerPedidoPage.tsx";
 // 📦 Pedidos del Cliente
-import HistorialPedidos from './components/Cliente/HistorialPedidos.tsx'; // Importa el componente del historial
+import HistorialPedidos from './components/Cliente/HistorialPedidos.tsx';
 import PedidoDetalle from './components/Pedidos/PedidoDetalle.tsx';
 import ClienteListPage from "./components/Admin/ClienteListPage.tsx";
 import EmpleadoListPage from "./components/Admin/EmpleadoListPage.tsx";
@@ -82,13 +83,12 @@ function App() {
 
           {/* 🔐 LOGIN / REGISTER */}
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} /> {/* CLIENTE */}
+          <Route path="/register" element={<RegisterPage />} />
 
           {/* 🔑 RECUPERAR CONTRASEÑA */}
           <Route path="/recuperar" element={<RecoverPasswordForm />} />
           <Route path="/verificar-codigo" element={<VerifyCodeForm />} />
           <Route path="/cambiar-password" element={<ChangePasswordForm />} />
-
 
 
           {/* 🧑 PERFIL MULTIROL */}
@@ -100,11 +100,11 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* ✅ NUEVAS RUTAS PARA EL HISTORIAL DE PEDIDOS DEL CLIENTE */}
+          {/* ✅ RUTAS PARA EL HISTORIAL DE PEDIDOS DEL CLIENTE (Solo Cliente) */}
           <Route
             path="/historial-pedidos"
             element={
-              <ProtectedRoute role="CLIENTE"> {/* Solo clientes pueden ver su historial */}
+              <ProtectedRoute role="CLIENTE">
                 <HistorialPedidos />
               </ProtectedRoute>
             }
@@ -112,7 +112,7 @@ function App() {
           <Route
             path="/historial-pedidos/:id"
             element={
-              <ProtectedRoute role="CLIENTE"> {/* Detalle también protegido para clientes */}
+              <ProtectedRoute role="CLIENTE">
                 <PedidoDetalle />
               </ProtectedRoute>
             }
@@ -123,7 +123,7 @@ function App() {
             path="/admin/promociones"
             element={
               <ProtectedRoute role="ADMINISTRADOR">
-                <PromocionList /> {/* Esta es la lista general para ABM */}
+                <PromocionList />
               </ProtectedRoute>
             }
           />
@@ -131,7 +131,7 @@ function App() {
             path="/admin/promociones/new"
             element={
               <ProtectedRoute role="ADMINISTRADOR">
-                <PromocionForm /> {/* Formulario para crear */}
+                <PromocionForm />
               </ProtectedRoute>
             }
           />
@@ -139,7 +139,7 @@ function App() {
             path="/admin/promociones/edit/:id"
             element={
               <ProtectedRoute role="ADMINISTRADOR">
-                <PromocionForm /> {/* Formulario para editar, el ID se pasa por parámetro */}
+                <PromocionForm />
               </ProtectedRoute>
             }
           />
@@ -164,10 +164,14 @@ function App() {
             <Route path="ranking-productos" element={<RankingProductosPage />} />
             <Route path="ranking-clientes" element={<ReporteClientesPage />} />
             <Route path="clientes" element={<ClienteListPage />} />
-
             <Route path="movimientos-monetarios" element={<ReporteMonetarioPage />} />
-
             <Route path="empleados" element={<EmpleadoListPage />} />
+
+            {/* <-- CAMBIO CLAVE AQUÍ: RUTA PARA VER TODOS LOS PEDIDOS DE UN CLIENTE (ADMIN) */}
+            <Route path="clientes/:clienteId/pedidos" element={<AdminClientePedidosPage />} />
+
+            {/* <-- CAMBIO CLAVE AQUÍ: RUTA PARA VER EL DETALLE DE UN PEDIDO (ADMIN) */}
+            <Route path="pedidos/:id" element={<PedidoDetalle />} />
 
           </Route>
 
@@ -176,7 +180,7 @@ function App() {
             path="/admin/registrar-empleado"
             element={
               <ProtectedRoute role="ADMINISTRADOR">
-                <RegisterPage /> {/* recibe ?rol=cocinero o ?rol=cajero por URL */}
+                <RegisterPage />
               </ProtectedRoute>
             }
           />

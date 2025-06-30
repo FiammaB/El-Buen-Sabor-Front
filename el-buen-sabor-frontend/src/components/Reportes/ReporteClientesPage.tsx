@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { getReporteClientes } from "../../services/ClienteReporteService"; // Asegúrate de que la ruta sea correcta
-import type { ClienteReporteDTO } from "../../models/DTO/ClienteReporteDTO"; // Asegúrate de que la ruta sea correcta
+import { getReporteClientes } from "../../services/ClienteReporteService";
+import type { ClienteReporteDTO } from "../../models/DTO/ClienteReporteDTO";
 import * as XLSX from "xlsx";
 
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { useNavigate } from "react-router-dom"; // <-- Asegúrate de importar useNavigate
 
 const MySwal = withReactContent(Swal);
 
@@ -13,7 +14,8 @@ const ReporteClientesPage: React.FC = () => {
     const [hasta, setHasta] = useState("");
     const [ordenarPor, setOrdenarPor] = useState("cantidad");
     const [clientes, setClientes] = useState<ClienteReporteDTO[]>([]);
-    const [loading, setLoading] = useState(false); // <-- NUEVO ESTADO: Para el indicador de carga
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate(); // <-- Inicializa useNavigate
 
     const cargarReporte = async () => {
         if (!desde || !hasta) {
@@ -25,7 +27,7 @@ const ReporteClientesPage: React.FC = () => {
             return;
         }
 
-        setLoading(true); // Activar carga
+        setLoading(true);
         try {
             const data = await getReporteClientes(desde, hasta, ordenarPor);
             setClientes(data);
@@ -52,7 +54,7 @@ const ReporteClientesPage: React.FC = () => {
                 text: (error as Error).message || 'Ocurrió un error inesperado al intentar obtener el reporte.',
             });
         } finally {
-            setLoading(false); // Desactivar carga
+            setLoading(false);
         }
     };
 
@@ -87,8 +89,8 @@ const ReporteClientesPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8"> {/* Contenedor principal de la página */}
-            <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8"> {/* Contenedor del formulario/reporte */}
+        <div className="min-h-screen bg-gray-50 p-8">
+            <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">Reporte de Pedidos por Cliente</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -99,6 +101,7 @@ const ReporteClientesPage: React.FC = () => {
                             id="fechaDesde"
                             value={desde}
                             onChange={(e) => setDesde(e.target.value)}
+                            required
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         />
                     </div>
@@ -109,6 +112,7 @@ const ReporteClientesPage: React.FC = () => {
                             id="fechaHasta"
                             value={hasta}
                             onChange={(e) => setHasta(e.target.value)}
+                            required
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         />
                     </div>
@@ -153,7 +157,7 @@ const ReporteClientesPage: React.FC = () => {
                 {!loading && clientes.length > 0 && (
                     <div className="tabla-resultados bg-gray-50 rounded-lg p-6 shadow-inner">
                         <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Resultados del Reporte</h3>
-                        <div className="overflow-x-auto"> {/* Para scroll horizontal en tablas pequeñas */}
+                        <div className="overflow-x-auto">
                             <table className="min-w-full bg-white rounded-lg overflow-hidden">
                                 <thead className="bg-gray-100">
                                     <tr>
@@ -174,13 +178,7 @@ const ReporteClientesPage: React.FC = () => {
                                             <td className="py-3 px-4 whitespace-nowrap text-sm">
                                                 <button
                                                     className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors text-xs"
-                                                    onClick={() => {
-                                                        MySwal.fire({
-                                                            icon: 'info',
-                                                            title: 'Funcionalidad en desarrollo',
-                                                            text: 'Próximamente vas a poder ver el detalle de pedidos por cliente.',
-                                                        });
-                                                    }}
+                                                    onClick={() => navigate(`/admin/clientes/${c.idCliente}/pedidos`)} // <-- CAMBIO: Ruta corregida
                                                 >
                                                     Ver Pedidos
                                                 </button>
@@ -192,12 +190,17 @@ const ReporteClientesPage: React.FC = () => {
                         </div>
                     </div>
                 )}
-                {!loading && clientes.length === 0 && desde && hasta && (
-                    <p className="text-red-500 text-center mt-4">
-                        No se encontraron registros para el rango de fechas seleccionado.
-                    </p>
-                )}
 
+                {!loading && clientes.length === 0 && (desde || hasta) && (
+                    <div className="text-center py-12 text-gray-500">
+                        <p>No se encontraron clientes para el rango de fechas seleccionado.</p>
+                    </div>
+                )}
+                {!loading && clientes.length === 0 && !desde && !hasta && (
+                    <div className="text-center py-12 text-gray-500">
+                        <p>Ingresa un rango de fechas y haz clic en "Buscar Reporte" para ver los clientes.</p>
+                    </div>
+                )}
             </div>
         </div>
     );
