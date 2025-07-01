@@ -66,4 +66,8 @@ export class UsuarioService {
             }
         });
     }
+
+    async actualizarNombre(id: number, nombre: string): Promise<void> {
+        await axios.patch(`${API_URL}/${id}/nombre`, { nombre });
+    }
 }

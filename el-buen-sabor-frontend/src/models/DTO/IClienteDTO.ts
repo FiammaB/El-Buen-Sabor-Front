@@ -1,4 +1,7 @@
 // src/models/DTO/IClienteDTO.ts
+import type {IDomicilioDTO} from "./IDomicilioDTO.ts";
+import type {UsuarioDTO} from "./UsuarioDTO.ts";
+
 export interface IClienteDTO {
     id: number;
     nombreUsuario?: string;
@@ -7,5 +10,6 @@ export interface IClienteDTO {
     fechaNacimiento: string;
     telefono: string;
     baja?: boolean;
-    domicilios?: DomicilioDTO[];
+    domicilios?: IDomicilioDTO[];
+    usuario?: UsuarioDTO;
 }

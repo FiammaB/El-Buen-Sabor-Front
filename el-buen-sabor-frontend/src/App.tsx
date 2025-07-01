@@ -61,6 +61,8 @@ import HistorialPedidos from './components/Cliente/HistorialPedidos.tsx';
 import PedidoDetalle from './components/Pedidos/PedidoDetalle.tsx';
 import ClienteListPage from "./components/Admin/ClienteListPage.tsx";
 import EmpleadoListPage from "./components/Admin/EmpleadoListPage.tsx";
+import ClienteAdminLayout from "./components/Cliente/ClienteAdminLayout.tsx";
+import ClientePerfilPage from "./components/Cliente/ClientePerfilPage.tsx";
 
 
 
@@ -185,7 +187,22 @@ function App() {
             }
           />
 
-          {/* 👨‍🍳 PANEL COCINERO */}
+            <Route
+                path="/cliente"
+                element={
+                    <ProtectedRoute role="CLIENTE">
+                        <ClienteAdminLayout />
+                    </ProtectedRoute>
+                }
+            >
+                <Route path="perfil" element={<ClientePerfilPage />} />
+                <Route path="pedidos" element={<HistorialPedidos />} />
+                <Route path="pedidos/:id" element={<PedidoDetalle />} />
+                {/* Si sumás más páginas, agregalas acá */}
+            </Route>
+
+
+            {/* 👨‍🍳 PANEL COCINERO */}
           <Route
             path="/cocinero"
             element={
