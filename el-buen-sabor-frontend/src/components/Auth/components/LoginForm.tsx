@@ -61,6 +61,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         apellido = "",
         email: userEmail,
         telefono = "",
+        primerIngreso, // ✅ nuevo campo desde el backend
       } = res.data;
 
       if (!rol || !userEmail) {
@@ -72,31 +73,40 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         return;
       }
 
-      // En este ejemplo se arma el fullName usando apellido (ajustalo según necesites)
+      // Guardamos en contexto
       const fullName = `${apellido}`.trim();
       login(id, rol, fullName || "Sin Nombre", userEmail, telefono);
 
-      if (onSuccess) {
-        onSuccess();
+      // Guardar email por si hace falta en cambio de contraseña
+      localStorage.setItem("email-primer-ingreso", userEmail);
+
+      // ✅ Redirigir a pantalla de cambio si es primer ingreso y es COCINERO, CAJERO o DELIVERY
+      if ((rol === "COCINERO" || rol === "CAJERO" || rol === "DELIVERY") && primerIngreso === true) {
+        navigate("/primer-ingreso");
       } else {
-        switch (rol) {
-          case "ADMINISTRADOR":
-            navigate("/admin");
-            break;
-          case "CLIENTE":
-            navigate("/cliente");
-            break;
-          case "COCINERO":
-            navigate("/cocinero");
-            break;
-          case "CAJERO":
-            navigate("/cajero");
-            break;
-          case "DELIVERY":
-            navigate("/delivery");
-            break;
-          default:
-            navigate("/");
+        // Navegación normal según rol
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          switch (rol) {
+            case "ADMINISTRADOR":
+              navigate("/admin");
+              break;
+            case "CLIENTE":
+              navigate("/cliente");
+              break;
+            case "COCINERO":
+              navigate("/cocinero");
+              break;
+            case "CAJERO":
+              navigate("/cajero");
+              break;
+            case "DELIVERY":
+              navigate("/delivery");
+              break;
+            default:
+              navigate("/");
+          }
         }
       }
     } catch (error) {
@@ -112,7 +122,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
   return (
     <div className="max-w-md mx-auto p-6">
-      {/* Bloque para login con Google */}
+      {/* Login con Google */}
       <div className="mb-6 text-center">
         <GoogleLogin
           onSuccess={(credentialResponse) => {
@@ -129,7 +139,6 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                   usuario.telefono
                 );
                 alert("¡Login con Google exitoso!");
-                // Redirigir según rol
                 switch (usuario.rol) {
                   case "ADMINISTRADOR":
                     navigate("/admin");
@@ -162,7 +171,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         />
       </div>
 
-      {/* Divisor */}
+      {/* Línea divisoria */}
       <div className="flex items-center mb-6">
         <div className="flex-grow h-px bg-gray-300"></div>
         <span className="px-3 text-sm text-gray-500">
@@ -171,7 +180,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         <div className="flex-grow h-px bg-gray-300"></div>
       </div>
 
-      {/* Formulario tradicional de login */}
+      {/* Formulario de login manual */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.general && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -181,10 +190,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
         {/* Email */}
         <div className="space-y-2">
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
             Correo electrónico
           </label>
           <div className="relative">
@@ -201,17 +207,12 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               onChange={handleInputChange}
             />
           </div>
-          {errors.email && (
-            <p className="text-sm text-red-600">{errors.email}</p>
-          )}
+          {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
         </div>
 
-        {/* Password */}
+        {/* Contraseña */}
         <div className="space-y-2">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             Contraseña
           </label>
           <div className="relative">
@@ -232,24 +233,16 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               className="absolute right-3 top-3.5"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400" />
-              ) : (
-                <Eye className="h-5 w-5 text-gray-400" />
-              )}
+              {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
             </button>
           </div>
-          {errors.password && (
-            <p className="text-sm text-red-600">{errors.password}</p>
-          )}
+          {errors.password && <p className="text-sm text-red-600">{errors.password}</p>}
         </div>
 
+        {/* Recordarme + recuperar */}
         <div className="flex items-center justify-between">
           <label className="flex items-center text-sm text-gray-900">
-            <input
-              type="checkbox"
-              className="mr-2 h-4 w-4 text-orange-600 border-gray-300 rounded"
-            />
+            <input type="checkbox" className="mr-2 h-4 w-4 text-orange-600 border-gray-300 rounded" />
             Recordarme
           </label>
           <button
@@ -261,6 +254,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
           </button>
         </div>
 
+        {/* Botón */}
         <button
           type="submit"
           disabled={isLoading}
@@ -269,6 +263,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
           {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
         </button>
 
+        {/* Ir al registro */}
         <p className="text-sm text-center text-gray-600">
           ¿No tienes una cuenta?{" "}
           <button

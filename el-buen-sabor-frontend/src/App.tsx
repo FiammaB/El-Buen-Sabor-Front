@@ -1,5 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
+import PrimerIngresoPage from './components/Auth/components/PrimerIngresoPage';
+
+
 
 // 🌐 Páginas públicas
 import Landing from './components/Landing/Landing';
@@ -84,6 +87,8 @@ function App() {
           {/* 🔐 LOGIN / REGISTER */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/primer-ingreso" element={<PrimerIngresoPage />} />
+
 
           {/* 🔑 RECUPERAR CONTRASEÑA */}
           <Route path="/recuperar" element={<RecoverPasswordForm />} />
