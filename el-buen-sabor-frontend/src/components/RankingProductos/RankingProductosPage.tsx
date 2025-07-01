@@ -1,151 +1,157 @@
 import React, { useState } from "react";
-import { getRanking } from "../../services/RankingService"; // Asegúrate de que la ruta sea correcta
-import type { ProductoRankingDTO } from "../../models/DTO/ProductoRankingDTO"; // Asegúrate de que la ruta sea correcta
-import * as XLSX from "xlsx";
-import Swal from "sweetalert2"; // Importar Swal
-import withReactContent from "sweetalert2-react-content"; // Importar withReactContent
+import { getRanking } from "../../services/RankingService";
+import type { ProductoRankingDTO } from "../../models/DTO/ProductoRankingDTO";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import {
+    BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
 
 const MySwal = withReactContent(Swal);
 
 const RankingProductosPage: React.FC = () => {
     const [desde, setDesde] = useState("");
     const [hasta, setHasta] = useState("");
-    const [productos, setProductos] = useState<ProductoRankingDTO[]>([]);
-    const [loading, setLoading] = useState(false); // Ya existe, lo usaremos correctamente
+    const [ranking, setRanking] = useState<ProductoRankingDTO[]>([]);
+    const [loading, setLoading] = useState(false);
 
     const cargarRanking = async () => {
         if (!desde || !hasta) {
-            MySwal.fire("Campos incompletos", "Seleccioná ambas fechas", "warning");
+            MySwal.fire("Campos requeridos", "Seleccioná ambas fechas", "warning");
             return;
         }
 
-        setLoading(true); // Activar carga
+        setLoading(true);
         try {
-            console.log("Desde:", desde, "Hasta:", hasta);
             const data = await getRanking(desde, hasta);
-            setProductos(data);
-
             if (data.length === 0) {
-                MySwal.fire({
-                    icon: 'info',
-                    title: 'Sin resultados',
-                    text: 'No se encontraron productos vendidos en ese rango de fechas.',
-                });
+                MySwal.fire("Sin resultados", "No se encontraron ventas en ese período", "info");
             } else {
-                MySwal.fire("Éxito", "Ranking generado correctamente", "success");
+                setRanking(data);
+                MySwal.fire("Éxito", "Ranking cargado correctamente", "success");
             }
         } catch (error) {
-            console.error("Error al cargar el ranking:", error);
-            MySwal.fire({
-                icon: "error",
-                title: "Error",
-                text: "No se pudo obtener el ranking. Por favor, intentá de nuevo más tarde.",
-            });
+            console.error("Error al obtener ranking:", error);
+            MySwal.fire("Error", "Hubo un problema al obtener el ranking", "error");
         } finally {
-            setLoading(false); // Desactivar carga
+            setLoading(false);
         }
     };
 
-    const exportarExcel = () => {
-        if (productos.length === 0) {
-            MySwal.fire("Sin datos", "No hay ranking para exportar", "info");
-            return;
-        }
+    // Calcular totales para gráfico de torta
+    const totalesPorTipo = ranking.reduce((acc, producto) => {
+        acc[producto.tipo] = (acc[producto.tipo] || 0) + producto.cantidadVendida;
+        return acc;
+    }, {} as Record<string, number>);
 
-        const datosParaExcel = productos.map(p => ({
-            "Nombre Producto": p.nombreProducto,
-            "Cantidad Vendida": p.cantidadVendida,
-        }));
+    const dataTorta = Object.entries(totalesPorTipo).map(([tipo, value]) => ({
+        name: tipo,
+        value
+    }));
 
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(datosParaExcel);
-        XLSX.utils.book_append_sheet(wb, ws, "Productos Más Vendidos");
-        XLSX.writeFile(wb, `ranking_productos_${desde}_${hasta}.xlsx`);
-
-        MySwal.fire("Éxito", "El reporte se exportó correctamente", "success");
-    };
+    const colores = ["#0088FE", "#FF8042"]; // Cocina y Bebidas
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8"> {/* Contenedor principal de la página */}
-            <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8"> {/* Contenedor del formulario/ranking */}
+        <div className="min-h-screen bg-gray-50 p-8">
+            <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">Ranking de Productos Más Vendidos</h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className="form-group">
-                        <label htmlFor="fechaDesde" className="block text-gray-700 text-sm font-bold mb-2">Desde</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label htmlFor="fechaDesde" className="block text-gray-700 font-bold mb-2">Desde</label>
                         <input
                             type="date"
                             id="fechaDesde"
                             value={desde}
                             onChange={(e) => setDesde(e.target.value)}
-                            required
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="shadow border rounded w-full py-2 px-3"
                         />
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="fechaHasta" className="block text-gray-700 text-sm font-bold mb-2">Hasta</label>
+                    <div>
+                        <label htmlFor="fechaHasta" className="block text-gray-700 font-bold mb-2">Hasta</label>
                         <input
                             type="date"
                             id="fechaHasta"
                             value={hasta}
                             onChange={(e) => setHasta(e.target.value)}
-                            required
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            className="shadow border rounded w-full py-2 px-3"
                         />
                     </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
+                <div className="flex justify-center gap-4 mb-6">
                     <button
-                        type="button"
-                        className="flex-1 bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={cargarRanking}
                         disabled={loading}
+                        className="bg-orange-500 text-white px-6 py-2 rounded-xl font-semibold hover:bg-orange-600 disabled:opacity-50"
                     >
-                        {loading ? "Cargando..." : "Buscar Ranking"}
-                    </button>
-                    <button
-                        type="button"
-                        className="flex-1 bg-green-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={exportarExcel}
-                        disabled={productos.length === 0 || loading}
-                    >
-                        Exportar Excel
+                        {loading ? "Cargando..." : "Buscar"}
                     </button>
                 </div>
 
-                {loading && (
-                    <div className="flex justify-center items-center py-8">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                    </div>
-                )}
-
-                {!loading && productos.length > 0 && (
-                    <div className="ranking-section bg-gray-50 rounded-lg p-6 shadow-inner">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Listado de Productos Más Vendidos</h3>
-                        <div className="overflow-x-auto"> {/* Para scroll horizontal en tablas pequeñas */}
-                            <ul className="divide-y divide-gray-200">
-                                {productos.map((p, index) => (
-                                    <li key={index} className="flex justify-between items-center py-3 px-2 hover:bg-white transition-colors">
-                                        <span className="text-lg font-medium text-gray-800">{p.nombreProducto}</span>
-                                        <span className="text-lg font-semibold text-orange-600">Vendidos: {p.cantidadVendida}</span>
-                                    </li>
-                                ))}
-                            </ul>
+                {ranking.length > 0 && (
+                    <>
+                        <div className="overflow-x-auto mb-6">
+                            <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                                <thead className="bg-gray-100">
+                                    <tr>
+                                        <th className="py-2 px-4 text-left text-sm font-semibold text-gray-700">Producto</th>
+                                        <th className="py-2 px-4 text-left text-sm font-semibold text-gray-700">Cantidad Vendida</th>
+                                        <th className="py-2 px-4 text-left text-sm font-semibold text-gray-700">Tipo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {ranking.map((p) => (
+                                        <tr key={p.id} className="hover:bg-gray-50">
+                                            <td className="py-2 px-4">{p.nombreProducto}</td>
+                                            <td className="py-2 px-4 text-blue-600 font-semibold">{p.cantidadVendida}</td>
+                                            <td className="py-2 px-4">{p.tipo}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
-                )}
 
-                {/* Mensaje de no resultados o si no se ha buscado aún */}
-                {!loading && productos.length === 0 && (desde || hasta) && ( // Si no está cargando, no hay productos, pero se intentó buscar
-                    <div className="text-center py-12 text-gray-500">
-                        <p>No se encontraron productos vendidos para el rango de fechas seleccionado.</p>
-                    </div>
-                )}
-                {!loading && productos.length === 0 && !desde && !hasta && ( // Si no hay búsqueda aún
-                    <div className="text-center py-12 text-gray-500">
-                        <p>Ingresa un rango de fechas y haz clic en "Buscar Ranking" para ver los productos más vendidos.</p>
-                    </div>
+                        <div className="flex flex-wrap justify-center gap-8">
+                            {/* Gráfico de barras */}
+                            <div style={{ width: 600, height: 300 }}>
+                                <h4 className="text-center mb-2 font-semibold">Cantidad Vendida por Producto</h4>
+                                <ResponsiveContainer>
+                                    <BarChart data={ranking}>
+                                        <XAxis dataKey="nombreProducto" />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="cantidadVendida" fill="#8884d8" name="Cantidad Vendida" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+
+                            {/* Gráfico de torta */}
+                            <div style={{ width: 400, height: 300 }}>
+                                <h4 className="text-center mb-2 font-semibold">Distribución por Tipo</h4>
+                                <ResponsiveContainer>
+                                    <PieChart>
+                                        <Pie
+                                            data={dataTorta}
+                                            dataKey="value"
+                                            nameKey="name"
+                                            cx="50%"
+                                            cy="50%"
+                                            outerRadius={100}
+                                            label
+                                        >
+                                            {dataTorta.map((_, i) => (
+                                                <Cell key={i} fill={colores[i % colores.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </>
                 )}
             </div>
         </div>
