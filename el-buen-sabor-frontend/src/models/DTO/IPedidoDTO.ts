@@ -19,6 +19,7 @@ export interface IPedidoDTO {
     telefono?: string;
     usuario: {
       id: number; // <-- Añadido ID para referencia
+      nombre?: string;
       email?: string;
     };
   };
