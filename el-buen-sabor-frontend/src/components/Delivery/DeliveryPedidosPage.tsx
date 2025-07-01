@@ -81,9 +81,14 @@ export default function DeliveryPedidosPage() {
                                     <td className="p-2 text-center font-bold">{pedido.id}</td>
                                     {/* CLIENTE */}
                                     <td className="p-2 text-center">
-                                        {pedido.cliente?.nombre
-                                            ? `${pedido.cliente.nombre} ${pedido.cliente.apellido}`
-                                            : pedido.clienteId ?? "-"}
+                                        {pedido.cliente
+                                            ? (
+                                            pedido.cliente.usuario?.nombre
+                                                ? `${pedido.cliente.usuario.nombre} ${pedido.cliente.apellido ?? ""}`
+                                                : `${pedido.cliente.nombre ?? ""} ${pedido.cliente.apellido ?? ""}`
+                                        ).trim() || pedido.clienteId
+                                            : pedido.clienteId ?? "-"
+                                        }
                                     </td>
                                     {/* DOMICILIO */}
                                     <td className="p-2 text-center">

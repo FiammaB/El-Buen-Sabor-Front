@@ -36,7 +36,17 @@ export default function VerPedidoPage() {
 
             {/* Datos del cliente */}
             <div className="mb-6">
-                <div><span className="font-semibold">Cliente:</span> {pedido.cliente?.nombre} {pedido.cliente?.apellido}</div>
+                <div>
+                    <span className="font-semibold">Cliente:</span>{" "}
+                    {pedido.cliente
+                        ? (
+                            pedido.cliente.usuario?.nombre
+                                ? `${pedido.cliente.usuario.nombre} ${pedido.cliente.apellido ?? ""}`
+                                : `${pedido.cliente.nombre ?? ""} ${pedido.cliente.apellido ?? ""}`
+                        ).trim()
+                        : pedido.clienteId ?? "-"
+                    }
+                </div>
                 <div><span className="font-semibold">Teléfono:</span> {pedido.cliente?.telefono}</div>
                 <div>
                     <span className="font-semibold">Dirección de Entrega:</span>{" "}
