@@ -411,7 +411,7 @@ export default function Landing() {
 											</p>
 
 											{promo.articulosManufacturados && promo.articulosManufacturados.length > 0 && (
-												<div className="text-sm text-gray-500 mt-2">
+												<div className="text-sm text-gray-500 mt-2 h-[60px] overflow-y-auto">
 													Incluye: {promo.articulosManufacturados.map(a => a.denominacion).join(', ')}
 												</div>
 											)}
@@ -528,7 +528,7 @@ export default function Landing() {
 							{articulosFiltradosPrincipal.map((articulo) => (
 								<div
 									key={articulo.id}
-									className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200"
+									className={`${articulo.baja ? 'saturate-0 cursor-not-allowed' : 'bg-white'}  rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group border hover:border-orange-200`}
 								>
 									<div className="relative">
 										<img
@@ -540,9 +540,6 @@ export default function Landing() {
 											alt={articulo.denominacion}
 											className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
 										/>
-										<button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition duration-200">
-											<Heart className="w-4 h-4 text-gray-400" />
-										</button>
 										{articulo instanceof ArticuloManufacturado && articulo.tiempoEstimadoMinutos !== undefined && (
 											<div className="absolute bottom-3 left-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-sm">
 												<Clock className="w-3 h-3 inline mr-1" />
@@ -574,7 +571,7 @@ export default function Landing() {
 													e.stopPropagation();
 													addToCart(articulo);
 												}}
-												className={`p-2 rounded-full transition duration-200 ${isInCart(articulo.id || 1)
+												className={`${articulo.baja ? 'saturate-0 cursor-not-allowed' : ''} p-2 rounded-full transition duration-200 ${isInCart(articulo.id || 1)
 													? "bg-green-500 text-white"
 													: "bg-orange-500 text-white hover:bg-orange-600"
 													}`}
@@ -603,7 +600,7 @@ export default function Landing() {
 												</div>
 											) : ''}
 										</div>
-										<Link to={`/producto/${articulo.id}`} className="text-center bg-orange-400 text-white py-2 block mx-auto mt-4 rounded-md">Ver detalle</Link>
+										<Link to={`/producto/${articulo.id}`} className={`${articulo.baja ? 'saturate-0 cursor-not-allowed' : ''} text-center bg-orange-400 text-white py-2 block mx-auto mt-4 rounded-md`}>Ver detalle</Link>
 									</div>
 								</div>
 							))}

@@ -102,10 +102,10 @@ export default function PerfilPage() {
       {/* Contenido */}
       <div className="pt-[88px] flex justify-center px-4">
         <div className="w-full max-w-2xl bg-white p-8 rounded-xl shadow-md mt-6">
-          <img 
-            src="https://t4.ftcdn.net/jpg/03/64/21/11/360_F_364211147_1qgLVxv1Tcq0Ohz3FawUfrtONzz8nq3e.jpg" 
+          <img
+            src="https://tse1.mm.bing.net/th/id/OIP.sD17RVKg5AcsA_hhKAKhiQHaJ7?pid=Api&P=0&h=180"
             alt="Nombre"
-            className="size-[60px] rounded-full mb-4 object-cover mx-auto" 
+            className="size-[60px] rounded-full mb-4 object-cover mx-auto"
           />
           <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Mi Perfil</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -144,7 +144,7 @@ export default function PerfilPage() {
               </div>
             </div>
 
-            {/* Cambiar contraseña */}            
+            {/* Cambiar contraseña */}
             <button
               type="button"
               onClick={() => navigate("/recuperar")}
