@@ -10,9 +10,10 @@ import { ArticuloInsumo } from "../../models/Articulos/ArticuloInsumo";
 interface IngredienteFormProps {
     onSave: () => void;
     onCancel: () => void;
+    insumosExistentes: ArticuloInsumo[];
 }
 
-export default function IngredienteForm({ onSave, onCancel }: IngredienteFormProps) {
+export default function IngredienteForm({ onSave, onCancel, insumosExistentes }: IngredienteFormProps) {
     // Estado individual por campo
     const [denominacion, setDenominacion] = useState("");
     const [precioCompra, setPrecioCompra] = useState<number | "">("");
@@ -22,6 +23,7 @@ export default function IngredienteForm({ onSave, onCancel }: IngredienteFormPro
     const [unidadMedidaId, setUnidadMedidaId] = useState<number | "">("");
     const [imagenId, setImagenId] = useState<number | undefined>(undefined);
     const [formReady, setFormReady] = useState(false);
+    const [errorNombre, setErrorNombre] = useState<string | null>(null);
 
     // NUEVO ESTADO para esParaElaborar
     const [esParaElaborar, setEsParaElaborar] = useState(false); // Por defecto, false (no es para elaborar)
@@ -30,6 +32,13 @@ export default function IngredienteForm({ onSave, onCancel }: IngredienteFormPro
     const [unidades, setUnidades] = useState<UnidadMedida[]>([]);
     const [isUploading, setIsUploading] = useState(false);
 
+    function normalizarTexto(texto: string): string {
+        return texto
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, '')
+            .toLowerCase();
+    }
     // Carga categorías y unidades
     useEffect(() => {
         new CategoriaService().getAll().then(setCategorias);
@@ -52,6 +61,18 @@ export default function IngredienteForm({ onSave, onCancel }: IngredienteFormPro
         if (unidades.length > 0 && !unidadMedidaId) setUnidadMedidaId(unidades[0].id ?? "");
     }, [unidades]);
 
+    useEffect(() => {
+        const nombreNormalizado = normalizarTexto(denominacion);
+        const existe = insumosExistentes.some(
+            ins => normalizarTexto(ins.denominacion) === nombreNormalizado
+        );
+        if (existe) {
+            setErrorNombre("Ya existe un ingrediente con ese nombre.");
+        } else {
+            setErrorNombre(null);
+        }
+    }, [denominacion, insumosExistentes]);
+
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -66,7 +87,7 @@ export default function IngredienteForm({ onSave, onCancel }: IngredienteFormPro
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Validación básica
+        if (errorNombre) return;
         if (
             !denominacion ||
             precioCompra === "" ||
@@ -121,6 +142,9 @@ export default function IngredienteForm({ onSave, onCancel }: IngredienteFormPro
                 required
                 className="border rounded p-2 w-full"
             />
+            {errorNombre && (
+                <span className="text-red-500 text-sm mt-1">{errorNombre}</span>
+            )}
             <input
                 type="number"
                 value={precioCompra}
@@ -194,7 +218,7 @@ export default function IngredienteForm({ onSave, onCancel }: IngredienteFormPro
                 <button
                     type="submit"
                     className="bg-blue-600 text-white px-4 py-2 rounded"
-                    disabled={isUploading || !formReady}
+                    disabled={isUploading || !formReady || !!errorNombre}
                 >
                     Crear ingrediente
                 </button>

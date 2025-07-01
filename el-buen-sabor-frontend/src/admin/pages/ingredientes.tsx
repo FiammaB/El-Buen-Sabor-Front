@@ -94,6 +94,14 @@ export default function Ingredientes() {
     }));
   };
 
+  function normalizarTexto(str: string) {
+    return str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+  }
+
   const abrirPopupEditar = (ing: ArticuloInsumo) => {
     setFormData({ ...ing }); // Carga todos los datos del ingrediente
     setIngredienteEditando(ing);
@@ -118,6 +126,14 @@ export default function Ingredientes() {
     setIngredienteEditando(null);
     resetForm();
   };
+
+  function normalizarTexto(str: string) {
+    return str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+  }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -174,6 +190,15 @@ export default function Ingredientes() {
       baja: esEdicion ? ingredienteEditando?.baja : false
     };
 
+    const nombreNuevo = normalizarTexto(formData.denominacion || "");
+    const esNombreRepetido = ingredientes.some((ing) => {
+      if (esEdicion && ing.id === ingredienteEditando?.id) return false; // Ignorar si es el mismo en edición
+      return normalizarTexto(ing.denominacion) === nombreNuevo;
+    });
+    if (esNombreRepetido) {
+      alert("Ya existe un ingrediente con ese nombre");
+      return;
+    }
 
     try {
       if (esEdicion && ingredienteEditando?.id) {

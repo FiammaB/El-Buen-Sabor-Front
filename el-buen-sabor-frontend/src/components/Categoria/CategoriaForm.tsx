@@ -1,43 +1,68 @@
-import type {ICategoriaResponseDTO} from "../../models/DTO/ICategoriaResponseDTO.ts";
-import {useEffect, useRef, useState} from "react";
+import type { ICategoriaResponseDTO } from "../../models/DTO/ICategoriaResponseDTO.ts";
+import { useEffect, useRef, useState } from "react";
+
+function normalizarTexto(texto: string): string {
+	return texto
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.replace(/\s+/g, '')
+		.toLowerCase();
+}
 
 export function CategoriaForm({
-						   idCategoriaPadre,
-						   reloadCategorias,
-						   onClose,
-						   editCategoria
-					   }: {
+								  idCategoriaPadre,
+								  reloadCategorias,
+								  onClose,
+								  editCategoria,
+								  categoriasExistentes = []
+							  }: {
 	idCategoriaPadre: number,
 	reloadCategorias: () => void,
 	onClose: () => void,
-	editCategoria?: ICategoriaResponseDTO | null
+	editCategoria?: ICategoriaResponseDTO | null,
+	categoriasExistentes?: ICategoriaResponseDTO[]
 }) {
 	const [denominacion, setDenominacion] = useState(editCategoria?.denominacion || "");
 	const [loading, setLoading] = useState(false);
 	const wrapperRef = useRef<HTMLDivElement>(null);
 	const [baja, setBaja] = useState(editCategoria?.baja ?? false);
-
+	const [errorNombre, setErrorNombre] = useState<string | null>(null);
 
 	useEffect(() => {
 		setDenominacion(editCategoria?.denominacion || "");
 	}, [editCategoria]);
 
+	// Validación reactiva al escribir
+	useEffect(() => {
+		const nombreNormalizado = normalizarTexto(denominacion);
+		const existe = categoriasExistentes
+			.filter(cat => !editCategoria || cat.id !== editCategoria.id)
+			.some(cat => normalizarTexto(cat.denominacion || "") === nombreNormalizado);
+
+		if (existe) {
+			setErrorNombre("Ya existe una categoría con ese nombre.");
+		} else {
+			setErrorNombre(null);
+		}
+	}, [denominacion, categoriasExistentes, editCategoria]);
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		if (errorNombre) return; // Bloquea si ya existe
+
 		setLoading(true);
 
 		const data = {
 			denominacion,
 			categoriaPadreId: idCategoriaPadre,
 			sucursalIds: [],
-			baja: false // Siempre crear activa, después actualizamos si hace falta
+			baja: false
 		};
 
 		try {
 			let res;
 			let categoriaCreada = null;
 			if (editCategoria) {
-				// PUT para editar: solo denominación
 				const dataEdit = { denominacion, categoriaPadreId: idCategoriaPadre, sucursalIds: [] };
 				res = await fetch(`http://localhost:8080/api/categorias/${editCategoria.id}`, {
 					method: "PUT",
@@ -45,7 +70,6 @@ export function CategoriaForm({
 					body: JSON.stringify(dataEdit)
 				});
 			} else {
-				// POST para crear (incluye estado)
 				res = await fetch("http://localhost:8080/api/categorias", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -53,7 +77,6 @@ export function CategoriaForm({
 				});
 				if (res.ok) {
 					categoriaCreada = await res.json();
-					// Si el usuario eligió "Inactiva", mandamos PATCH para poner en baja
 					if (baja) {
 						await fetch(`http://localhost:8080/api/categorias/${categoriaCreada.id}/baja?baja=true`, {
 							method: "PATCH"
@@ -75,8 +98,6 @@ export function CategoriaForm({
 		}
 	};
 
-
-
 	return (
 		<div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
 			<div ref={wrapperRef} className="bg-white rounded-xl shadow-lg p-8 min-w-[300px] w-full max-w-md">
@@ -94,8 +115,10 @@ export function CategoriaForm({
 							className="border rounded p-2"
 							disabled={loading}
 						/>
+						{errorNombre && (
+							<span className="text-red-500 text-sm mt-1">{errorNombre}</span>
+						)}
 					</label>
-					{/* Solo mostrar el estado si ES NUEVA */}
 					{!editCategoria && (
 						<label className="flex flex-col gap-1">
 							<span className="font-semibold">Estado</span>
@@ -112,7 +135,7 @@ export function CategoriaForm({
 					)}
 					<button
 						type="submit"
-						disabled={loading}
+						disabled={loading || !!errorNombre || !denominacion.trim()}
 						className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800"
 					>
 						{editCategoria ? "Guardar cambios" : "Crear categoría"}

@@ -95,6 +95,7 @@ export default function CategoriaManufacturadoPage() {
                     reloadCategorias={fetchCategorias}
                     onClose={() => setShowForm(false)}
                     editCategoria={editCategoria}
+                    categoriasExistentes={categorias} // <-- agregá esto
                 />
             )}
 

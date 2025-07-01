@@ -535,6 +535,7 @@ export default function CheckoutPage() {
                                     }),
                                   });
 
+
                                   if (!res.ok) throw new Error("Error al guardar domicilio");
                                   const saved = await res.json();
 
