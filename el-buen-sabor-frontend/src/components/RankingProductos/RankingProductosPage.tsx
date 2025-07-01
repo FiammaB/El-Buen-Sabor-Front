@@ -28,13 +28,16 @@ const RankingProductosPage: React.FC = () => {
 
     const cargarRanking = async () => {
         if (!desde || !hasta) {
-            MySwal.fire("Campos requeridos", "Seleccioná ambas fechas", "warning");
+            MySwal.fire("Campos incompletos", "Seleccioná ambas fechas", "warning");
             return;
         }
 
         setLoading(true);
         try {
+            console.log("Desde:", desde, "Hasta:", hasta);
             const data = await getRanking(desde, hasta);
+            setProductos(data);
+
             if (data.length === 0) {
                 MySwal.fire({
                     icon: "info",
@@ -42,28 +45,38 @@ const RankingProductosPage: React.FC = () => {
                     text: "No se encontraron productos vendidos en ese rango de fechas.",
                 });
             } else {
-                setRanking(data);
-                MySwal.fire("Éxito", "Ranking cargado correctamente", "success");
+                MySwal.fire("Éxito", "Ranking generado correctamente", "success");
             }
         } catch (error) {
-            console.error("Error al obtener ranking:", error);
-            MySwal.fire("Error", "Hubo un problema al obtener el ranking", "error");
+            console.error("Error al cargar el ranking:", error);
+            MySwal.fire({
+                icon: "error",
+                title: "Error",
+                text: "No se pudo obtener el ranking. Por favor, intentá de nuevo más tarde.",
+            });
         } finally {
             setLoading(false);
         }
     };
 
-    // Calcular totales para gráfico de torta
-    const totalesPorTipo = ranking.reduce((acc, producto) => {
-        acc[producto.tipo] = (acc[producto.tipo] || 0) + producto.cantidadVendida;
-        return acc;
-    }, {} as Record<string, number>);
+    const exportarExcel = () => {
+        if (productos.length === 0) {
+            MySwal.fire("Sin datos", "No hay ranking para exportar", "info");
+            return;
+        }
 
         const datosParaExcel = productos.map((p) => ({
             "Nombre Producto": p.nombreProducto,
             "Cantidad Vendida": p.cantidadVendida,
         }));
 
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(datosParaExcel);
+        XLSX.utils.book_append_sheet(wb, ws, "Productos Más Vendidos");
+        XLSX.writeFile(wb, `ranking_productos_${desde}_${hasta}.xlsx`);
+
+        MySwal.fire("Éxito", "El reporte se exportó correctamente", "success");
+    };
 
     // --- Preparación de datos y colores para los gráficos ---
     // Los datos para el gráfico de barras ya están en el formato correcto (productos)
@@ -116,7 +129,8 @@ const RankingProductosPage: React.FC = () => {
                             id="fechaDesde"
                             value={desde}
                             onChange={(e) => setDesde(e.target.value)}
-                            className="shadow border rounded w-full py-2 px-3"
+                            required
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         />
                     </div>
                     <div className="form-group">
@@ -131,17 +145,27 @@ const RankingProductosPage: React.FC = () => {
                             id="fechaHasta"
                             value={hasta}
                             onChange={(e) => setHasta(e.target.value)}
-                            className="shadow border rounded w-full py-2 px-3"
+                            required
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         />
                     </div>
                 </div>
                 <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
                     <button
+                        type="button"
+                        className="flex-1 bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={cargarRanking}
                         disabled={loading}
-                        className="bg-orange-500 text-white px-6 py-2 rounded-xl font-semibold hover:bg-orange-600 disabled:opacity-50"
                     >
-                        {loading ? "Cargando..." : "Buscar"}
+                        {loading ? "Cargando..." : "Buscar Ranking"}
+                    </button>
+                    <button
+                        type="button"
+                        className="flex-1 bg-green-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={exportarExcel}
+                        disabled={productos.length === 0 || loading}
+                    >
+                        Exportar Excel
                     </button>
                 </div>
                 {loading && (
