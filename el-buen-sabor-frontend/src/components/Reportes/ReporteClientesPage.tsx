@@ -209,7 +209,11 @@ const ReporteClientesPage: React.FC = () => {
                                 <h4 className="text-xl font-bold text-gray-800 mb-4 text-center">Cantidad de pedidos por cliente</h4>
                                 <ResponsiveContainer width="100%" height={300}>
                                     <BarChart data={clientes}>
-                                        <XAxis dataKey="nombre" tickLine={false} axisLine={false} style={{ fontSize: '0.75rem' }} />
+                                        <XAxis
+                                            dataKey={(cliente) => `  ${cliente.apellido}`}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            style={{ fontSize: '0.75rem' }} />
                                         <YAxis tickLine={false} axisLine={false} style={{ fontSize: '0.75rem' }} />
                                         <Tooltip cursor={{ fill: 'rgba(0,0,0,0.1)' }} />
                                         <Legend />
