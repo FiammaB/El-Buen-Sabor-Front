@@ -151,6 +151,13 @@ const ReporteClientesPage: React.FC = () => {
                     >
                         Exportar Excel
                     </button>
+                    <button
+                        type="button"
+                        className="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition duration-200"
+                        onClick={() => navigate(-1)}
+                    >
+                        Volver Atrás
+                    </button>
                 </div>
 
                 {loading && (

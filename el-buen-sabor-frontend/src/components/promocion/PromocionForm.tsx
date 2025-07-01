@@ -208,6 +208,7 @@ const PromocionForm: React.FC = () => {
                 Volver a la lista
             </button>
 
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="form-group">
                     <label htmlFor="denominacion" className="block text-gray-700 text-sm font-bold mb-2">Denominación</label>
