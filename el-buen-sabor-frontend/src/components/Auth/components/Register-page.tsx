@@ -3,6 +3,7 @@ import { ArrowLeft, Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../Auth/Context/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
 
 // Tipado opcional que puede venir como props
 type RegisterProps = {
@@ -62,6 +63,7 @@ export default function RegisterPage(props: RegisterProps) {
     }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
+
 
   // ✅ Validación de datos antes de enviar
   const validateForm = () => {
@@ -380,6 +382,39 @@ export default function RegisterPage(props: RegisterProps) {
                 </p>
               )}
             </form>
+            {rolDestino === "CLIENTE" && (
+              <div className="pt-6 border-t border-gray-200 text-center space-y-4">
+                <p className="text-sm text-gray-500">O registrate con</p>
+                <div className="flex justify-center">
+                  <GoogleLogin
+                    onSuccess={(credentialResponse) => {
+                      const token = credentialResponse.credential;
+                      axios.post("http://localhost:8080/api/auth/google", { token })
+                        .then((res) => {
+                          const usuario = res.data;
+                          login(
+                            usuario.id,
+                            usuario.rol,
+                            `${usuario.nombre} ${usuario.apellido}`,
+                            usuario.email,
+                            usuario.telefono
+                          );
+                          alert("¡Login con Google exitoso!");
+                          navigate("/cliente");
+                        })
+                        .catch((err) => {
+                          console.error("❌ Error al loguear con Google", err);
+                          alert("Falló el login con Google.");
+                        });
+                    }}
+                    onError={() => {
+                      console.log("❌ Falló el login con Google");
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
       </div>
