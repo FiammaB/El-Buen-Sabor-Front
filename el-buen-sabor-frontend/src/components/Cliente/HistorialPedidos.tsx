@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { PedidoService } from '../../services/PedidoService';
 import type { IPedidoDTO } from '../../models/DTO/IPedidoDTO'; // Importa la interfaz IPedidoDTO
 import { useAuth } from '../Auth/Context/AuthContext';
+import PedidoDetallePopup from "./PedidoDetallePopup.tsx";
 
 export default function HistorialPedidos() {
     const [pedidos, setPedidos] = useState<IPedidoDTO[]>([]);
@@ -11,6 +12,12 @@ export default function HistorialPedidos() {
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
     const { role, id: clienteId } = useAuth();
+    const [pedidoDetalle, setPedidoDetalle] = useState<IPedidoDTO | null>(null);
+    const [estadoFiltro, setEstadoFiltro] = useState<string>('');
+    const estadosUnicos = Array.from(new Set(pedidos.map(p => p.estado)));
+    const pedidosFiltrados = estadoFiltro
+        ? pedidos.filter(p => p.estado === estadoFiltro)
+        : pedidos;
 
     const pedidoService = new PedidoService();
 
@@ -36,10 +43,6 @@ export default function HistorialPedidos() {
 
         fetchHistorialPedidos();
     }, [role, clienteId]);
-
-    const handleVerDetalle = (pedidoId: number) => {
-        navigate(`/historial-pedidos/${pedidoId}`);
-    };
 
     // FUNCIÓN MODIFICADA: Ahora visualizará el PDF en una nueva pestaña (usando Blob)
     const handleVisualizarFactura = async (pedidoId: number) => {
@@ -102,9 +105,45 @@ export default function HistorialPedidos() {
         );
     }
 
+    const handleVerDetalle = async (pedidoId: number) => {
+        try {
+            setLoading(true);
+            // Si ya tenés todos los datos del pedido, podés pasar el objeto:
+            const pedido = pedidos.find(p => p.id === pedidoId);
+            if (pedido) {
+                setPedidoDetalle(pedido);
+            } else {
+                // Si querés cargarlo con otro endpoint:
+                const pedidoData = await pedidoService.getPedidoById(pedidoId);
+                setPedidoDetalle(pedidoData);
+            }
+        } catch (e) {
+            alert("Error al cargar el detalle del pedido.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <div className="p-8 max-w-6xl mx-auto">
+        <div className="p-8 max-w-6xl mx-auto relative">
             <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Historial de Pedidos 📜</h2>
+
+            {/* Filtro por estado */}
+            <div className="mb-4 flex items-center gap-2">
+                <label className="font-semibold">Filtrar por estado:</label>
+                <select
+                    value={estadoFiltro}
+                    onChange={e => setEstadoFiltro(e.target.value)}
+                    className="border rounded p-2"
+                >
+                    <option value="">Todos</option>
+                    {estadosUnicos.map(estado => (
+                        <option key={estado} value={estado}>
+                            {estado.replace(/_/g, ' ')}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
             {pedidos.length === 0 ? (
                 <div className="bg-white p-6 rounded-lg shadow-md text-center">
@@ -114,26 +153,33 @@ export default function HistorialPedidos() {
                 <div className="overflow-x-auto bg-white rounded-lg shadow-md">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
-                            <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    N° Pedido
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Fecha
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Total
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Estado
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Acciones
-                                </th>
-                            </tr>
+                        <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                N° Pedido
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Fecha
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Total
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Estado
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Acciones
+                            </th>
+                        </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {pedidos.map((pedido) => (
+                        {pedidosFiltrados.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="text-center py-8 text-gray-500">
+                                    No hay pedidos que coincidan con el filtro seleccionado.
+                                </td>
+                            </tr>
+                        ) : (
+                            pedidosFiltrados.map((pedido) => (
                                 <tr key={pedido.id} className="hover:bg-gray-100">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         #{pedido.id}
@@ -156,27 +202,37 @@ export default function HistorialPedidos() {
                                         </button>
                                         {pedido.factura?.urlPdf && (
                                             <div className="inline-flex space-x-2">
-                                                <button // CAMBIO AQUÍ: Ahora llama a handleVisualizarFactura
+                                                <button
                                                     onClick={() => handleVisualizarFactura(pedido.id)}
                                                     className="text-blue-600 hover:text-blue-900"
                                                 >
-                                                    Visualizar {/* Botón para abrir en nueva pestaña */}
+                                                    Visualizar
                                                 </button>
                                                 <button
                                                     onClick={() => handleDescargarFactura(pedido.id)}
                                                     className="text-green-600 hover:text-green-900"
                                                 >
-                                                    Descargar {/* Botón para forzar descarga */}
+                                                    Descargar
                                                 </button>
                                             </div>
                                         )}
                                     </td>
                                 </tr>
-                            ))}
+                            ))
+                        )}
                         </tbody>
                     </table>
                 </div>
             )}
+
+            {/* ----------- MODAL de Detalle ----------- */}
+            {pedidoDetalle && (
+                <PedidoDetallePopup
+                    pedido={pedidoDetalle}
+                    onClose={() => setPedidoDetalle(null)}
+                />
+            )}
         </div>
     );
+
 }
