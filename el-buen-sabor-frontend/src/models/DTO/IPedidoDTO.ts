@@ -6,7 +6,7 @@ import type { IArticuloInsumoResponseDTO } from '../DTO/IAArticuloInsumoResponse
 
 // Interfaz para el DTO de Pedido que viene del backend
 export interface IPedidoDTO {
-  id: number;
+  id?: number;
   fechaPedido: string; // Formato string, e.g., "AAAA-MM-DD"
   total: number;
   estado: EstadoPedido; // <-- ¡Usamos el enum EstadoPedido!

@@ -169,33 +169,25 @@ export default function CheckoutPage() {
 
     try {
       const detallesPedido = items.map((item) => {
-        let articuloId: number | undefined;
-        let subTotalCalculado: number = 0;
-        let precioUnitario: number = 0;
-
-        if (item.purchasableItem.tipo === 'articulo') {
-          const articulo = item.purchasableItem as Articulo;
-          articuloId = articulo.id;
-          precioUnitario = articulo.precioVenta || 0;
-        } else if (item.purchasableItem.tipo === 'promocion') {
+        if (item.purchasableItem.tipo === 'promocion') {
           const promocion = item.purchasableItem as IPromocionDTO;
-          articuloId = promocion.id;
-          precioUnitario = promocion.precioPromocional || 0;
+          return {
+            cantidad: item.quantity,
+            promocionId: promocion.id, // <-- OJO, no articuloId
+            // El subtotal lo calcula el backend, pero lo podés mandar igual para tener consistencia en el resumen
+            subTotal: Number((promocion.precioPromocional * item.quantity).toFixed(2)),
+          };
+        } else if (item.purchasableItem.tipo === 'articulo') {
+          const articulo = item.purchasableItem as Articulo;
+          return {
+            cantidad: item.quantity,
+            articuloId: articulo.id, // <-- Solo artículo
+            subTotal: Number((articulo.precioVenta * item.quantity).toFixed(2)),
+          };
         }
-
-        subTotalCalculado = Number((precioUnitario * item.quantity).toFixed(2));
-
-        if (articuloId === undefined) {
-          console.error("Item en carrito sin ID definido, omitiendo en PedidoDetalle:", item);
-          return null;
-        }
-
-        return {
-          cantidad: item.quantity,
-          subTotal: subTotalCalculado,
-          articuloId: articuloId,
-        };
-      }).filter(detail => detail !== null) as IPedidoDTO['detalles'];
+        // No envíes nada para otros tipos
+        return null;
+      }).filter(Boolean);
 
 
       const pedido: IPedidoDTO = {
@@ -204,11 +196,10 @@ export default function CheckoutPage() {
         tipoEnvio: deliveryType,
         formaPago: paymentMethod,
         total: finalTotal,
-        clienteId: auth.id || 1,
+        clienteId: auth.id ?? undefined,
         domicilioId: deliveryType === TipoEnvio.DELIVERY ? selectedAddressId ?? undefined : undefined,
-        sucursalId: deliveryType === TipoEnvio.RETIRO_EN_LOCAL ? 1 : undefined,
+
         detalles: detallesPedido,
-        id: 0
       };
 
       console.log("PEDIDO A ENVIAR:", pedido)

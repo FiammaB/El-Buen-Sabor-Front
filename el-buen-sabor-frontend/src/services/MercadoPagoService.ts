@@ -8,11 +8,6 @@ export class MercadoPagoService {
     this.baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080/api"
   }
 
-  /**
-   * Creates a MercadoPago preference for the given order
-   * @param pedido Order data
-   * @returns The preference ID from MercadoPago
-   */
   async createPreference(pedido: IPedidoDTO): Promise<string> {
     console.log("PEDIDO ANTES DEL BACK ", pedido)
     try {
