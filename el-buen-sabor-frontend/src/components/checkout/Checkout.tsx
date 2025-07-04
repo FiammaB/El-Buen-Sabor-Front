@@ -232,14 +232,15 @@ export default function CheckoutPage() {
         const response = await pedidoService.sendPedido(pedido)
         console.log("Pedido creado con éxito:", response)
         setIsComplete(true)
-        clearCart()
+
 
         setTimeout(() => {
+          clearCart()
           navigate("/order-confirmation")
         }, 2000)
       }
     } catch (error) {
-      console.error("Error al crear el pedido:", error)
+      console.error("Error al crear esl pedido:", error)
       alert("No se pudo crear el pedido. Intentalo de nuevo.")
     } finally {
       setIsProcessing(false)
