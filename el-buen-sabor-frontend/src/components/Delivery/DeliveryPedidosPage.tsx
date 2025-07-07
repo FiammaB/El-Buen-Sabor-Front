@@ -118,7 +118,7 @@ export default function DeliveryPedidosPage() {
                                     </td>
                                     {/* TOTAL */}
                                     <td className="p-2 text-center font-bold">
-                                        ${calcularTotal(pedido).toFixed(2)}
+                                        ${pedido.total?.toFixed(2)}
                                     </td>
                                     {/* ACCION */}
                                     <td className="p-2 text-center">
@@ -135,29 +135,156 @@ export default function DeliveryPedidosPage() {
                                     <tr>
                                         <td colSpan={7} className="bg-gray-50 pl-8 py-2">
                                             <h4 className="font-semibold mb-2">Detalle del Pedido</h4>
-                                            <ul>
-                                                {pedido.detalles?.map((det, idx) => (
-                                                    <li key={idx} className="mb-1">
-                                                        {det.articuloManufacturado
-                                                            ? (
-                                                                <span className="font-bold text-green-800">
-                          {det.articuloManufacturado.denominacion}
-                        </span>
-                                                            )
-                                                            : det.articuloInsumo
-                                                                ? (
-                                                                    <span className="font-bold text-blue-800">
-                            {det.articuloInsumo.denominacion}
-                          </span>
-                                                                )
-                                                                : <span>-</span>
+                                            {/* Agrupado por tipo */}
+                                            {/* 1. Promociones */}
+                                            {(() => {
+                                                // Agrupar promociones
+                                                const promosMap = new Map();
+                                                pedido.detalles?.forEach(det => {
+                                                    if (det.promocion) {
+                                                        const key = det.promocion.id;
+                                                        if (!promosMap.has(key)) {
+                                                            promosMap.set(key, {
+                                                                ...det.promocion,
+                                                                cantidad: det.cantidad,
+                                                                subTotal: det.subTotal
+                                                            });
+                                                        } else {
+                                                            const prev = promosMap.get(key);
+                                                            promosMap.set(key, {
+                                                                ...prev,
+                                                                cantidad: prev.cantidad + det.cantidad,
+                                                                subTotal: prev.subTotal + det.subTotal
+                                                            });
                                                         }
-                                                        {" "} x{det.cantidad}
-                                                        {" "}
-                                                        <span className="text-gray-500">(${det.subTotal?.toFixed(2)})</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
+                                                    }
+                                                });
+                                                if (promosMap.size > 0) {
+                                                    return (
+                                                        <div className="mb-2">
+                                                            <span className="font-bold text-purple-700">Promociones:</span>
+                                                            <ul className="ml-3 mt-1 list-disc">
+                                                                {[...promosMap.values()].map((promo: any, i) => (
+                                                                    <li key={i} className="mb-2">
+                                                                        <span className="font-bold">{promo.denominacion}</span> (x{promo.cantidad})
+                                                                        <span className="text-gray-500"> (${promo.subTotal?.toFixed(2)})</span>
+                                                                        {/* Lista de artículos de la promo */}
+                                                                        {promo.articulosInsumo?.length > 0 && (
+                                                                            <div className="ml-2 text-blue-900 text-xs">
+                                                                                <strong>Insumos: </strong>
+                                                                                {promo.articulosInsumo.map((ins: any, j: number) => (
+                                                                                    <span key={j}>
+                                                                                        ({promo.cantidad}x) {ins.denominacion}
+                                                                                        {ins.precioVenta && (
+                                                                                            <> <span className="text-gray-500">(${ins.precioVenta?.toFixed(2)})</span></>
+                                                                                        )}
+                                                                                        {j < promo.articulosInsumo.length - 1 ? ", " : ""}
+                                                                                     </span>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+                                                                        {promo.articulosManufacturados?.length > 0 && (
+                                                                            <div className="ml-2 text-green-900 text-xs">
+                                                                                <strong>Manufacturados: </strong>
+                                                                                {promo.articulosManufacturados.map((am: any, j: number) => (
+                                                                                    <span key={j}>
+                                                                                        ({promo.cantidad}x) {am.denominacion}
+                                                                                        {am.precioVenta && (
+                                                                                            <> <span className="text-gray-500">(${am.precioVenta?.toFixed(2)})</span></>
+                                                                                        )}
+                                                                                        {j < promo.articulosManufacturados.length - 1 ? ", " : ""}
+                                                                                    </span>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
+
+                                            {/* 2. Manufacturados */}
+                                            {(() => {
+                                                const manMap = new Map();
+                                                pedido.detalles?.forEach(det => {
+                                                    if (det.articuloManufacturado && !det.promocion) {
+                                                        const key = det.articuloManufacturado.id;
+                                                        if (!manMap.has(key)) {
+                                                            manMap.set(key, {
+                                                                ...det.articuloManufacturado,
+                                                                cantidad: det.cantidad,
+                                                                subTotal: det.subTotal
+                                                            });
+                                                        } else {
+                                                            const prev = manMap.get(key);
+                                                            manMap.set(key, {
+                                                                ...prev,
+                                                                cantidad: prev.cantidad + det.cantidad,
+                                                                subTotal: prev.subTotal + det.subTotal
+                                                            });
+                                                        }
+                                                    }
+                                                });
+                                                if (manMap.size > 0) {
+                                                    return (
+                                                        <div className="mb-2">
+                                                            <span className="font-bold text-green-700">Artículos Manufacturados:</span>
+                                                            <ul className="ml-3 mt-1 list-disc">
+                                                                {[...manMap.values()].map((am: any, i) => (
+                                                                    <li key={i}>
+                                                                        <span className="font-bold">{am.denominacion}</span> (x{am.cantidad})
+                                                                        <span className="text-gray-500"> (${am.subTotal?.toFixed(2)})</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
+
+                                            {/* 3. Insumos */}
+                                            {(() => {
+                                                const insMap = new Map();
+                                                pedido.detalles?.forEach(det => {
+                                                    if (det.articuloInsumo && !det.promocion) {
+                                                        const key = det.articuloInsumo.id;
+                                                        if (!insMap.has(key)) {
+                                                            insMap.set(key, {
+                                                                ...det.articuloInsumo,
+                                                                cantidad: det.cantidad,
+                                                                subTotal: det.subTotal
+                                                            });
+                                                        } else {
+                                                            const prev = insMap.get(key);
+                                                            insMap.set(key, {
+                                                                ...prev,
+                                                                cantidad: prev.cantidad + det.cantidad,
+                                                                subTotal: prev.subTotal + det.subTotal
+                                                            });
+                                                        }
+                                                    }
+                                                });
+                                                if (insMap.size > 0) {
+                                                    return (
+                                                        <div>
+                                                            <span className="font-bold text-blue-700">Artículos Insumo:</span>
+                                                            <ul className="ml-3 mt-1 list-disc">
+                                                                {[...insMap.values()].map((ins: any, i) => (
+                                                                    <li key={i}>
+                                                                        <span className="font-bold">{ins.denominacion}</span> (x{ins.cantidad})
+                                                                        <span className="text-gray-500"> (${det.subTotal?.toFixed(2)})</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
                                         </td>
                                     </tr>
                                 )}
@@ -165,7 +292,6 @@ export default function DeliveryPedidosPage() {
                         ))
                     )}
                     </tbody>
-
                 </table>
             </div>
         </div>
