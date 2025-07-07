@@ -3,6 +3,7 @@
 // Importar interfaces de DTO existentes si son usadas en los detalles
 import type { IArticuloManufacturadoResponseDTO } from '../DTO/IAArticuloManufacturadoResponseDTO';
 import type { IArticuloInsumoResponseDTO } from '../DTO/IAArticuloInsumoResponseDTO';
+import type {IPromocionDTO} from "./IPromocionDTO.ts";
 
 // Interfaz para el DTO de Pedido que viene del backend
 export interface IPedidoDTO {
@@ -65,6 +66,7 @@ export interface IDetallePedidoDTO {
   subTotal: number;
   articuloManufacturado?: IArticuloManufacturadoResponseDTO | null; // Usar el DTO de respuesta
   articuloInsumo?: IArticuloInsumoResponseDTO | null; // Usar el DTO de respuesta
+  promocion?: IPromocionDTO | null;
 }
 
 // Enum para los estados del pedido (debe coincidir con el backend)

@@ -85,134 +85,184 @@ export default function PedidosPage() {
   }
 
   return (
-    <div className="p-8">
-      <h2 className="text-3xl font-bold text-green-700 mb-6">Panel de Pedidos 👨‍🍳</h2>
       <div className="p-8">
-        {/* ...Cabecera y acciones... */}
-        <h3 className="text-xl font-semibold mb-4">📋 Pedidos en Preparación:</h3>
-        <table className="min-w-full border border-gray-300 shadow-sm">
-          <thead>
-          <tr className="bg-gray-100">
-            <th className="p-2">ID</th>
-            <th className="p-2">Fecha</th>
-            <th className="p-2">Total</th>
-            <th className="p-2">Hora Estimada</th>
-            <th className="p-2 text-center">+Tiempo</th>
-            <th className="p-2">Acción</th>
-          </tr>
-          </thead>
-          <tbody>
-          {pedidos.length > 0 ? (
-              pedidos.map((pedido) => {
-                let nuevoEstado = "";
-                let botonTexto = "";
-                let buttonColor = "";
+        <h2 className="text-3xl font-bold text-green-700 mb-6">Panel de Pedidos 👨‍🍳</h2>
+        <div className="p-8">
+          <h3 className="text-xl font-semibold mb-4">📋 Pedidos en Preparación:</h3>
+          <table className="min-w-full border border-gray-300 shadow-sm">
+            <thead>
+            <tr className="bg-gray-100">
+              <th className="p-2">ID</th>
+              <th className="p-2">Fecha</th>
+              <th className="p-2">Total</th>
+              <th className="p-2">Hora Estimada</th>
+              <th className="p-2 text-center">+Tiempo</th>
+              <th className="p-2">Acción</th>
+            </tr>
+            </thead>
+            <tbody>
+            {pedidos.length > 0 ? (
+                pedidos.map((pedido) => {
+                  let nuevoEstado = "";
+                  let botonTexto = "";
+                  let buttonColor = "";
 
-                if (pedido.estado === "EN_COCINA") {
-                  nuevoEstado = "EN_PREPARACION";
-                  botonTexto = "Marcar en Preparación";
-                  buttonColor = "bg-blue-500 hover:bg-blue-600";
-                } else if (pedido.estado === "EN_PREPARACION") {
-                  nuevoEstado = "LISTO";
-                  botonTexto = "Marcar como Listo";
-                  buttonColor = "bg-green-600 hover:bg-green-700";
-                } else {
-                  // No mostrar botón para otros estados
-                  nuevoEstado = "";
-                  botonTexto = "";
-                  buttonColor = "";
-                }
+                  if (pedido.estado === "EN_COCINA") {
+                    nuevoEstado = "EN_PREPARACION";
+                    botonTexto = "Marcar en Preparación";
+                    buttonColor = "bg-blue-500 hover:bg-blue-600";
+                  } else if (pedido.estado === "EN_PREPARACION") {
+                    nuevoEstado = "LISTO";
+                    botonTexto = "Marcar como Listo";
+                    buttonColor = "bg-green-600 hover:bg-green-700";
+                  }
 
-                return (
-                    <React.Fragment key={pedido.id}>
-                      <tr className="border-t">
-                        <td className="p-2 text-center">{pedido.id}</td>
-                        <td className="p-2 text-center">{pedido.fechaPedido}</td>
-                        <td className="p-2 text-center">${pedido.total?.toFixed(2)}</td>
-                        <td className="p-2 text-center">
-                          {pedido.horaEstimadaFinalizacion
-                              ? pedido.horaEstimadaFinalizacion.slice(0, 5)
-                              : "Sin asignar"}
-                        </td>
-                        <td className="p-2 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <input
-                                type="number"
-                                min={1}
-                                placeholder="Min"
-                                className="border rounded p-1 w-14 text-center"
-                                value={delayMinutes[pedido.id!] || ""}
-                                onChange={e => setDelayMinutes({
-                                  ...delayMinutes,
-                                  [pedido.id!]: Number(e.target.value)
-                                })}
-                            />
-                            <button
-                                className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                                onClick={() => agregarRetraso(pedido, delayMinutes[pedido.id!] || 0)}
-                            >
-                              +Min
-                            </button>
-                          </div>
-                        </td>
-                        <td className="p-2 text-center">
-                          {nuevoEstado && (
+                  // 1. Manufacturados sueltos
+                  const manufacturadosSuelto = pedido.detalles
+                      .filter(det => det.articuloManufacturado)
+                      .map(det => ({
+                        id: det.articuloManufacturado?.id,
+                        denominacion: det.articuloManufacturado?.denominacion,
+                        cantidad: det.cantidad,
+                        preparacion: det.articuloManufacturado?.preparacion,
+                        detalles: det.articuloManufacturado?.detalles,
+                      }));
+
+                  // 2. Manufacturados de promociones
+                  const manufacturadosPromo: {
+                    id?: number,
+                    denominacion?: string,
+                    cantidad: number,
+                    preparacion?: string,
+                    detalles?: any[]
+                  }[] = [];
+                  pedido.detalles
+                      .filter(det => det.promocion && det.promocion.articulosManufacturados && det.promocion.articulosManufacturados.length)
+                      .forEach(det => {
+                        det.promocion.articulosManufacturados.forEach(am => {
+                          manufacturadosPromo.push({
+                            id: am.id,
+                            denominacion: am.denominacion,
+                            cantidad: det.cantidad,
+                            preparacion: am.preparacion,
+                            detalles: am.detalles,
+                          });
+                        });
+                      });
+
+                  // AGRUPAR MANUFACTURADOS por id
+                  const agrupados: {
+                    [key: string]: {
+                      id?: number;
+                      denominacion?: string;
+                      cantidad: number;
+                      preparacion?: string;
+                      detalles?: any[];
+                    }
+                  } = {};
+                  [...manufacturadosPromo, ...manufacturadosSuelto].forEach(am => {
+                    const key = am.id ?? am.denominacion ?? Math.random();
+                    if (agrupados[key]) {
+                      agrupados[key].cantidad += am.cantidad;
+                    } else {
+                      agrupados[key] = { ...am };
+                    }
+                  });
+                  const manufacturadosAgrupados = Object.values(agrupados);
+
+                  return (
+                      <React.Fragment key={pedido.id}>
+                        <tr className="border-t">
+                          <td className="p-2 text-center">{pedido.id}</td>
+                          <td className="p-2 text-center">{pedido.fechaPedido}</td>
+                          <td className="p-2 text-center">${pedido.total?.toFixed(2)}</td>
+                          <td className="p-2 text-center">
+                            {pedido.horaEstimadaFinalizacion
+                                ? pedido.horaEstimadaFinalizacion.slice(0, 5)
+                                : "Sin asignar"}
+                          </td>
+                          <td className="p-2 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <input
+                                  type="number"
+                                  min={1}
+                                  placeholder="Min"
+                                  className="border rounded p-1 w-14 text-center"
+                                  value={delayMinutes[pedido.id!] || ""}
+                                  onChange={e => setDelayMinutes({
+                                    ...delayMinutes,
+                                    [pedido.id!]: Number(e.target.value)
+                                  })}
+                              />
                               <button
-                                  onClick={() => cambiarEstado(pedido.id!, nuevoEstado)}
-                                  className={`text-white px-3 py-1 rounded ${buttonColor}`}
+                                  className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                                  onClick={() => agregarRetraso(pedido, delayMinutes[pedido.id!] || 0)}
                               >
-                                {botonTexto}
+                                +Min
                               </button>
-                          )}
-                        </td>
-                      </tr>
-                      {/* Subfila para manufacturados */}
-                      {pedido.detalles.filter(det => det.articuloManufacturado).map((det, idx) => (
-                          <tr key={idx} className="bg-gray-50">
-                            <td colSpan={6} className="pl-8 py-2">
-                <span
-                    onClick={() => toggleSlide(det.id!)}
-                    className="cursor-pointer font-semibold text-blue-700 hover:underline"
-                >
+                            </div>
+                          </td>
+                          <td className="p-2 text-center">
+                            {nuevoEstado && (
+                                <button
+                                    onClick={() => cambiarEstado(pedido.id!, nuevoEstado)}
+                                    className={`text-white px-3 py-1 rounded ${buttonColor}`}
+                                >
+                                  {botonTexto}
+                                </button>
+                            )}
+                          </td>
+                        </tr>
 
-                   {det.articuloManufacturado?.denominacion} (x{det.cantidad})
-                </span>
+                        {/* SUBFILAS: Manufacturados agrupados (promo + sueltos) */}
+                        {manufacturadosAgrupados.map((am, idx) => (
+                            <tr key={am.id + "-" + idx} className="bg-gray-50">
+                              <td colSpan={6} className="pl-8 py-2">
+                        <span
+                            onClick={() => toggleSlide((am.id ?? 0) * 1000 + idx)}
+                            className="cursor-pointer font-semibold text-blue-700 hover:underline"
+                        >
+                          {am.denominacion} (x{am.cantidad})
+                        </span>
 
-                              {openSlideIds.has(det.id!) && (
-                                  <div className="mt-2 ml-4 border-l-4 border-blue-400 pl-4 py-2 bg-white rounded shadow">
-                                    <div>
-                                      <strong>Preparación:</strong>{" "}
-                                      <span>{det.articuloManufacturado?.preparacion || "Sin descripción"}</span>
+                                {openSlideIds.has((am.id ?? 0) * 1000 + idx) && (
+                                    <div className="mt-2 ml-4 border-l-4 border-blue-400 pl-4 py-2 bg-white rounded shadow">
+                                      <div>
+                                        <strong>Preparación:</strong>{" "}
+                                        <span>{am.preparacion || "Sin descripción"}</span>
+                                      </div>
+                                      <div className="mt-2">
+                                        <strong>Insumos:</strong>
+                                        <ul className="list-disc ml-5">
+                                          {am.detalles?.length
+                                              ? am.detalles.map((d, i) => (
+                                                  <li key={i}>
+                                                    {d.articuloInsumo?.denominacion ?? "Insumo desconocido"}{" "}
+                                                    <span className="text-gray-500">(x{d.cantidad})</span>
+                                                  </li>
+                                              ))
+                                              : <li>Sin insumos</li>
+                                          }
+                                        </ul>
+                                      </div>
                                     </div>
-                                    <div className="mt-2">
-                                      <strong>Insumos:</strong>
-                                      <ul className="list-disc ml-5">
-                                        {det.articuloManufacturado?.detalles?.map((d, i) => (
-                                            <li key={i}>
-                                              {d.articuloInsumo?.denominacion ?? "Insumo desconocido"}{" "}
-                                              <span className="text-gray-500">(x{d.cantidad})</span>
-                                            </li>
-                                        )) || <li>Sin insumos</li>}
-                                      </ul>
-                                    </div>
-                                  </div>
-                              )}
-                            </td>
-                          </tr>
-                      ))}
-                    </React.Fragment>
-                );
-              })
-          ) : (
-              <tr>
-                <td colSpan={6} className="text-center p-4">
-                  No hay pedidos en preparación.
-                </td>
-              </tr>
-          )}
-          </tbody>
-        </table>
+                                )}
+                              </td>
+                            </tr>
+                        ))}
+                      </React.Fragment>
+                  );
+                })
+            ) : (
+                <tr>
+                  <td colSpan={6} className="text-center p-4">
+                    No hay pedidos en preparación.
+                  </td>
+                </tr>
+            )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
   );
 }
