@@ -383,9 +383,10 @@ export default function Landing() {
 						) : (
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
 								{promociones.map((promo) => (
-									<div // Ya no es un Link completo, para que los botones sean clicables
+									<div
 										key={promo.id}
-										className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200"
+										// Clases para desactivar completamente la tarjeta si promo.baja es true
+										className={`${promo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-white'} rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200`}
 									>
 										<div className="relative">
 											<img
@@ -443,19 +444,24 @@ export default function Landing() {
 													<button
 														onClick={(e) => {
 															e.stopPropagation();
+															if (promo.baja) return;
 															removeFromCart(promo.id || 0);
 														}}
-														className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-200 ml-2"
+														className={`${promo.baja ? 'saturate-0 cursor-not-allowed' : ''} p-2 rounded-full transition duration-200 ${isInCart(promo.id || 1)
+															? "bg-green-500 text-white"
+															: "bg-orange-500 text-white hover:bg-orange-600"
+															}`}
 														title="Eliminar del carrito"
 													>
 														<X className="w-3 h-3" />
 													</button>
 												)}
-												{/* Enlace para ver detalles de la promoción */}
-												<Link to={`/producto/${promo.id}`} className="text-center bg-orange-400 text-white py-2 px-4 ml-auto rounded-md text-sm">
-													Ver detalles
-												</Link>
+
+
 											</div>
+											{/* Enlace para ver detalles de la promoción */}
+											<Link to={`/producto/${promo.id}`} className={`${promo.baja ? 'saturate-0 cursor-not-allowed' : ''} text-center bg-orange-400 text-white py-2 block mx-auto mt-4 rounded-md`}>Ver detalle</Link>
+
 										</div>
 									</div>
 								))}
@@ -528,7 +534,8 @@ export default function Landing() {
 							{articulosFiltradosPrincipal.map((articulo) => (
 								<div
 									key={articulo.id}
-									className={`${articulo.baja ? 'saturate-0 cursor-not-allowed' : 'bg-white'}  rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group border hover:border-orange-200`}
+									// Clases para desactivar completamente la tarjeta si articulo.baja es true
+									className={`${articulo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-white'} rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group border hover:border-orange-200`}
 								>
 									<div className="relative">
 										<img
@@ -571,7 +578,7 @@ export default function Landing() {
 													e.stopPropagation();
 													addToCart(articulo);
 												}}
-												className={`${articulo.baja ? 'saturate-0 cursor-not-allowed' : ''} p-2 rounded-full transition duration-200 ${isInCart(articulo.id || 1)
+												className={`${articulo.baja ? 'saturate-0 cursor-not-allowed ' : ''} p-2 rounded-full transition duration-200 ${isInCart(articulo.id || 1)
 													? "bg-green-500 text-white"
 													: "bg-orange-500 text-white hover:bg-orange-600"
 													}`}
