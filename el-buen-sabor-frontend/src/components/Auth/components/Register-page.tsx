@@ -28,7 +28,8 @@ export default function RegisterPage(props: RegisterProps) {
         ? "/api/usuarios/registrar-cajero"
         : "/api/auth/register");
 
-  // Formulario y errores
+  // Formulario y errores--------------------------- CONST PARA VALIDAR EDAD, EMAIL ---------------------------------------------
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -36,6 +37,7 @@ export default function RegisterPage(props: RegisterProps) {
     phone: "",
     password: "",
     confirmPassword: "",
+    dateOfBirth: "", // <--- AGREGAR ESTO
     acceptTerms: false,
   });
 
@@ -47,6 +49,7 @@ export default function RegisterPage(props: RegisterProps) {
     password: "",
     confirmPassword: "",
     acceptTerms: "",
+    dateOfBirth: "", // <--- AGREGAR ESTO
     general: "",
   });
 
@@ -110,6 +113,25 @@ export default function RegisterPage(props: RegisterProps) {
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "No coinciden";
     }
+
+     // --- NUEVAS VALIDACIONES PARA FECHA DE NACIMIENTO Y EDAD ---
+    if (!formData.dateOfBirth) {
+        newErrors.dateOfBirth = "La fecha de nacimiento es requerida";
+    } else {
+        const today = new Date();
+        const birthDate = new Date(formData.dateOfBirth);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        if (age < 13) {
+            newErrors.dateOfBirth = "Debes tener al menos 13 años para registrarte";
+        } else if (age > 99) {
+            newErrors.dateOfBirth = "Tu edad no puede ser mayor a 99 años";
+        }
+    }
     if (rolDestino === "CLIENTE" && !formData.acceptTerms) {
       newErrors.acceptTerms = "Debes aceptar los términos";
     }
@@ -136,7 +158,7 @@ export default function RegisterPage(props: RegisterProps) {
         email: formData.email,
         telefono: formData.phone,
         password: formData.password,
-        fechaNacimiento: "2000-01-01", // 🔒 Por ahora fijo
+        fechaNacimiento: formData.dateOfBirth, // <--- CAMBIAR ESTO
       };
 
       const res = await axios.post(`http://localhost:8080${endpoint}`, payload, {
@@ -294,6 +316,21 @@ export default function RegisterPage(props: RegisterProps) {
                 />
                 {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
               </div>
+
+
+            {/* 🎂 Fecha de Nacimiento */} {/* <--- AGREGAR ESTE BLOQUE */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
+              <input
+                name="dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              />
+              {errors.dateOfBirth && <p className="text-sm text-red-600">{errors.dateOfBirth}</p>}
+            </div>
+            {/* --------------------------------------------------------------------------- */}
 
               {/* 🔒 Contraseña */}
               <div>
