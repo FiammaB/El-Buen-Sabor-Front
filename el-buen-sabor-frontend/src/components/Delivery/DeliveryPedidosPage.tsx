@@ -167,7 +167,7 @@ export default function DeliveryPedidosPage() {
                                                                 {[...promosMap.values()].map((promo: any, i) => (
                                                                     <li key={i} className="mb-2">
                                                                         <span className="font-bold">{promo.denominacion}</span> (x{promo.cantidad})
-                                                                        <span className="text-gray-500"> (${promo.subTotal?.toFixed(2)})</span>
+                                                                        <span className="text-gray-500"> (Total: ${promo.subTotal?.toFixed(2)})</span>
                                                                         {/* Lista de artículos de la promo */}
                                                                         {promo.articulosInsumo?.length > 0 && (
                                                                             <div className="ml-2 text-blue-900 text-xs">
@@ -236,7 +236,7 @@ export default function DeliveryPedidosPage() {
                                                                 {[...manMap.values()].map((am: any, i) => (
                                                                     <li key={i}>
                                                                         <span className="font-bold">{am.denominacion}</span> (x{am.cantidad})
-                                                                        <span className="text-gray-500"> (${am.subTotal?.toFixed(2)})</span>
+                                                                        <span className="text-gray-500"> (Total: ${am.subTotal?.toFixed(2)})</span>
                                                                     </li>
                                                                 ))}
                                                             </ul>
@@ -276,7 +276,7 @@ export default function DeliveryPedidosPage() {
                                                                 {[...insMap.values()].map((ins: any, i) => (
                                                                     <li key={i}>
                                                                         <span className="font-bold">{ins.denominacion}</span> (x{ins.cantidad})
-                                                                        <span className="text-gray-500"> (${det.subTotal?.toFixed(2)})</span>
+                                                                        <span className="text-gray-500"> (Total: ${ins.subTotal?.toFixed(2)})</span>
                                                                     </li>
                                                                 ))}
                                                             </ul>

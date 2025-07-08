@@ -76,19 +76,35 @@ export default function VerPedidoPage() {
                                             Subtotal: ${det.subTotal?.toFixed(2)}
                                         </div>
                                         <div className="ml-2">
-                                            {/* Artículos manufacturados de la promo */}
+                                            {/* Artículos manufacturados de la promo agrupados */}
                                             {det.promocion.articulosManufacturados && det.promocion.articulosManufacturados.length > 0 && (
                                                 <div className="mb-1">
-                                                    <span className="font-semibold text-green-700">Manufacturados:</span>
+                                                    <span className="font-semibold text-green-700">Manufacturados (Total):</span>
                                                     <ul className="ml-3 list-disc text-sm">
-                                                        {det.promocion.articulosManufacturados.map((am, i) => (
-                                                            <li key={i}>
-                                                                {am.denominacion}
-                                                                <span className="text-xs text-gray-500 ml-1">
-                                                                    (${am.precioVenta?.toFixed(2)})
-                                                                </span>
-                                                            </li>
-                                                        ))}
+                                                        {/* Agrupar por denominacion y sumar cantidad */}
+                                                        {(() => {
+                                                            const manMap = new Map();
+                                                            det.promocion.articulosManufacturados.forEach(am => {
+                                                                const key = am.id;
+                                                                if (!manMap.has(key)) {
+                                                                    manMap.set(key, {
+                                                                        ...am,
+                                                                        cantidad: det.cantidad // Inicia con la cantidad de la promo en este detalle
+                                                                    });
+                                                                } else {
+                                                                    const prev = manMap.get(key);
+                                                                    manMap.set(key, {
+                                                                        ...am,
+                                                                        cantidad: prev.cantidad + det.cantidad
+                                                                    });
+                                                                }
+                                                            });
+                                                            return [...manMap.values()].map((am, i) => (
+                                                                <li key={i}>
+                                                                    {am.denominacion} (x{am.cantidad})
+                                                                </li>
+                                                            ));
+                                                        })()}
                                                     </ul>
                                                 </div>
                                             )}
@@ -124,7 +140,7 @@ export default function VerPedidoPage() {
                                         className="w-12 h-12 object-cover rounded"
                                     />
                                     <div className="flex-1">
-                                        <div className="font-bold">
+                                        <div className="font-semibold text-red-800">
                                             {det.articuloManufacturado?.denominacion || det.articuloInsumo?.denominacion}
                                             <span className="ml-2 text-xs text-gray-600">(x{det.cantidad})</span>
                                         </div>
