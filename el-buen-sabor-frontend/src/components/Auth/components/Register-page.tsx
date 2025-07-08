@@ -83,10 +83,15 @@ export default function RegisterPage(props: RegisterProps) {
 
     if (!formData.firstName.trim()) {
       newErrors.firstName = "El nombre es requerido";
+    }else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(formData.firstName)) {
+      newErrors.firstName = "El nombre solo puede contener letras y espacios";
     }
     if (!formData.lastName.trim()) {
       newErrors.lastName = "El apellido es requerido";
+    }else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(formData.lastName)) {
+      newErrors.lastName = "El apellido solo puede contener letras y espacios";
     }
+    
     if (!formData.email) {
       newErrors.email = "El email es requerido";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -320,7 +325,7 @@ export default function RegisterPage(props: RegisterProps) {
 
             {/* 🎂 Fecha de Nacimiento */} {/* <--- AGREGAR ESTE BLOQUE */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
+              <label className="block text-sm font-medium text-gray-700">Fecha de Nacimiento - Formato: mes/dia/año</label>
               <input
                 name="dateOfBirth"
                 type="date"
