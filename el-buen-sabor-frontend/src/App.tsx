@@ -120,31 +120,8 @@ function App() {
             }
           />
 
-          {/* 🎉 Rutas del ABM de PROMOCIONES (Protegidas para ADMINISTRADOR) */}
-          <Route
-            path="/admin/promociones"
-            element={
-              <ProtectedRoute role="ADMINISTRADOR">
-                <PromocionList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/promociones/new"
-            element={
-              <ProtectedRoute role="ADMINISTRADOR">
-                <PromocionForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/promociones/edit/:id"
-            element={
-              <ProtectedRoute role="ADMINISTRADOR">
-                <PromocionForm />
-              </ProtectedRoute>
-            }
-          />
+
+
 
           {/* 👑 PANEL ADMINISTRADOR */}
           <Route
@@ -174,7 +151,11 @@ function App() {
 
             {/* <-- CAMBIO CLAVE AQUÍ: RUTA PARA VER EL DETALLE DE UN PEDIDO (ADMIN) */}
             <Route path="pedidos/:id" element={<PedidoDetalle />} />
-
+            <Route path="/admin/promociones" element={<PromocionList />} />
+            <Route
+              path="/admin/promociones/new" element={<PromocionForm />} />
+            <Route
+              path="/admin/promociones/edit/:id" element={<PromocionForm />} />
           </Route>
 
           {/* ✅ NUEVA RUTA: REGISTRO DE EMPLEADOS */}
@@ -187,22 +168,22 @@ function App() {
             }
           />
 
-            <Route
-                path="/cliente"
-                element={
-                    <ProtectedRoute role="CLIENTE">
-                        <ClienteAdminLayout />
-                    </ProtectedRoute>
-                }
-            >
-                <Route path="perfil" element={<ClientePerfilPage />} />
-                <Route path="pedidos" element={<HistorialPedidos />} />
-                <Route path="pedidos/:id" element={<PedidoDetalle />} />
-                {/* Si sumás más páginas, agregalas acá */}
-            </Route>
+          <Route
+            path="/cliente"
+            element={
+              <ProtectedRoute role="CLIENTE">
+                <PerfilPage />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="perfil" element={<ClientePerfilPage />} />
+            <Route path="pedidos" element={<HistorialPedidos />} />
+            <Route path="pedidos/:id" element={<PedidoDetalle />} />
+            {/* Si sumás más páginas, agregalas acá */}
+          </Route>
 
 
-            {/* 👨‍🍳 PANEL COCINERO */}
+          {/* 👨‍🍳 PANEL COCINERO */}
           <Route
             path="/cocinero"
             element={

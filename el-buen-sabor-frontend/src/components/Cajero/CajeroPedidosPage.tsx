@@ -210,7 +210,14 @@ export default function CajeroPedidosPage() {
                                         </div>
                                     </td>
                                     <td className="p-2 text-center">
-                                        {pedido.cliente?.nombre || pedido.clienteId || "-"}
+                                        {pedido.cliente
+                                            ? (
+                                            pedido.cliente.usuario?.nombre
+                                                ? `${pedido.cliente.usuario.nombre} ${pedido.cliente.apellido ?? ""}`
+                                                : `${pedido.cliente.nombre ?? ""} ${pedido.cliente.apellido ?? ""}`
+                                        ).trim() || pedido.clienteId
+                                            : pedido.clienteId ?? "-"
+                                        }
                                     </td>
                                     <td className="p-2 text-center">
                                         {pedido.fechaPedido?.slice(0, 10)}
@@ -224,6 +231,8 @@ export default function CajeroPedidosPage() {
                                                         return acc + (det.cantidad || 0) * (det.articuloManufacturado.precioVenta || 0);
                                                     } else if (det.articuloInsumo) {
                                                         return acc + (det.cantidad || 0) * (det.articuloInsumo.precioVenta || 0);
+                                                    } else if (det.promocion) {
+                                                        return acc + (det.cantidad || 0) * (det.promocion.precioPromocional || 0);
                                                     } else {
                                                         return acc;
                                                     }
@@ -241,8 +250,8 @@ export default function CajeroPedidosPage() {
                                             </button>
                                         ) : (
                                             <span className="inline-block bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
-                                                    {pedido.estado}
-                                                </span>
+                                                {pedido.estado}
+                                            </span>
                                         )}
                                     </td>
                                     <td className="p-2 text-center">
@@ -272,35 +281,81 @@ export default function CajeroPedidosPage() {
                                             <div>
                                                 <h4 className="font-semibold mb-2">Detalles:</h4>
                                                 <ul>
-                                                    {pedido.detalles?.map((det, idx) => (
-                                                        <li key={idx} className="mb-1">
-                                                            {det.articuloManufacturado
-                                                                ? (
-                                                                    <>
-                                                                        <span className="font-bold text-green-800">{det.articuloManufacturado.denominacion}</span>
-                                                                        {" "} (x{det.cantidad})
-                                                                        <div className="ml-4 text-xs text-gray-700">
-                                                                            <strong>Preparación:</strong> {det.articuloManufacturado.preparacion}
-                                                                            <br />
-                                                                            <strong>Insumos:</strong>{" "}
-                                                                            {det.articuloManufacturado.detalles?.map((d, i) => (
-                                                                                <span key={i}>
-                                                                                        {d.articuloInsumo.denominacion} (x{d.cantidad})
-                                                                                    {i < det.articuloManufacturado.detalles.length - 1 ? ", " : ""}
-                                                                                    </span>
-                                                                            )) || " - "}
-                                                                        </div>
-                                                                    </>
-                                                                )
-                                                                : det.articuloInsumo
-                                                                    ? (
-                                                                        <span className="font-bold text-blue-800">
-                                                                                {det.articuloInsumo.denominacion} (x{det.cantidad})
-                                                                            </span>
-                                                                    )
-                                                                    : <span>-</span>
-                                                            }
-                                                            {" "} <span className="text-gray-500">(${det.subTotal?.toFixed(2)})</span>
+                                                    {/* PROMOCIONES */}
+                                                    {pedido.detalles?.filter(det => det.promocion).map((det, idx) => (
+                                                        <li key={"promo" + idx} className="mb-3">
+                                                            <div className="font-bold text-purple-700">
+                                                                {det.promocion.denominacion} (x{det.cantidad}) <span className="text-gray-500">(Total: ${det.subTotal?.toFixed(2)})</span>
+                                                            </div>
+                                                            {/* Artículo Insumo */}
+                                                            {det.promocion.articulosInsumo && det.promocion.articulosInsumo.length > 0 && (
+                                                                <div className="ml-3 text-sm">
+                                                                    <span className="font-semibold text-blue-800">Artículos Insumo:</span>
+                                                                    <ul className="ml-4 list-disc">
+                                                                        {det.promocion.articulosInsumo.map((ins, i) => (
+                                                                            <li key={i}>
+                                                                                ({det.cantidad}x) {ins.denominacion}
+                                                                                {ins.precioVenta && (
+                                                                                    <> <span className="text-gray-500">($
+                                                                                        {ins.precioVenta?.toFixed(2)})
+                                                                                    </span></>
+                                                                                )}
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+                                                            {/* Artículo Manufacturado */}
+                                                            {det.promocion.articulosManufacturados && det.promocion.articulosManufacturados.length > 0 && (() => {
+                                                                // Agrupar manufacturados por ID
+                                                                const agrupados = det.promocion.articulosManufacturados.reduce((acc, am) => {
+                                                                    if (!am.id) return acc;
+                                                                    if (!acc[am.id]) {
+                                                                        acc[am.id] = {
+                                                                            ...am,
+                                                                            cantidad: det.cantidad,
+                                                                        };
+                                                                    } else {
+                                                                        acc[am.id].cantidad += det.cantidad;
+                                                                    }
+                                                                    return acc;
+                                                                }, {} as Record<number, any>);
+
+                                                                return (
+                                                                    <div className="ml-3 text-sm">
+                                                                        <span className="font-semibold text-green-800">Artículos Manufacturados (Total):</span>
+                                                                        <ul className="ml-4 list-disc">
+                                                                            {Object.values(agrupados).map((am: any) => (
+                                                                                <li key={am.id}>
+                                                                                    ({am.cantidad}x) {am.denominacion}
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    </div>
+                                                                );
+                                                            })()}
+
+                                                        </li>
+                                                    ))}
+
+                                                    {/* MANUFACTURADOS SUELTOS */}
+                                                    {pedido.detalles?.filter(det => !det.promocion && det.articuloManufacturado).map((det, idx) => (
+                                                        <li key={"manu" + idx} className="mb-3">
+                                                            <span className="font-bold text-green-800">{det.articuloManufacturado.denominacion}</span> (x{det.cantidad})
+                                                            <span className="text-gray-500"> (${det.subTotal?.toFixed(2)})</span>
+                                                            <span className="ml-2 text-green-700 font-bold">
+                                                                (Total: ${(det.subTotal * det.cantidad).toFixed(2)})
+                                                            </span>
+                                                        </li>
+                                                    ))}
+
+                                                    {/* INSUMOS SUELTOS */}
+                                                    {pedido.detalles?.filter(det => !det.promocion && det.articuloInsumo).map((det, idx) => (
+                                                        <li key={"insu" + idx} className="mb-3">
+                                                              <span className="font-bold text-blue-800">
+                                                                {det.articuloInsumo.denominacion} (x{det.cantidad})
+                                                                <span className="ml-2 text-green-700 font-bold"> (Total: ${det.subTotal?.toFixed(2)})</span>
+                                                              </span>
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -308,6 +363,7 @@ export default function CajeroPedidosPage() {
                                         </td>
                                     </tr>
                                 )}
+
                             </React.Fragment>
                         ))
                     )}

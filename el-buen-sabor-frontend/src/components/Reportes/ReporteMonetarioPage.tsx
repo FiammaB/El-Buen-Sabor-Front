@@ -7,6 +7,7 @@ import withReactContent from "sweetalert2-react-content";
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
+import { useNavigate } from "react-router-dom";
 
 const MySwal = withReactContent(Swal);
 
@@ -16,6 +17,8 @@ const ReporteMonetarioPage: React.FC = () => {
     const [reporte, setReporte] = useState<ReporteMonetarioDTO | null>(null);
     const [loading, setLoading] = useState(false);
 
+        const navigate = useNavigate();
+    
     const cargarReporte = async () => {
         if (!desde || !hasta) {
             MySwal.fire("Campos incompletos", "Seleccioná ambas fechas", "warning");
@@ -103,6 +106,13 @@ const ReporteMonetarioPage: React.FC = () => {
                         className="flex-1 bg-green-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Exportar Excel
+                    </button>
+                    <button
+                        type="button"
+                        className="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition duration-200"
+                        onClick={() => navigate(-1)}
+                    >
+                        Volver Atrás
                     </button>
                 </div>
 

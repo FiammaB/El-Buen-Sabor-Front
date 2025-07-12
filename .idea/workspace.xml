@@ -30,6 +30,7 @@
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/USER-WINDOWS/Documents/GitHub/El-Buen-Sabor-Front&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.standard&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -97,10 +98,27 @@
       <workItem from="1751228213984" duration="3670000" />
       <workItem from="1751246704605" duration="6389000" />
       <workItem from="1751282243502" duration="6974000" />
+      <workItem from="1751370525548" duration="12828000" />
+      <workItem from="1751484237482" duration="5000" />
+      <workItem from="1751484284216" duration="343000" />
+      <workItem from="1751577569491" duration="5196000" />
+      <workItem from="1751921927843" duration="4504000" />
+      <workItem from="1752008565190" duration="4160000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/el-buen-sabor-frontend/src/components/checkout/Checkout.tsx</url>
+          <line>204</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

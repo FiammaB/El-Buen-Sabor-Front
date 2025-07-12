@@ -4,6 +4,8 @@ import type { ProductoRankingDTO } from "../../models/DTO/ProductoRankingDTO"; /
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { useNavigate } from "react-router-dom";
+
 // Importar componentes de Recharts
 import {
     BarChart,
@@ -106,6 +108,8 @@ const RankingProductosPage: React.FC = () => {
         "#f15f79",
     ]; // Más colores para productos
 
+    const navigate = useNavigate();
+
     return (
         <div className="min-h-screen bg-gray-50 p-8">
             {" "}
@@ -166,6 +170,13 @@ const RankingProductosPage: React.FC = () => {
                         disabled={productos.length === 0 || loading}
                     >
                         Exportar Excel
+                    </button>
+                    <button
+                        type="button"
+                        className="flex-1 bg-gray-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-600 transition duration-200"
+                        onClick={() => navigate(-1)}
+                    >
+                        Volver Atrás
                     </button>
                 </div>
                 {loading && (

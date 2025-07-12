@@ -7,7 +7,7 @@ import { ArticuloInsumo } from "../../models/Articulos/ArticuloInsumo";
 import { Articulo } from "../../models/Articulos/Articulo";
 import { useAuth } from "../Auth/Context/AuthContext";
 import { Link } from "react-router-dom";
-import { Search, Clock, Truck, CreditCard, ShoppingBag, Menu, X, Heart, Plus } from 'lucide-react';
+import { Search, Clock, Truck, CreditCard, ShoppingBag, Menu, X, Heart, Plus, Ban, Minus } from 'lucide-react'; // Import Ban and Minus icons
 import { useCart } from "../Cart/context/cart-context"; // Asegúrate de esta ruta
 import type { Categoria } from "../../models/Categoria/Categoria";
 
@@ -40,13 +40,14 @@ export default function Landing() {
 	const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(null);
 
 	// Importamos las funciones del carrito
-	const { addToCart, isInCart, getItemQuantity, totalItems, removeFromCart } = useCart()
+	const { addToCart, getItemQuantity, totalItems, removeFromCart, updateQuantity } = useCart() // Asegúrate de importar updateQuantity
 
 	const articuloService = new ArticuloService();
 
 	const fetchArticulos = async () => {
 		try {
 			setLoading(true);
+			// Filtrar por artículos activos tanto manufacturados como de insumo
 			const manufacturedData: ArticuloManufacturado[] = await articuloService.findAllArticulosManufacturadosActivos();
 			const insumoData: ArticuloInsumo[] = await articuloService.findAllArticulosInsumoActivos();
 			const allArticulos: Articulo[] = [...manufacturedData, ...insumoData];
@@ -98,7 +99,9 @@ export default function Landing() {
 	useEffect(() => {
 		const fetchPromos = async () => {
 			try {
+				// Filtrar por promociones activas (no de baja) desde el backend si tu servicio lo permite
 				const data = await getPromociones();
+				// Asegúrate de que las promos con baja=true no se filtren aquí si quieres mostrarlas desactivadas
 				setPromociones(data);
 			} catch (error) {
 				console.error("Error al cargar promociones:", error);
@@ -385,7 +388,7 @@ export default function Landing() {
 								{promociones.map((promo) => (
 									<div // Ya no es un Link completo, para que los botones sean clicables
 										key={promo.id}
-										className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200"
+										className={`${promo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-white'} rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200`}
 									>
 										<div className="relative">
 											<img
@@ -411,48 +414,72 @@ export default function Landing() {
 											</p>
 
 											{promo.articulosManufacturados && promo.articulosManufacturados.length > 0 && (
-												<div className="text-sm text-gray-500 mt-2">
+												<div className="text-sm text-gray-500 mt-2 h-[60px] overflow-y-auto">
 													Incluye: {promo.articulosManufacturados.map(a => a.denominacion).join(', ')}
 												</div>
 											)}
 
 											<div className="flex justify-between items-center mt-4"> {/* Contenedor para botones */}
-												{/* Botón para agregar/gestionar en el carrito */}
-												<button
-													onClick={(e) => {
-														e.stopPropagation(); // Evita que el clic se propague
-														addToCart(promo); // Agrega la promoción completa
-													}}
-													className={`p-2 rounded-full transition duration-200 ${isInCart(promo.id || 1)
-														? "bg-green-500 text-white"
-														: "bg-orange-500 text-white hover:bg-orange-600"
-														}`}
-												>
-													{isInCart(promo.id || 1) ? (
-														<div className="flex gap-2">
-															<span className="text-xs font-bold">{getItemQuantity(promo.id || 0)}</span>
-															<Plus className="w-4 h-4" />
-														</div>
-													) : (
-														<Plus className="w-4 h-4" />
-													)}
-												</button>
-
-												{/* Botón para eliminar del carrito si ya está */}
-												{isInCart(promo.id || 1) && (
+												{/* CONTROLES DE CANTIDAD PARA PROMOCIONES */}
+												{promo.baja ? (
+													// Si la promoción está de baja, solo muestra el icono Ban en un botón deshabilitado
 													<button
-														onClick={(e) => {
-															e.stopPropagation();
-															removeFromCart(promo.id || 0);
-														}}
-														className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-200 ml-2"
-														title="Eliminar del carrito"
+														className="p-2 rounded-full bg-gray-200 text-gray-500 cursor-not-allowed"
+														disabled
 													>
-														<X className="w-3 h-3" />
+														<Ban className="w-4 h-4 text-red-600" />
 													</button>
+												) : (
+													<>
+														{/* Botón para disminuir cantidad, visible si hay al menos 1 unidad */}
+														{getItemQuantity(promo.id || 0) > 0 && (
+															<button
+																onClick={(e) => { e.stopPropagation(); updateQuantity(promo.id || 0, getItemQuantity(promo.id || 0) - 1); }}
+																className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-200"
+																title="Disminuir cantidad"
+															>
+																<Minus className="w-4 h-4" />
+															</button>
+														)}
+
+														{/* Muestra la cantidad actual si es > 0 */}
+														{getItemQuantity(promo.id || 0) > 0 && (
+															<span className="font-bold text-lg">{getItemQuantity(promo.id || 0)}</span>
+														)}
+
+														{/* Botón para aumentar cantidad o añadir al carrito */}
+														<button
+															onClick={(e) => { e.stopPropagation(); addToCart(promo); }}
+															className={`p-2 rounded-full transition duration-200 ${getItemQuantity(promo.id || 0) > 0
+																? "bg-green-500 text-white hover:bg-green-600" // Verde si ya está en el carrito
+																: "bg-orange-500 text-white hover:bg-orange-600" // Naranja si se añade por primera vez
+																}`}
+															title="Aumentar cantidad"
+														>
+															<Plus className="w-4 h-4" />
+														</button>
+
+														{/* Botón para eliminar TODAS las unidades, visible si hay > 0 */}
+														{getItemQuantity(promo.id || 0) > 0 && (
+															<button
+																onClick={(e) => { e.stopPropagation(); removeFromCart(promo.id || 0); }}
+																className="p-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition duration-200 ml-2"
+																title="Eliminar todas las unidades del carrito"
+															>
+																<X className="w-3 h-3" />
+															</button>
+														)}
+													</>
 												)}
-												{/* Enlace para ver detalles de la promoción */}
-												<Link to={`/producto/${promo.id}`} className="text-center bg-orange-400 text-white py-2 px-4 ml-auto rounded-md text-sm">
+
+
+											</div>
+											{/* Enlace para ver detalles de la promoción */}
+											<div className="mt-4">
+												<Link
+													to={`/producto/${promo.id}`}
+													className={`${promo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-orange-400 hover:bg-orange-500'} text-center text-white py-2 block mx-auto mt-4 rounded-md transition duration-200`}
+												>
 													Ver detalles
 												</Link>
 											</div>
@@ -528,7 +555,7 @@ export default function Landing() {
 							{articulosFiltradosPrincipal.map((articulo) => (
 								<div
 									key={articulo.id}
-									className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200"
+									className={`${articulo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-white'}  rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group border hover:border-orange-200`}
 								>
 									<div className="relative">
 										<img
@@ -540,9 +567,6 @@ export default function Landing() {
 											alt={articulo.denominacion}
 											className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
 										/>
-										<button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition duration-200">
-											<Heart className="w-4 h-4 text-gray-400" />
-										</button>
 										{articulo instanceof ArticuloManufacturado && articulo.tiempoEstimadoMinutos !== undefined && (
 											<div className="absolute bottom-3 left-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-sm">
 												<Clock className="w-3 h-3 inline mr-1" />
@@ -569,41 +593,63 @@ export default function Landing() {
 											<div className="text-sm text-gray-500">
 												{articulo.categoria?.denominacion || "Producto"}
 											</div>
-											<button
-												onClick={(e) => {
-													e.stopPropagation();
-													addToCart(articulo);
-												}}
-												className={`p-2 rounded-full transition duration-200 ${isInCart(articulo.id || 1)
-													? "bg-green-500 text-white"
-													: "bg-orange-500 text-white hover:bg-orange-600"
-													}`}
-											>
-												{isInCart(articulo.id || 1) ? (
-													<div className="flex gap-2">
-														<span className="text-xs font-bold">{getItemQuantity(articulo.id || 0)}</span>
-														<Plus className="w-4 h-4" />
-													</div>
-												) : (
-													<Plus className="w-4 h-4" />
-												)}
-											</button>
-											{isInCart(articulo.id || 1) ? (
-												<div className="flex gap-2">
+											{/* CONTROLES DE CANTIDAD PARA ARTÍCULOS */}
+											{articulo.baja ? (
+												// Si el artículo está de baja, solo muestra el icono Ban en un botón deshabilitado
+												<button
+													className="p-2 rounded-full bg-gray-200 text-gray-500 cursor-not-allowed"
+													disabled
+												>
+													<Ban className="w-4 h-4 text-red-600" />
+												</button>
+											) : (
+												<>
+													{/* Botón para disminuir cantidad, visible si hay al menos 1 unidad */}
+													{getItemQuantity(articulo.id || 0) > 0 && (
+														<button
+															onClick={(e) => { e.stopPropagation(); updateQuantity(articulo.id || 0, getItemQuantity(articulo.id || 0) - 1); }}
+															className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-200"
+															title="Disminuir cantidad"
+														>
+															<Minus className="w-4 h-4" />
+														</button>
+													)}
+
+													{/* Muestra la cantidad actual si es > 0 */}
+													{getItemQuantity(articulo.id || 0) > 0 && (
+														<span className="font-bold text-lg">{getItemQuantity(articulo.id || 0)}</span>
+													)}
+
+													{/* Botón para aumentar cantidad o añadir al carrito */}
 													<button
-														onClick={(e) => {
-															e.stopPropagation()
-															removeFromCart(articulo.id || 0)
-														}}
-														className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-200"
-														title="Eliminar del carrito"
+														onClick={(e) => { e.stopPropagation(); addToCart(articulo); }}
+														className={`p-2 rounded-full transition duration-200 ${getItemQuantity(articulo.id || 0) > 0
+															? "bg-green-500 text-white hover:bg-green-600" // Verde si ya está en el carrito
+															: "bg-orange-500 text-white hover:bg-orange-600" // Naranja si se añade por primera vez
+															}`}
+														title="Aumentar cantidad"
 													>
-														<X className="w-3 h-3" />
+														<Plus className="w-4 h-4" />
 													</button>
-												</div>
-											) : ''}
+
+													{/* Botón para eliminar TODAS las unidades, visible si hay > 0 */}
+													{getItemQuantity(articulo.id || 0) > 0 && (
+														<button
+															onClick={(e) => { e.stopPropagation(); removeFromCart(articulo.id || 0); }}
+															className="p-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition duration-200 ml-2"
+															title="Eliminar todas las unidades del carrito"
+														>
+															<X className="w-3 h-3" />
+														</button>
+													)}
+												</>
+											)}
 										</div>
-										<Link to={`/producto/${articulo.id}`} className="text-center bg-orange-400 text-white py-2 block mx-auto mt-4 rounded-md">Ver detalle</Link>
+										<Link
+											to={`/producto/${articulo.id}`}
+											className={`${articulo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-orange-400 hover:bg-orange-500'} text-center text-white py-2 block mx-auto mt-4 rounded-md transition duration-200`}>
+											Ver detalle
+										</Link>
 									</div>
 								</div>
 							))}

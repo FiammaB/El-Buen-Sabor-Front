@@ -18,6 +18,7 @@ import { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufactur
 import { Articulo } from "../../models/Articulos/Articulo";
 import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO";
 import { getPromocionById } from "../../services/PromocionService";
+import {ArticuloInsumo} from "../../models/Articulos/ArticuloInsumo.ts";
 
 // Reducimos el tipo para que sea solo ArticuloManufacturado o IPromocionDTO
 type ProductDetailType = ArticuloManufacturado | IPromocionDTO;
@@ -45,21 +46,28 @@ export default function ProductDetailPage() {
         const res = await fetch(`http://localhost:8080/api/articuloManufacturado/${id}`);
         if (res.ok) {
           fetchedProduct = Object.setPrototypeOf(
-            await res.json(),
-            ArticuloManufacturado.prototype
+              await res.json(),
+              ArticuloManufacturado.prototype
           ) as ArticuloManufacturado;
         } else if (res.status === 404) {
-          // 2. Si no es manufacturado, intentar cargar como Promocion
+          // 2. Intentar cargar como Promoción
           try {
             const promo = await getPromocionById(Number(id));
             fetchedProduct = promo;
-          } catch (_promoError) {
-            throw new Error(`Producto manufacturado o Promoción no encontrada.`);
+          } catch {
+            // 3. Si no es promoción, intentar cargar como ArticuloInsumo
+            const insumoRes = await fetch(`http://localhost:8080/api/articuloInsumo/${id}`);
+            if (insumoRes.ok) {
+              fetchedProduct = Object.setPrototypeOf(
+                  await insumoRes.json(),
+                  ArticuloInsumo.prototype
+              ) as ArticuloInsumo;
+            } else {
+              throw new Error("Producto no encontrado.");
+            }
           }
         } else {
-          throw new Error(
-            `Error al cargar producto: ${res.statusText}`
-          );
+          throw new Error(`Error al cargar producto: ${res.statusText}`);
         }
 
         if (fetchedProduct) {

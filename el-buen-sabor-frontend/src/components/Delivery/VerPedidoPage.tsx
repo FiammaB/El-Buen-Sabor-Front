@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { PedidoService } from "../../services/PedidoService";
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO";
-import { useNavigate } from "react-router-dom";
 
 export default function VerPedidoPage() {
     const { pedidoId } = useParams();
@@ -21,9 +20,6 @@ export default function VerPedidoPage() {
     if (loading) return <div className="p-6 text-gray-500">Cargando pedido...</div>;
     if (!pedido) return <div className="p-6 text-red-500">Pedido no encontrado.</div>;
 
-    // Calcular total
-    const total = pedido.detalles.reduce((acc, det) => acc + (det.subTotal || 0), 0);
-
     return (
         <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 my-8">
             <button
@@ -36,7 +32,17 @@ export default function VerPedidoPage() {
 
             {/* Datos del cliente */}
             <div className="mb-6">
-                <div><span className="font-semibold">Cliente:</span> {pedido.cliente?.nombre} {pedido.cliente?.apellido}</div>
+                <div>
+                    <span className="font-semibold">Cliente:</span>{" "}
+                    {pedido.cliente
+                        ? (
+                            pedido.cliente.usuario?.nombre
+                                ? `${pedido.cliente.usuario.nombre} ${pedido.cliente.apellido ?? ""}`
+                                : `${pedido.cliente.nombre ?? ""} ${pedido.cliente.apellido ?? ""}`
+                        ).trim()
+                        : pedido.clienteId ?? "-"
+                    }
+                </div>
                 <div><span className="font-semibold">Teléfono:</span> {pedido.cliente?.telefono}</div>
                 <div>
                     <span className="font-semibold">Dirección de Entrega:</span>{" "}
@@ -44,7 +50,7 @@ export default function VerPedidoPage() {
                         ? `${pedido.domicilio.calle} ${pedido.domicilio.numero}, ${pedido.domicilio.localidad?.nombre ?? ""}`
                         : "-"}
                 </div>
-                <div><span className="font-semibold">Total:</span> ${total.toFixed(2)}</div>
+                <div><span className="font-semibold">Total:</span> ${pedido.total?.toFixed(2)}</div>
             </div>
 
             {/* Lista de artículos */}
@@ -52,33 +58,105 @@ export default function VerPedidoPage() {
                 <h3 className="font-semibold text-lg mb-2">Artículos:</h3>
                 <ul className="space-y-3">
                     {pedido.detalles.map((det, idx) => (
-                        <li key={idx} className="flex items-center gap-4 bg-gray-50 rounded-lg p-3">
-                            {/* Imagen */}
-                            <img
-                                src={
-                                    det.articuloManufacturado?.imagen?.denominacion ||
-                                    det.articuloInsumo?.imagen?.denominacion ||
-                                    "https://via.placeholder.com/48"
-                                }
-                                alt="Imagen"
-                                className="w-12 h-12 object-cover rounded"
-                            />
-                            {/* Descripción */}
-                            <div className="flex-1">
-                                <div className="font-bold">
-                                    {det.articuloManufacturado?.denominacion || det.articuloInsumo?.denominacion}
-                                </div>
-                                <div className="text-xs text-gray-600">
-                                    x{det.cantidad} | Subtotal: ${det.subTotal?.toFixed(2)}
-                                </div>
-                            </div>
+                        <li key={idx} className="flex items-start gap-4 bg-gray-50 rounded-lg p-3">
+                            {/* Si es promoción */}
+                            {det.promocion ? (
+                                <>
+                                    <img
+                                        src={det.promocion.imagen?.denominacion || "https://via.placeholder.com/48"}
+                                        alt="Imagen promoción"
+                                        className="w-16 h-16 object-cover rounded shadow"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="font-bold text-purple-700">
+                                            {det.promocion.denominacion}
+                                            <span className="ml-2 text-xs text-gray-600">(x{det.cantidad})</span>
+                                        </div>
+                                        <div className="text-xs text-gray-600 mb-1">
+                                            Subtotal: ${det.subTotal?.toFixed(2)}
+                                        </div>
+                                        <div className="ml-2">
+                                            {/* Artículos manufacturados de la promo agrupados */}
+                                            {det.promocion.articulosManufacturados && det.promocion.articulosManufacturados.length > 0 && (
+                                                <div className="mb-1">
+                                                    <span className="font-semibold text-green-700">Manufacturados (Total):</span>
+                                                    <ul className="ml-3 list-disc text-sm">
+                                                        {/* Agrupar por denominacion y sumar cantidad */}
+                                                        {(() => {
+                                                            const manMap = new Map();
+                                                            det.promocion.articulosManufacturados.forEach(am => {
+                                                                const key = am.id;
+                                                                if (!manMap.has(key)) {
+                                                                    manMap.set(key, {
+                                                                        ...am,
+                                                                        cantidad: det.cantidad // Inicia con la cantidad de la promo en este detalle
+                                                                    });
+                                                                } else {
+                                                                    const prev = manMap.get(key);
+                                                                    manMap.set(key, {
+                                                                        ...am,
+                                                                        cantidad: prev.cantidad + det.cantidad
+                                                                    });
+                                                                }
+                                                            });
+                                                            return [...manMap.values()].map((am, i) => (
+                                                                <li key={i}>
+                                                                    {am.denominacion} (x{am.cantidad})
+                                                                </li>
+                                                            ));
+                                                        })()}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                            {/* Insumos de la promo */}
+                                            {det.promocion.articulosInsumo && det.promocion.articulosInsumo.length > 0 && (
+                                                <div>
+                                                    <span className="font-semibold text-blue-700">Insumos:</span>
+                                                    <ul className="ml-3 list-disc text-sm">
+                                                        {det.promocion.articulosInsumo.map((ins, i) => (
+                                                            <li key={i}>
+                                                                {ins.denominacion}
+                                                                <span className="text-xs text-gray-500 ml-1">
+                                                                    (${ins.precioVenta?.toFixed(2)})
+                                                                </span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                // No es promo: manufacturado o insumo suelto
+                                <>
+                                    <img
+                                        src={
+                                            det.articuloManufacturado?.imagen?.denominacion ||
+                                            det.articuloInsumo?.imagen?.denominacion ||
+                                            "https://via.placeholder.com/48"
+                                        }
+                                        alt="Imagen"
+                                        className="w-12 h-12 object-cover rounded"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="font-semibold text-red-800">
+                                            {det.articuloManufacturado?.denominacion || det.articuloInsumo?.denominacion}
+                                            <span className="ml-2 text-xs text-gray-600">(x{det.cantidad})</span>
+                                        </div>
+                                        <div className="text-xs text-gray-600">
+                                            Subtotal: ${det.subTotal?.toFixed(2)}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </li>
                     ))}
                 </ul>
             </div>
             {/* Precio total abajo */}
             <div className="mt-6 text-right text-xl font-bold text-green-700">
-                Total: ${total.toFixed(2)}
+                Total: ${pedido.total?.toFixed(2)}
             </div>
         </div>
     );
