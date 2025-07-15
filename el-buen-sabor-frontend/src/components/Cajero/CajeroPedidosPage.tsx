@@ -5,6 +5,20 @@ import { Eye } from "lucide-react";
 import {useAuth} from "../Auth/Context/AuthContext";
 
 // Helpers UI
+
+const ESTADOS = [
+    "A_CONFIRMAR",
+    "PAGADO",
+    "EN_COCINA",
+    "EN_PREPARACION",
+    "LISTO",
+    "EN_DELIVERY",
+    "ENTREGADO",
+    "CANCELADO",
+    "RECHAZADO",
+    "DEVOLUCION",
+];
+
 function getProximoEstado(pedido: IPedidoDTO): { estado: string, label: string } | null {
     if (pedido.estado === "A_CONFIRMAR") {
         return { estado: "PAGADO", label: "Marcar como Pagado" };
@@ -38,10 +52,13 @@ function puedeDevolver(pedido: IPedidoDTO) {
 export default function CajeroPedidosPage() {
     const [pedidos, setPedidos] = useState<IPedidoDTO[]>([]);
     const [estadoFiltro, setEstadoFiltro] = useState<string>("");
-    const [idBusqueda, setIdBusqueda] = useState<string>("");
     const [openSlide, setOpenSlide] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [allPedidos, setAllPedidos] = useState<IPedidoDTO[]>([]);
+    const [filteredPedidos, setFilteredPedidos] = useState<IPedidoDTO[]>([]);
+    const [selectedEstados, setSelectedEstados] = useState<string[]>([]);
+    const [idBusqueda, setIdBusqueda] = useState<string>("");
 
     const fetchPedidos = async () => {
         setLoading(true);
@@ -98,10 +115,6 @@ export default function CajeroPedidosPage() {
         fetchPedidos();
     }, [estadoFiltro, idBusqueda]);
 
-    const handleBuscarPorId = (e: React.FormEvent) => {
-        e.preventDefault();
-    };
-
     const handleLimpiarBusqueda = () => {
         setIdBusqueda("");
     };
@@ -112,6 +125,40 @@ export default function CajeroPedidosPage() {
         if (!prox) return;
         await new PedidoService().actualizarEstadoPedido(pedido.id!, prox.estado);
         fetchPedidos();
+    };
+
+    useEffect(() => {
+        (async () => {
+            const data = await new PedidoService().getAllPedidos();
+            setAllPedidos(data);
+        })();
+    }, []);
+
+    // Filtrado por estados seleccionados y por ID
+    useEffect(() => {
+        let pedidos = allPedidos;
+        if (idBusqueda) {
+            pedidos = pedidos.filter(p => p.id?.toString() === idBusqueda);
+        }
+        if (selectedEstados.length > 0) {
+            pedidos = pedidos.filter(p => selectedEstados.includes(p.estado));
+        }
+        setFilteredPedidos(pedidos);
+    }, [allPedidos, selectedEstados, idBusqueda]);
+
+    // Toggle de selección de estados
+    const handleEstadoToggle = (estado: string) => {
+        setSelectedEstados(estados =>
+            estados.includes(estado)
+                ? estados.filter(e => e !== estado)
+                : [...estados, estado]
+        );
+    };
+
+    // Buscar por ID
+    const handleBuscarPorId = (e: React.FormEvent) => {
+        e.preventDefault();
+        // El filtrado se maneja en useEffect
     };
 
     return (
@@ -144,33 +191,27 @@ export default function CajeroPedidosPage() {
                         </button>
                     )}
                 </form>
-                {/* Filtro por Estado */}
-                <div className="flex items-center gap-2">
-                    <label className="text-sm">Filtrar por Estado:</label>
-                    <select
-                        value={estadoFiltro}
-                        onChange={e => setEstadoFiltro(e.target.value)}
-                        className="border rounded px-2 py-1 text-sm"
-                    >
-                        <option value="">Todos</option>
-                        <option value="A_CONFIRMAR">A Confirmar</option>
-                        <option value="PAGADO">Pagado</option>
-                        <option value="EN_COCINA">En Cocina</option>
-                        <option value="EN_PREPARACION">En Preparación</option>
-                        <option value="LISTO">Listo</option>
-                        <option value="EN_DELIVERY">En Delivery</option>
-                        <option value="ENTREGADO">Entregado</option>
-                        <option value="CANCELADO">Cancelado</option>
-                        <option value="DEVOLUCION">Devolución</option>
-                    </select>
-                    {estadoFiltro && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                    {ESTADOS.map(estado => (
                         <button
+                            key={estado}
                             type="button"
-                            className="text-xs text-red-600 ml-1"
-                            onClick={() => { setEstadoFiltro(""); fetchPedidos(); }}
+                            onClick={() => handleEstadoToggle(estado)}
+                            className={
+                                "px-3 py-1 rounded-full text-xs font-semibold border transition " +
+                                (selectedEstados.includes(estado)
+                                    ? "bg-blue-600 text-white border-blue-700 shadow"
+                                    : "bg-white text-gray-800 border-gray-400 hover:bg-blue-50")
+                            }
                         >
-                            Limpiar
+                            {estado.replace(/_/g, " ")}
                         </button>
+                    ))}
+                    {selectedEstados.length > 0 && (
+                        <button
+                            className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
+                            onClick={() => setSelectedEstados([])}
+                        >Limpiar filtros</button>
                     )}
                 </div>
             </div>
@@ -188,14 +229,14 @@ export default function CajeroPedidosPage() {
                     </tr>
                     </thead>
                     <tbody>
-                    {pedidos.length === 0 ? (
+                    {filteredPedidos.length === 0 ? (
                         <tr>
                             <td colSpan={7} className="text-center p-4 text-gray-500">
                                 No hay pedidos para mostrar.
                             </td>
                         </tr>
                     ) : (
-                        pedidos.map((pedido) => (
+                        filteredPedidos.map((pedido) => (
                             <React.Fragment key={pedido.id}>
                                 <tr className="border-t">
                                     <td className="p-2 text-center font-bold">{pedido.id}</td>
