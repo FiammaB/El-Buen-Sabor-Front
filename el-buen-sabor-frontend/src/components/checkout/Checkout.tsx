@@ -196,7 +196,7 @@ export default function CheckoutPage() {
         tipoEnvio: deliveryType,
         formaPago: paymentMethod,
         total: finalTotal,
-        clienteId: auth.id ?? undefined,
+        personaId: auth.id ?? undefined,
         domicilioId: deliveryType === TipoEnvio.DELIVERY ? selectedAddressId ?? undefined : undefined,
 
         detalles: detallesPedido,

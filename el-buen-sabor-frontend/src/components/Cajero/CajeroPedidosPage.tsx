@@ -56,6 +56,7 @@ export default function CajeroPedidosPage() {
             } else {
                 data = await new PedidoService().getAllPedidos();
             }
+            console.log("Respuesta del backend de pedidos:", data);
             setPedidos(data);
         } catch {
             setError("Error cargando pedidos.");
@@ -210,13 +211,13 @@ export default function CajeroPedidosPage() {
                                         </div>
                                     </td>
                                     <td className="p-2 text-center">
-                                        {pedido.cliente
+                                        {pedido.persona
                                             ? (
-                                            pedido.cliente.usuario?.nombre
-                                                ? `${pedido.cliente.usuario.nombre} ${pedido.cliente.apellido ?? ""}`
-                                                : `${pedido.cliente.nombre ?? ""} ${pedido.cliente.apellido ?? ""}`
-                                        ).trim() || pedido.clienteId
-                                            : pedido.clienteId ?? "-"
+                                                <>
+                                                    <div>{pedido.persona.nombre}, {pedido.persona.apellido}</div>
+                                                </>
+                                            )
+                                            : pedido.personaId ?? "-"
                                         }
                                     </td>
                                     <td className="p-2 text-center">

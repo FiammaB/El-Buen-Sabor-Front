@@ -4,7 +4,7 @@ import type {UsuarioDTO} from "./UsuarioDTO.ts";
 
 export interface IClienteDTO {
     id: number;
-    nombreUsuario?: string;
+    nombre?: string;
     apellido: string;
     emailUsuario?: string;
     fechaNacimiento: string;

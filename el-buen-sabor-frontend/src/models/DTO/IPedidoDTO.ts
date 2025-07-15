@@ -11,9 +11,9 @@ export interface IPedidoDTO {
   fechaPedido: string; // Formato string, e.g., "AAAA-MM-DD"
   total: number;
   estado: EstadoPedido; // <-- ¡Usamos el enum EstadoPedido!
-  clienteId?: number; // El ID del cliente principal
+  personaId?: number; // El ID del cliente principal
 
-  cliente?: {
+  persona?: {
     id: number; // <-- Añadido ID para referencia
     nombre: string;
     apellido: string;

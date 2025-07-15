@@ -81,13 +81,13 @@ export default function DeliveryPedidosPage() {
                                     <td className="p-2 text-center font-bold">{pedido.id}</td>
                                     {/* CLIENTE */}
                                     <td className="p-2 text-center">
-                                        {pedido.cliente
+                                        {pedido.persona
                                             ? (
-                                            pedido.cliente.usuario?.nombre
-                                                ? `${pedido.cliente.usuario.nombre} ${pedido.cliente.apellido ?? ""}`
-                                                : `${pedido.cliente.nombre ?? ""} ${pedido.cliente.apellido ?? ""}`
-                                        ).trim() || pedido.clienteId
-                                            : pedido.clienteId ?? "-"
+                                            pedido.persona.nombre
+                                                ? `${pedido.persona.nombre} ${pedido.persona.apellido ?? ""}`
+                                                : `${pedido.persona.nombre ?? ""} ${pedido.persona.apellido ?? ""}`
+                                        ).trim() || pedido.personaId
+                                            : pedido.personaId ?? "-"
                                         }
                                     </td>
                                     {/* DOMICILIO */}
@@ -98,7 +98,7 @@ export default function DeliveryPedidosPage() {
                                     </td>
                                     {/* TELEFONO */}
                                     <td className="p-2 text-center">
-                                        {pedido.cliente?.telefono || "-"}
+                                        {pedido.persona?.telefono || "-"}
                                     </td>
                                     {/* DETALLE */}
                                     <td className="p-2 text-center flex gap-2 justify-center">

@@ -4,7 +4,7 @@ export interface IPedidoCocineroDTO {
   total: number;
   estado: string;
   horaEstimadaFinalizacion?: string;
-  cliente?: {
+  persona?: {
     usuario?: {
       nombre: string;
     };

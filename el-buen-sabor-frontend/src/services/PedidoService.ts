@@ -85,12 +85,12 @@ export class PedidoService {
     });
   }
 
-  async getPedidosByClienteId(clienteId: number): Promise<IPedidoDTO[]> {
+  async getPedidosByClienteId(personaId: number): Promise<IPedidoDTO[]> {
     try {
-      const response = await axios.get<IPedidoDTO[]>(`${API_BASE_URL}/cliente/${clienteId}`);
+      const response = await axios.get<IPedidoDTO[]>(`${API_BASE_URL}/persona/${personaId}`);
       return response.data;
     } catch (error) {
-      console.error(`Error al obtener pedidos para el cliente ${clienteId}:`, error);
+      console.error(`Error al obtener pedidos para el cliente ${personaId}:`, error);
       throw error;
     }
   }

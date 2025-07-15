@@ -34,16 +34,16 @@ export default function VerPedidoPage() {
             <div className="mb-6">
                 <div>
                     <span className="font-semibold">Cliente:</span>{" "}
-                    {pedido.cliente
+                    {pedido.persona
                         ? (
-                            pedido.cliente.usuario?.nombre
-                                ? `${pedido.cliente.usuario.nombre} ${pedido.cliente.apellido ?? ""}`
-                                : `${pedido.cliente.nombre ?? ""} ${pedido.cliente.apellido ?? ""}`
+                            pedido.persona.nombre
+                                ? `${pedido.persona.usuario.nombre} ${pedido.persona.apellido ?? ""}`
+                                : `${pedido.persona.nombre ?? ""} ${pedido.persona.apellido ?? ""}`
                         ).trim()
-                        : pedido.clienteId ?? "-"
+                        : pedido.personaId ?? "-"
                     }
                 </div>
-                <div><span className="font-semibold">Teléfono:</span> {pedido.cliente?.telefono}</div>
+                <div><span className="font-semibold">Teléfono:</span> {pedido.persona?.telefono}</div>
                 <div>
                     <span className="font-semibold">Dirección de Entrega:</span>{" "}
                     {pedido.domicilio
