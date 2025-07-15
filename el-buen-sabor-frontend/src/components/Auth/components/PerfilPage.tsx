@@ -190,7 +190,7 @@ export default function PerfilPage() {
 
       // 3. Envío al backend (usando el ID del cliente)
       // Ajusta la URL si tu endpoint de actualización es diferente
-      const res = await axios.put(`http://localhost:8080/api/clientes/${id}/perfil`, payload);
+      const res = await axios.put(`http://localhost:8080/api/persona/${id}/perfil`, payload);
 
       // 4. Actualizar contexto de autenticación si es necesario (ej: nombre/apellido cambiaron)
       // Asegúrate de que los parámetros de login coincidan con los de tu AuthContext
