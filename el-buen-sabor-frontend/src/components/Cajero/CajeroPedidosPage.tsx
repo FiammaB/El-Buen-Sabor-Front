@@ -5,6 +5,20 @@ import { Eye } from "lucide-react";
 import {useAuth} from "../Auth/Context/AuthContext";
 
 // Helpers UI
+
+const ESTADOS = [
+    "A_CONFIRMAR",
+    "PAGADO",
+    "EN_COCINA",
+    "EN_PREPARACION",
+    "LISTO",
+    "EN_DELIVERY",
+    "ENTREGADO",
+    "CANCELADO",
+    "RECHAZADO",
+    "DEVOLUCION",
+];
+
 function getProximoEstado(pedido: IPedidoDTO): { estado: string, label: string } | null {
     if (pedido.estado === "A_CONFIRMAR") {
         return { estado: "PAGADO", label: "Marcar como Pagado" };
@@ -38,10 +52,14 @@ function puedeDevolver(pedido: IPedidoDTO) {
 export default function CajeroPedidosPage() {
     const [pedidos, setPedidos] = useState<IPedidoDTO[]>([]);
     const [estadoFiltro, setEstadoFiltro] = useState<string>("");
-    const [idBusqueda, setIdBusqueda] = useState<string>("");
     const [openSlide, setOpenSlide] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [allPedidos, setAllPedidos] = useState<IPedidoDTO[]>([]);
+    const [filteredPedidos, setFilteredPedidos] = useState<IPedidoDTO[]>([]);
+    const [selectedEstados, setSelectedEstados] = useState<string[]>([]);
+    const [idBusqueda, setIdBusqueda] = useState<string>("");
+    const [fechaFiltro, setFechaFiltro] = useState<string>("");
 
     const fetchPedidos = async () => {
         setLoading(true);
@@ -98,10 +116,6 @@ export default function CajeroPedidosPage() {
         fetchPedidos();
     }, [estadoFiltro, idBusqueda]);
 
-    const handleBuscarPorId = (e: React.FormEvent) => {
-        e.preventDefault();
-    };
-
     const handleLimpiarBusqueda = () => {
         setIdBusqueda("");
     };
@@ -114,66 +128,126 @@ export default function CajeroPedidosPage() {
         fetchPedidos();
     };
 
+    useEffect(() => {
+        (async () => {
+            const data = await new PedidoService().getAllPedidos();
+            setAllPedidos(data);
+        })();
+    }, []);
+
+    // Filtrado por estados seleccionados y por ID
+    useEffect(() => {
+        let pedidosFiltrados = allPedidos;
+
+        if (idBusqueda) {
+            pedidosFiltrados = pedidosFiltrados.filter(p => p.id?.toString() === idBusqueda);
+        }
+        if (selectedEstados.length > 0) {
+            pedidosFiltrados = pedidosFiltrados.filter(p => selectedEstados.includes(p.estado));
+        }
+        if (fechaFiltro) {
+            pedidosFiltrados = pedidosFiltrados.filter(p =>
+                p.fechaPedido && p.fechaPedido.slice(0, 10) === fechaFiltro
+            );
+        }
+        setFilteredPedidos(pedidosFiltrados);
+    }, [allPedidos, selectedEstados, idBusqueda, fechaFiltro]);
+
+
+    // Toggle de selección de estados
+    const handleEstadoToggle = (estado: string) => {
+        setSelectedEstados(estados =>
+            estados.includes(estado)
+                ? estados.filter(e => e !== estado)
+                : [...estados, estado]
+        );
+    };
+
+    // Buscar por ID
+    const handleBuscarPorId = (e: React.FormEvent) => {
+        e.preventDefault();
+        // El filtrado se maneja en useEffect
+    };
+
     return (
         <div>
-            {/* FILTROS ARRIBA DE LA TABLA */}
-            <div className="mb-4 flex flex-wrap gap-4 items-end">
+            {/* FILTROS (BARRA SUPERIOR) */}
+            <div className="flex flex-wrap items-center gap-6 justify-center mb-2">
                 {/* Filtro por ID */}
-                <form onSubmit={handleBuscarPorId} className="flex items-center gap-2">
+                <form
+                    onSubmit={handleBuscarPorId}
+                    className="flex items-center gap-2"
+                    style={{ minWidth: 180 }}
+                >
                     <input
                         type="number"
-                        className="border rounded px-2 py-1 text-sm"
+                        className="border rounded px-3 py-2 text-sm shadow-sm"
                         placeholder="Buscar por ID"
                         value={idBusqueda}
                         onChange={(e) => setIdBusqueda(e.target.value)}
-                        style={{ width: 120 }}
+                        style={{ minWidth: 120 }}
                     />
                     <button
                         type="submit"
-                        className="bg-blue-600 text-white rounded px-2 py-1 text-xs font-medium transition hover:bg-blue-700"
+                        className="bg-blue-600 text-white rounded px-3 py-2 text-xs font-medium hover:bg-blue-700 transition"
                     >
                         Buscar
                     </button>
                     {idBusqueda && (
                         <button
                             type="button"
-                            className="text-xs text-red-600 ml-1"
+                            className="text-xs text-red-600 ml-1 hover:underline"
                             onClick={() => { setIdBusqueda(""); fetchPedidos(); }}
                         >
                             Limpiar
                         </button>
                     )}
                 </form>
-                {/* Filtro por Estado */}
-                <div className="flex items-center gap-2">
-                    <label className="text-sm">Filtrar por Estado:</label>
-                    <select
-                        value={estadoFiltro}
-                        onChange={e => setEstadoFiltro(e.target.value)}
-                        className="border rounded px-2 py-1 text-sm"
-                    >
-                        <option value="">Todos</option>
-                        <option value="A_CONFIRMAR">A Confirmar</option>
-                        <option value="PAGADO">Pagado</option>
-                        <option value="EN_COCINA">En Cocina</option>
-                        <option value="EN_PREPARACION">En Preparación</option>
-                        <option value="LISTO">Listo</option>
-                        <option value="EN_DELIVERY">En Delivery</option>
-                        <option value="ENTREGADO">Entregado</option>
-                        <option value="CANCELADO">Cancelado</option>
-                        <option value="DEVOLUCION">Devolución</option>
-                    </select>
-                    {estadoFiltro && (
+                {/* Filtro por Fecha */}
+                <div className="flex items-center gap-2" style={{ minWidth: 180 }}>
+                    <label className="text-sm font-medium">Fecha:</label>
+                    <input
+                        type="date"
+                        className="border rounded px-3 py-2 text-sm shadow-sm"
+                        value={fechaFiltro}
+                        onChange={e => setFechaFiltro(e.target.value)}
+                        style={{ minWidth: 120 }}
+                    />
+                    {fechaFiltro && (
                         <button
+                            className="text-xs text-red-600 ml-1 hover:underline"
                             type="button"
-                            className="text-xs text-red-600 ml-1"
-                            onClick={() => { setEstadoFiltro(""); fetchPedidos(); }}
-                        >
-                            Limpiar
-                        </button>
+                            onClick={() => setFechaFiltro("")}
+                        >Limpiar</button>
                     )}
                 </div>
             </div>
+
+            {/* FILTRO POR ESTADOS (CENTRADO, DEBAJO DE LOS OTROS FILTROS) */}
+            <div className="flex flex-wrap gap-2 justify-center mb-6">
+                {ESTADOS.map(estado => (
+                    <button
+                        key={estado}
+                        type="button"
+                        onClick={() => handleEstadoToggle(estado)}
+                        className={
+                            "px-4 py-2 rounded-full text-xs font-semibold border shadow-sm transition " +
+                            (selectedEstados.includes(estado)
+                                ? "bg-blue-600 text-white border-blue-700"
+                                : "bg-white text-gray-800 border-gray-300 hover:bg-blue-100")
+                        }
+                    >
+                        {estado.replace(/_/g, " ")}
+                    </button>
+                ))}
+                {selectedEstados.length > 0 && (
+                    <button
+                        className="ml-2 px-3 py-2 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100 border border-red-200"
+                        onClick={() => setSelectedEstados([])}
+                    >Limpiar</button>
+                )}
+            </div>
+
             <div className="overflow-x-auto">
                 <table className="min-w-full border text-sm rounded shadow">
                     <thead>
@@ -188,14 +262,14 @@ export default function CajeroPedidosPage() {
                     </tr>
                     </thead>
                     <tbody>
-                    {pedidos.length === 0 ? (
+                    {filteredPedidos.length === 0 ? (
                         <tr>
                             <td colSpan={7} className="text-center p-4 text-gray-500">
                                 No hay pedidos para mostrar.
                             </td>
                         </tr>
                     ) : (
-                        pedidos.map((pedido) => (
+                        filteredPedidos.map((pedido) => (
                             <React.Fragment key={pedido.id}>
                                 <tr className="border-t">
                                     <td className="p-2 text-center font-bold">{pedido.id}</td>
