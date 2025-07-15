@@ -442,6 +442,14 @@ export default function PerfilPage() {
               >
                 Guardar cambios
               </button>
+              {/* NUEVO BOTÓN "VOLVER" */}
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="w-full bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 font-semibold py-3 rounded-md transition"
+              >
+                Volver
+              </button>
             </div>
           </form>
         </div>

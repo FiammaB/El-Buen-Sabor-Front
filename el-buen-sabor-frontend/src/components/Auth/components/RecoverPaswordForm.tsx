@@ -14,10 +14,8 @@ export default function RecoverPasswordForm() {
             await axios.post(`http://localhost:8080/api/auth/recuperar?email=${email}`);
             setMensaje("📩 Código enviado al correo");
 
-            // Guardar el email para usarlo en la próxima pantalla
             localStorage.setItem("email-recuperacion", email);
 
-            // Redirigir luego de 1 segundo
             setTimeout(() => {
                 navigate("/verificar-codigo");
             }, 1000);
@@ -54,12 +52,26 @@ export default function RecoverPasswordForm() {
                             </div>
                         </div>
 
-                        <button
-                            type="submit"
-                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                        >
-                            Enviar código
-                        </button>
+                        {/* --- INICIO DE LA MODIFICACIÓN --- */}
+                        <div className="space-y-4">
+                            {/* Botón principal (existente) */}
+                            <button
+                                type="submit"
+                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                            >
+                                Enviar código
+                            </button>
+
+                            {/* NUEVO BOTÓN "VOLVER" */}
+                            <button
+                                type="button" // Importante para que no envíe el formulario
+                                onClick={() => navigate(-1)} // Vuelve a la página anterior
+                                className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                            >
+                                Volver
+                            </button>
+                        </div>
+                        {/* --- FIN DE LA MODIFICACIÓN --- */}
 
                         {mensaje && <p className="text-center text-sm text-gray-700">{mensaje}</p>}
                     </form>

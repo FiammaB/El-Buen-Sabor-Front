@@ -55,12 +55,27 @@ export default function VerifyCodeForm() {
                             />
                         </div>
 
-                        <button
-                            type="submit"
-                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                        >
-                            Verificar
-                        </button>
+                        {/* --- INICIO DE LA MODIFICACIÓN --- */}
+                        <div className="space-y-4">
+                            {/* Botón principal (existente) */}
+                            <button
+                                type="submit"
+                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                            >
+                                Verificar
+                            </button>
+
+                            {/* NUEVO BOTÓN "VOLVER" */}
+                            <button
+                                type="button" // Importante: 'type="button"' para que no envíe el formulario
+                                onClick={() => navigate(-1)} // Vuelve a la página anterior
+                                className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                            >
+                                Volver
+                            </button>
+                        </div>
+                        {/* --- FIN DE LA MODIFICACIÓN --- */}
+
 
                         {mensaje && <p className="text-center text-sm text-gray-700">{mensaje}</p>}
                     </form>
