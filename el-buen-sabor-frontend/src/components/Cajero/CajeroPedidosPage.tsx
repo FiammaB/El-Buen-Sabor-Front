@@ -59,6 +59,7 @@ export default function CajeroPedidosPage() {
     const [filteredPedidos, setFilteredPedidos] = useState<IPedidoDTO[]>([]);
     const [selectedEstados, setSelectedEstados] = useState<string[]>([]);
     const [idBusqueda, setIdBusqueda] = useState<string>("");
+    const [fechaFiltro, setFechaFiltro] = useState<string>("");
 
     const fetchPedidos = async () => {
         setLoading(true);
@@ -136,15 +137,22 @@ export default function CajeroPedidosPage() {
 
     // Filtrado por estados seleccionados y por ID
     useEffect(() => {
-        let pedidos = allPedidos;
+        let pedidosFiltrados = allPedidos;
+
         if (idBusqueda) {
-            pedidos = pedidos.filter(p => p.id?.toString() === idBusqueda);
+            pedidosFiltrados = pedidosFiltrados.filter(p => p.id?.toString() === idBusqueda);
         }
         if (selectedEstados.length > 0) {
-            pedidos = pedidos.filter(p => selectedEstados.includes(p.estado));
+            pedidosFiltrados = pedidosFiltrados.filter(p => selectedEstados.includes(p.estado));
         }
-        setFilteredPedidos(pedidos);
-    }, [allPedidos, selectedEstados, idBusqueda]);
+        if (fechaFiltro) {
+            pedidosFiltrados = pedidosFiltrados.filter(p =>
+                p.fechaPedido && p.fechaPedido.slice(0, 10) === fechaFiltro
+            );
+        }
+        setFilteredPedidos(pedidosFiltrados);
+    }, [allPedidos, selectedEstados, idBusqueda, fechaFiltro]);
+
 
     // Toggle de selección de estados
     const handleEstadoToggle = (estado: string) => {
@@ -163,58 +171,83 @@ export default function CajeroPedidosPage() {
 
     return (
         <div>
-            {/* FILTROS ARRIBA DE LA TABLA */}
-            <div className="mb-4 flex flex-wrap gap-4 items-end">
+            {/* FILTROS (BARRA SUPERIOR) */}
+            <div className="flex flex-wrap items-center gap-6 justify-center mb-2">
                 {/* Filtro por ID */}
-                <form onSubmit={handleBuscarPorId} className="flex items-center gap-2">
+                <form
+                    onSubmit={handleBuscarPorId}
+                    className="flex items-center gap-2"
+                    style={{ minWidth: 180 }}
+                >
                     <input
                         type="number"
-                        className="border rounded px-2 py-1 text-sm"
+                        className="border rounded px-3 py-2 text-sm shadow-sm"
                         placeholder="Buscar por ID"
                         value={idBusqueda}
                         onChange={(e) => setIdBusqueda(e.target.value)}
-                        style={{ width: 120 }}
+                        style={{ minWidth: 120 }}
                     />
                     <button
                         type="submit"
-                        className="bg-blue-600 text-white rounded px-2 py-1 text-xs font-medium transition hover:bg-blue-700"
+                        className="bg-blue-600 text-white rounded px-3 py-2 text-xs font-medium hover:bg-blue-700 transition"
                     >
                         Buscar
                     </button>
                     {idBusqueda && (
                         <button
                             type="button"
-                            className="text-xs text-red-600 ml-1"
+                            className="text-xs text-red-600 ml-1 hover:underline"
                             onClick={() => { setIdBusqueda(""); fetchPedidos(); }}
                         >
                             Limpiar
                         </button>
                     )}
                 </form>
-                <div className="flex flex-wrap gap-2 mb-4">
-                    {ESTADOS.map(estado => (
+                {/* Filtro por Fecha */}
+                <div className="flex items-center gap-2" style={{ minWidth: 180 }}>
+                    <label className="text-sm font-medium">Fecha:</label>
+                    <input
+                        type="date"
+                        className="border rounded px-3 py-2 text-sm shadow-sm"
+                        value={fechaFiltro}
+                        onChange={e => setFechaFiltro(e.target.value)}
+                        style={{ minWidth: 120 }}
+                    />
+                    {fechaFiltro && (
                         <button
-                            key={estado}
+                            className="text-xs text-red-600 ml-1 hover:underline"
                             type="button"
-                            onClick={() => handleEstadoToggle(estado)}
-                            className={
-                                "px-3 py-1 rounded-full text-xs font-semibold border transition " +
-                                (selectedEstados.includes(estado)
-                                    ? "bg-blue-600 text-white border-blue-700 shadow"
-                                    : "bg-white text-gray-800 border-gray-400 hover:bg-blue-50")
-                            }
-                        >
-                            {estado.replace(/_/g, " ")}
-                        </button>
-                    ))}
-                    {selectedEstados.length > 0 && (
-                        <button
-                            className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
-                            onClick={() => setSelectedEstados([])}
-                        >Limpiar filtros</button>
+                            onClick={() => setFechaFiltro("")}
+                        >Limpiar</button>
                     )}
                 </div>
             </div>
+
+            {/* FILTRO POR ESTADOS (CENTRADO, DEBAJO DE LOS OTROS FILTROS) */}
+            <div className="flex flex-wrap gap-2 justify-center mb-6">
+                {ESTADOS.map(estado => (
+                    <button
+                        key={estado}
+                        type="button"
+                        onClick={() => handleEstadoToggle(estado)}
+                        className={
+                            "px-4 py-2 rounded-full text-xs font-semibold border shadow-sm transition " +
+                            (selectedEstados.includes(estado)
+                                ? "bg-blue-600 text-white border-blue-700"
+                                : "bg-white text-gray-800 border-gray-300 hover:bg-blue-100")
+                        }
+                    >
+                        {estado.replace(/_/g, " ")}
+                    </button>
+                ))}
+                {selectedEstados.length > 0 && (
+                    <button
+                        className="ml-2 px-3 py-2 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100 border border-red-200"
+                        onClick={() => setSelectedEstados([])}
+                    >Limpiar</button>
+                )}
+            </div>
+
             <div className="overflow-x-auto">
                 <table className="min-w-full border text-sm rounded shadow">
                     <thead>
