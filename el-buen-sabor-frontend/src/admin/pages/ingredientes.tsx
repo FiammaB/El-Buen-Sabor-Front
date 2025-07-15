@@ -96,10 +96,10 @@ export default function Ingredientes() {
 
   function normalizarTexto(str: string) {
     return str
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .trim();
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 
   const abrirPopupEditar = (ing: ArticuloInsumo) => {
@@ -129,10 +129,10 @@ export default function Ingredientes() {
 
   function normalizarTexto(str: string) {
     return str
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .trim();
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -322,109 +322,128 @@ export default function Ingredientes() {
                 {esEdicion ? `Editar ingrediente #${ingredienteEditando?.id}` : "Crear nuevo ingrediente"}
               </h2>
 
-              {/* FORM FIELDS */}
+              {/* FORM FIELDS - CORREGIDO */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Denominacion */}
-                <input
-                  type="text"
-                  placeholder="Denominación"
-                  value={formData.denominacion || ""}
-                  onChange={(e) => setFormData({ ...formData, denominacion: e.target.value })}
-                  className="border border-gray-300 rounded p-2"
-                />
+
+                {/* Denominación */}
+                <div>
+                  <label htmlFor="denominacion" className="block text-sm font-medium text-gray-700 mb-1">Denominación</label>
+                  <input
+                    type="text"
+                    id="denominacion"
+                    value={formData.denominacion || ""}
+                    onChange={(e) => setFormData({ ...formData, denominacion: e.target.value })}
+                    className="border border-gray-300 rounded p-2 w-full"
+                  />
+                </div>
 
                 {/* Precio Compra */}
-                <input
-                  type="number"
-                  placeholder="Precio de compra"
-                  value={formData.precioCompra ?? ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, precioCompra: e.target.value === "" ? undefined : parseFloat(e.target.value) })
-                  }
-                  className="border border-gray-300 rounded p-2"
-                />
+                <div>
+                  <label htmlFor="precioCompra" className="block text-sm font-medium text-gray-700 mb-1">Precio de compra</label>
+                  <input
+                    type="number"
+                    id="precioCompra"
+                    value={formData.precioCompra ?? ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, precioCompra: e.target.value === "" ? undefined : parseFloat(e.target.value) })
+                    }
+                    className="border border-gray-300 rounded p-2 w-full"
+                  />
+                </div>
 
                 {/* Precio Venta */}
-                <input // <-- NUEVO CAMPO PARA PRECIO DE VENTA
-                  type="number"
-                  placeholder="Precio de venta"
-                  value={formData.precioVenta ?? ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, precioVenta: e.target.value === "" ? undefined : parseFloat(e.target.value) })
-                  }
-                  className="border border-gray-300 rounded p-2"
-                  min={0}
-                  step="0.01"
-                />
+                <div>
+                  <label htmlFor="precioVenta" className="block text-sm font-medium text-gray-700 mb-1">Precio de venta</label>
+                  <input
+                    type="number"
+                    id="precioVenta"
+                    value={formData.precioVenta ?? ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, precioVenta: e.target.value === "" ? undefined : parseFloat(e.target.value) })
+                    }
+                    className="border border-gray-300 rounded p-2 w-full"
+                    min={0}
+                    step="0.01"
+                  />
+                </div>
 
                 {/* Stock actual */}
-                <input
-                  type="number"
-                  placeholder="Stock actual"
-                  value={formData.stockActual ?? ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stockActual: e.target.value === "" ? undefined : parseFloat(e.target.value) })
-                  }
-                  className="border border-gray-300 rounded p-2"
-                />
+                <div>
+                  <label htmlFor="stockActual" className="block text-sm font-medium text-gray-700 mb-1">Stock actual</label>
+                  <input
+                    type="number"
+                    id="stockActual"
+                    value={formData.stockActual ?? ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, stockActual: e.target.value === "" ? undefined : parseFloat(e.target.value) })
+                    }
+                    className="border border-gray-300 rounded p-2 w-full"
+                  />
+                </div>
 
                 {/* Stock mínimo */}
-                <input
-                  type="number"
-                  placeholder="Stock mínimo"
-                  value={formData.stockMinimo ?? ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stockMinimo: e.target.value === "" ? undefined : parseFloat(e.target.value) })
-                  }
-                  className="border border-gray-300 rounded p-2"
-                />
+                <div>
+                  <label htmlFor="stockMinimo" className="block text-sm font-medium text-gray-700 mb-1">Stock mínimo</label>
+                  <input
+                    type="number"
+                    id="stockMinimo"
+                    value={formData.stockMinimo ?? ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, stockMinimo: e.target.value === "" ? undefined : parseFloat(e.target.value) })
+                    }
+                    className="border border-gray-300 rounded p-2 w-full"
+                  />
+                </div>
 
                 {/* Categoría */}
-                <select
+                <div>
+                  <label htmlFor="categoria" className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                  <select
+                    id="categoria"
                     value={formData.categoria?.id ?? ""}
                     onChange={(e) => {
                       const id = parseInt(e.target.value);
                       const cat = categoriasList.find((c) => c.id === id);
                       setFormData({ ...formData, categoria: cat });
                     }}
-                    className="border border-gray-300 rounded p-2"
-                >
-                  <option value="" disabled>
-                    Seleccione categoría
-                  </option>
-                  {categoriasList.map((c) => (
+                    className="border border-gray-300 rounded p-2 w-full"
+                  >
+                    <option value="" disabled>Seleccione categoría</option>
+                    {categoriasList.map((c) => (
                       <option
-                          key={c.id}
-                          value={c.id}
-                          disabled={c.baja === true}
-                          style={c.baja ? { color: "#aaa" } : {}}
+                        key={c.id}
+                        value={c.id}
+                        disabled={c.baja === true}
+                        style={c.baja ? { color: "#aaa" } : {}}
                       >
                         {c.denominacion}
                         {c.baja ? " (Dada de baja)" : ""}
                       </option>
-                  ))}
-                </select>
+                    ))}
+                  </select>
+                </div>
 
-
-                {/* Unidad */}
-                <select
-                  value={formData.unidadMedida?.id ?? ""}
-                  onChange={(e) => {
-                    const id = parseInt(e.target.value);
-                    const un = unidadMedidaList.find((u) => u.id === id);
-                    setFormData({ ...formData, unidadMedida: un });
-                  }}
-                  className="border border-gray-300 rounded p-2"
-                >
-                  <option value="" disabled>
-                    Seleccione unidad de medida
-                  </option>
-                  {unidadMedidaList.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.denominacion}
-                    </option>
-                  ))}
-                </select>
+                {/* Unidad de Medida */}
+                <div>
+                  <label htmlFor="unidadMedida" className="block text-sm font-medium text-gray-700 mb-1">Unidad de medida</label>
+                  <select
+                    id="unidadMedida"
+                    value={formData.unidadMedida?.id ?? ""}
+                    onChange={(e) => {
+                      const id = parseInt(e.target.value);
+                      const un = unidadMedidaList.find((u) => u.id === id);
+                      setFormData({ ...formData, unidadMedida: un });
+                    }}
+                    className="border border-gray-300 rounded p-2 w-full"
+                  >
+                    <option value="" disabled>Seleccione unidad de medida</option>
+                    {unidadMedidaList.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.denominacion}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 {/* Checkbox para "Es para elaborar" */}
                 <div className="flex items-center space-x-2 sm:col-span-2">
@@ -440,6 +459,7 @@ export default function Ingredientes() {
 
                 {/* Campo de Imagen y Previsualización */}
                 <div className="sm:col-span-2">
+                  <label htmlFor="imagen" className="block text-sm font-medium text-gray-700 mb-1">Imagen del ingrediente</label>
                   {previewImage && (
                     <div className="mb-2 w-32 h-32 rounded-lg overflow-hidden border border-gray-300 flex items-center justify-center">
                       <img src={previewImage} alt="Previsualización" className="object-cover w-full h-full" />
@@ -447,6 +467,7 @@ export default function Ingredientes() {
                   )}
                   <input
                     type="file"
+                    id="imagen"
                     accept="image/*"
                     onChange={handleImageUpload}
                     disabled={isUploading}
@@ -473,6 +494,7 @@ export default function Ingredientes() {
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
