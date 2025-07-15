@@ -2,7 +2,7 @@
 import axios from "axios";
 import type {IClienteDTO} from "../models/DTO/IClienteDTO";
 
-const API_URL = "http://localhost:8080/api/clientes";
+const API_URL = "http://localhost:8080/api/persona";
 
 export class ClienteService {
     async getAllClientes(): Promise<IClienteDTO[]> {
