@@ -20,7 +20,7 @@ const navItems = [
 
     { href: "/admin/empleados", label: "Panel de Empleados", icon: <Users className="w-5 h-5" /> },
     // No implementadas
-    { label: "Registrar Empleado", icon: <Users className="w-5 h-5" />, toImplement: true },
+    { href: "/admin/registrar-empleado", label: "Registrar Empleado", icon: <Users className="w-5 h-5" /> },
 
 
 ];

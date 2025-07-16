@@ -63,6 +63,7 @@ import ClienteListPage from "./components/Admin/ClienteListPage.tsx";
 import EmpleadoListPage from "./components/Admin/EmpleadoListPage.tsx";
 import ClienteAdminLayout from "./components/Cliente/ClienteAdminLayout.tsx";
 import ClientePerfilPage from "./components/Cliente/ClientePerfilPage.tsx";
+import RegistrarEmpleadoPage from "./components/Admin/RegistrarEmpleadoPage.tsx";
 
 
 
@@ -156,6 +157,7 @@ function App() {
               path="/admin/promociones/new" element={<PromocionForm />} />
             <Route
               path="/admin/promociones/edit/:id" element={<PromocionForm />} />
+            <Route path="/admin/registrar-empleado" element={<RegistrarEmpleadoPage />} />
           </Route>
 
           {/* ✅ NUEVA RUTA: REGISTRO DE EMPLEADOS */}

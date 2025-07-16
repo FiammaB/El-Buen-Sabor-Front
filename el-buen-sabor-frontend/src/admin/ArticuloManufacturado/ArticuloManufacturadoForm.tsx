@@ -37,23 +37,21 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             try {
                 setLoadingMasterData(true);
 
-                // Cargar categorías con el service nuevo
+                // Cargar categorías
                 const categoriasData = await categoriaService.getAll();
                 setCategorias(categoriasData);
 
-                // Cargar insumos igual que antes
+                // Cargar insumos
                 const insumosData = await articuloService.getAllArticulosInsumo();
-
                 const insumosFiltradosYOrdenados = insumosData
                     .filter(insumo =>
                         insumo.categoria?.denominacion.toLowerCase() !== 'bebida' &&
                         insumo.categoria?.denominacion.toLowerCase() !== 'postre'
                     )
                     .sort((a, b) => a.denominacion.localeCompare(b.denominacion));
-
                 setInsumos(insumosFiltradosYOrdenados);
 
-                // Mapear data si es edición
+                // Si es edición, cargar datos y setear precioEditado en true
                 if (articulo) {
                     setFormData({
                         ...articulo,
@@ -65,8 +63,10 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                             articuloInsumo: d.articuloInsumo ?? insumosData.find(i => i.id === (d.articuloInsumo?.id ?? d.articuloInsumoId))
                         }))
                     });
+                    setPrecioEditado(true); // 👈 Importante para que respete el precio inicial
                 } else {
                     setFormData(new ArticuloManufacturado('', 0, 0, '', 0, '', [], undefined, undefined, undefined, undefined, undefined, undefined));
+                    setPrecioEditado(false); // 👈 En creación, empieza en automático
                 }
             } catch (err) {
                 setError('Error al cargar datos maestros.');
@@ -76,7 +76,9 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             }
         };
         fetchMasterData();
+        // eslint-disable-next-line
     }, [articulo, articuloService, categoriaService]);
+
 
     const [nombreDuplicado, setNombreDuplicado] = useState(false);
 
@@ -101,14 +103,26 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
     // Cambios para el form principal
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+        if (name === 'precioVenta') {
+            if (!value || Number(value) === 0) {
+                // Si está vacío o en 0, activar modo automático
+                setPrecioEditado(false);
+                setFormData(prev => ({
+                    ...prev,
+                    precioVenta: 0
+                }));
+                return;
+            } else {
+                setPrecioEditado(true);
+            }
+        }
         setFormData(prev => ({
             ...prev,
             [name]: name === 'precioVenta' || name === 'tiempoEstimadoMinutos' ? Number(value) : value,
         }));
-        if (name === 'precioVenta') {
-            setPrecioEditado(true); // ahora el usuario lo tocó
-        }
     };
+
+
 
     // Subida de imagen a tu backend
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -303,17 +317,24 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                 <input
                     type="number"
                     name="precioVenta"
-                    value={formData.precioVenta}
+                    value={formData.precioVenta === 0 && !precioEditado ? '' : formData.precioVenta}
                     onChange={handleChange}
-                    required
                     min="0.01"
                     step="0.01"
                     style={{ width: '100%', padding: '8px' }}
-                    onBlur={() => {
-
-                        if (!formData.precioVenta) setPrecioEditado(false);
+                    onBlur={e => {
+                        // Si el usuario deja el campo vacío o pone 0, se vuelve a automático
+                        if (!e.target.value || Number(e.target.value) === 0) {
+                            setPrecioEditado(false);
+                            setFormData(prev => ({
+                                ...prev,
+                                precioVenta: calculatePrecioVenta()
+                            }));
+                        }
                     }}
+                    required
                 />
+
                 <div style={{ marginBottom: '15px' }}>
                     <label>Descripción:</label>
                     <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} style={{ width: '100%', padding: '8px' }} />

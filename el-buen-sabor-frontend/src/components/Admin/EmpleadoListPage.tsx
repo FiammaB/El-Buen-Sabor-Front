@@ -1,73 +1,63 @@
-// src/admin/Empleados/EmpleadoListPage.tsx
 import { useEffect, useState } from "react";
 import type { UsuarioDTO } from "../../models/DTO/UsuarioDTO";
 import { UsuarioService } from "../../services/UsuarioService";
-import {Check, Loader2, Pencil, Trash2} from "lucide-react";
-import {ClienteService} from "../../services/ClienteService.ts";
-import type {IClienteDTO} from "../../models/DTO/IClienteDTO.ts";
+import { ClienteService } from "../../services/ClienteService";
+import type { IClienteDTO } from "../../models/DTO/IClienteDTO";
+import { Pencil, Trash2, Check, Loader2 } from "lucide-react";
 
 const ROLES_EMPLEADO = ["ADMINISTRADOR", "COCINERO", "CAJERO", "DELIVERY"];
 
 export default function EmpleadoListPage() {
     const [loading, setLoading] = useState(false);
-    const [usuarioEdit, setUsuarioEdit] = useState<UsuarioDTO | null>(null);
-    const [clienteEdit, setClienteEdit] = useState<IClienteDTO | null>(null);
+    const [usuarios, setUsuarios] = useState<UsuarioDTO[]>([]);
+    const [clientes, setClientes] = useState<IClienteDTO[]>([]);
+    const [editUser, setEditUser] = useState<UsuarioDTO | null>(null);
+    const [editCliente, setEditCliente] = useState<IClienteDTO | null>(null);
     const [showForm, setShowForm] = useState(false);
-    const clienteService = new ClienteService();
+
     const usuarioService = new UsuarioService();
-
-    type UsuarioConCliente = UsuarioDTO & {
-        cliente?: IClienteDTO;
-        esCliente?: boolean;
-    };
-
-    const [usuarios, setUsuarios] = useState<UsuarioConCliente[]>([]);
+    const clienteService = new ClienteService();
 
     useEffect(() => {
-        fetchEmpleados();
+        fetchData();
     }, []);
 
-    const fetchEmpleados = async () => {
+    const fetchData = async () => {
         setLoading(true);
         try {
             const [usuariosData, clientesData] = await Promise.all([
                 usuarioService.getAllUsuarios(),
                 clienteService.getAllClientes()
             ]);
-            setUsuarios(
-                usuariosData
-                    .filter((u) => ROLES_EMPLEADO.includes(u.rol))
-                    .map((u) => ({
-                        ...u,
-                        baja: u.baja ?? false,
-                        esCliente: clientesData.some((c) => c.emailUsuario === u.email),
-                        cliente: clientesData.find((c) => c.emailUsuario === u.email)
-                    }))
-            );
-        } catch (err) {
+            setUsuarios(usuariosData.filter(u => ROLES_EMPLEADO.includes(u.rol)));
+            setClientes(clientesData);
+        } catch {
             alert("Error al cargar empleados");
         } finally {
             setLoading(false);
         }
     };
 
+    // Relaciona cada usuario empleado con su persona/cliente (por email)
+    const empleadosFull = usuarios.map(u => ({
+        ...u,
+        persona: clientes.find(c => c.emailUsuario === u.email)
+    }));
 
-
-    const handleEditClick = (usuario: any) => {
-        setUsuarioEdit(usuario);
-        setClienteEdit(usuario.cliente || null);
+    const handleEditClick = (usuario: UsuarioDTO) => {
+        setEditUser(usuario);
+        setEditCliente(clientes.find(c => c.emailUsuario === usuario.email) || null);
         setShowForm(true);
     };
 
-    const handleBajaEmpleado = async (id: number, baja: boolean) => {
+    const handleToggleBaja = async (usuarioId: number, baja: boolean) => {
         try {
-            await usuarioService.toggleBaja(id, baja);
-            await fetchEmpleados();
+            await usuarioService.toggleBaja(usuarioId, baja);
+            await fetchData();
         } catch {
-            alert("Error al cambiar estado");
+            alert("No se pudo cambiar el estado");
         }
     };
-
 
     return (
         <div className="max-w-6xl mx-auto py-8">
@@ -82,46 +72,51 @@ export default function EmpleadoListPage() {
                     <table className="min-w-full divide-y divide-gray-200 text-sm">
                         <thead className="bg-gray-50">
                         <tr>
-                            {["ID", "Nombre", "Email", "Rol", "Estado", "Acciones"].map((h) => (
-                                <th key={h} className="px-4 py-3 text-left font-semibold text-gray-700">
-                                    {h}
-                                </th>
-                            ))}
+                            <th className="px-4 py-3">ID</th>
+                            <th className="px-4 py-3">Nombre</th>
+                            <th className="px-4 py-3">Apellido</th>
+                            <th className="px-4 py-3">Email</th>
+                            <th className="px-4 py-3">Username</th>
+                            <th className="px-4 py-3">Rol</th>
+                            <th className="px-4 py-3">Teléfono</th>
+                            <th className="px-4 py-3">Fecha Nac.</th>
+                            <th className="px-4 py-3">Estado</th>
+                            <th className="px-4 py-3 text-center">Acciones</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                        {usuarios.map((usuario) => (
-                            <tr key={usuario.id} className={`hover:bg-gray-50 ${usuario.baja ? "opacity-50" : ""}`}>
-                                <td className="px-4 py-3 whitespace-nowrap">{usuario.id}</td>
-                                <td className="px-4 py-3 whitespace-nowrap">{usuario.nombre}</td>
-                                <td className="px-4 py-3 whitespace-nowrap">{usuario.email}</td>
-                                <td className="px-4 py-3 whitespace-nowrap">{usuario.rol}</td>
-                                <td className="px-4 py-3 whitespace-nowrap">
-                                    {usuario.baja ? "Inactivo" : "Activo"}
-                                </td>
+                        {empleadosFull.map(emp => (
+                            <tr key={emp.id} className={`hover:bg-gray-50 ${emp.baja ? "opacity-50" : ""}`}>
+                                <td className="px-4 py-3">{emp.id}</td>
+                                <td className="px-4 py-3">{emp.persona?.nombre || "-"}</td>
+                                <td className="px-4 py-3">{emp.persona?.apellido || "-"}</td>
+                                <td className="px-4 py-3">{emp.email}</td>
+                                <td className="px-4 py-3">{emp.nombre}</td>
+                                <td className="px-4 py-3">{emp.rol}</td>
+                                <td className="px-4 py-3">{emp.persona?.telefono || "-"}</td>
+                                <td className="px-4 py-3">{emp.persona?.fechaNacimiento?.substring(0, 10) || "-"}</td>
+                                <td className="px-4 py-3">{emp.baja ? "Inactivo" : "Activo"}</td>
                                 <td className="p-4 text-center">
                                     <div className="flex items-center justify-center space-x-2">
-                                        {/* Botón editar */}
                                         <button
-                                            onClick={() => handleEditClick(usuario)}
-                                            className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition duration-200"
+                                            onClick={() => handleEditClick(emp)}
+                                            className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600"
                                             title="Editar"
                                         >
                                             <Pencil className="w-4 h-4" />
                                         </button>
-                                        {/* Botón baja/reactivar */}
-                                        {!usuario.baja ? (
+                                        {!emp.baja ? (
                                             <button
-                                                onClick={() => handleBajaEmpleado(usuario.id!, true)}
-                                                className="p-2 rounded-full bg-red-50 hover:bg-red-100 text-red-600 transition duration-200"
+                                                onClick={() => handleToggleBaja(emp.id!, true)}
+                                                className="p-2 rounded-full bg-red-50 hover:bg-red-100 text-red-600"
                                                 title="Eliminar"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         ) : (
                                             <button
-                                                onClick={() => handleBajaEmpleado(usuario.id!, false)}
-                                                className="p-2 rounded-full bg-green-50 hover:bg-green-100 text-green-600 transition duration-200"
+                                                onClick={() => handleToggleBaja(emp.id!, false)}
+                                                className="p-2 rounded-full bg-green-50 hover:bg-green-100 text-green-600"
                                                 title="Reactivar"
                                             >
                                                 <Check className="w-4 h-4" />
@@ -136,123 +131,101 @@ export default function EmpleadoListPage() {
                 </section>
             )}
 
-            {/* Modal de edición flotante */}
-            {showForm && usuarioEdit && (
+            {/* Modal edición */}
+            {showForm && editUser && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                         <h2 className="text-xl font-semibold mb-4">Editar Empleado</h2>
-                        <p className="text-xs text-gray-500 mb-2">
-                            La contraseña no puede modificarse desde este panel.
-                        </p>
                         <div className="grid gap-3 max-h-[70vh] overflow-y-auto pr-2">
-                            {/* DATOS USUARIO */}
+                            {/* DATOS PERSONALES */}
                             <input
                                 type="text"
                                 className="w-full border rounded px-3 py-2"
-                                value={usuarioEdit.nombre}
-                                onChange={(e) =>
-                                    setUsuarioEdit({ ...usuarioEdit, nombre: e.target.value })
-                                }
+                                value={editCliente?.nombre || ""}
+                                onChange={e => setEditCliente(editCliente ? { ...editCliente, nombre: e.target.value } : null)}
                                 placeholder="Nombre"
+                            />
+                            <input
+                                type="text"
+                                className="w-full border rounded px-3 py-2"
+                                value={editCliente?.apellido || ""}
+                                onChange={e => setEditCliente(editCliente ? { ...editCliente, apellido: e.target.value } : null)}
+                                placeholder="Apellido"
+                            />
+                            <input
+                                type="text"
+                                className="w-full border rounded px-3 py-2"
+                                value={editUser?.nombre || ""}
+                                onChange={e => setEditUser({ ...editUser, nombre: e.target.value })}
+                                placeholder="Username"
                             />
                             <input
                                 type="email"
                                 className="w-full border rounded px-3 py-2"
-                                value={usuarioEdit.email}
-                                onChange={(e) =>
-                                    setUsuarioEdit({ ...usuarioEdit, email: e.target.value })
-                                }
+                                value={editUser?.email || ""}
+                                disabled
                                 placeholder="Email"
                             />
                             <select
                                 className="w-full border rounded px-3 py-2"
-                                value={usuarioEdit.rol}
-                                onChange={(e) =>
-                                    setUsuarioEdit({ ...usuarioEdit, rol: e.target.value as any })
-                                }
+                                value={editUser?.rol}
+                                onChange={e => setEditUser({ ...editUser!, rol: e.target.value as any })}
                             >
                                 {ROLES_EMPLEADO.map((rol) => (
                                     <option key={rol} value={rol}>{rol}</option>
                                 ))}
                             </select>
-
-                            {/* DATOS CLIENTE (solo si existe) */}
-                            {clienteEdit && (
-                                <>
-                                    <div className="font-semibold text-gray-600 mt-2 mb-1 border-b">Datos personales (Cliente asociado)</div>
-                                    <input
-                                        type="text"
-                                        className="w-full border rounded px-3 py-2"
-                                        value={clienteEdit.apellido}
-                                        onChange={(e) => setClienteEdit({ ...clienteEdit, apellido: e.target.value })}
-                                        placeholder="Apellido"
-                                    />
-                                    <input
-                                        type="text"
-                                        className="w-full border rounded px-3 py-2"
-                                        value={clienteEdit.telefono}
-                                        onChange={(e) => setClienteEdit({ ...clienteEdit, telefono: e.target.value })}
-                                        placeholder="Teléfono"
-                                    />
-                                    <input
-                                        type="date"
-                                        className="w-full border rounded px-3 py-2"
-                                        value={clienteEdit.fechaNacimiento?.substring(0, 10) || ""}
-                                        onChange={(e) => setClienteEdit({ ...clienteEdit, fechaNacimiento: e.target.value })}
-                                        placeholder="Fecha de nacimiento"
-                                    />
-                                </>
-                            )}
-
-                            <div className="flex justify-end gap-2 mt-4">
-                                <button
-                                    onClick={() => setShowForm(false)}
-                                    className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={async () => {
-                                        try {
-                                            // Actualizar usuario (sin password)
-                                            await usuarioService.updateUsuario(usuarioEdit.id, {
-                                                nombre: usuarioEdit.nombre,
-                                                email: usuarioEdit.email,
-                                                rol: usuarioEdit.rol
+                            <input
+                                type="text"
+                                className="w-full border rounded px-3 py-2"
+                                value={editCliente?.telefono || ""}
+                                onChange={e => setEditCliente(editCliente ? { ...editCliente, telefono: e.target.value } : null)}
+                                placeholder="Teléfono"
+                            />
+                            <input
+                                type="date"
+                                className="w-full border rounded px-3 py-2"
+                                value={editCliente?.fechaNacimiento?.substring(0, 10) || ""}
+                                onChange={e =>
+                                    setEditCliente(editCliente ? { ...editCliente, fechaNacimiento: e.target.value } : null)
+                                }
+                                placeholder="Fecha de nacimiento"
+                            />
+                        </div>
+                        <div className="flex justify-end gap-2 mt-4">
+                            <button
+                                onClick={() => setShowForm(false)}
+                                className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        // Actualiza usuario (solo datos editables)
+                                        await usuarioService.updateUsuario(editUser!.id!, {
+                                            nombre: editUser!.nombre,
+                                            rol: editUser!.rol,
+                                        });
+                                        // Actualiza persona/cliente
+                                        if (editCliente) {
+                                            await clienteService.updateCliente(editCliente.id, {
+                                                nombre: editCliente.nombre,
+                                                apellido: editCliente.apellido,
+                                                telefono: editCliente.telefono,
+                                                fechaNacimiento: editCliente.fechaNacimiento,
                                             });
-                                            // Si existe cliente, actualizar también cliente
-                                            if (clienteEdit) {
-                                                await clienteService.updateCliente(clienteEdit.id, {
-                                                    apellido: clienteEdit.apellido,
-                                                    telefono: clienteEdit.telefono,
-                                                    fechaNacimiento: clienteEdit.fechaNacimiento,
-
-                                                });
-                                            }
-                                            // Recargar usuarios
-                                            const [usuariosData, clientesData] = await Promise.all([
-                                                usuarioService.getAllUsuarios(),
-                                                clienteService.getAllClientes()
-                                            ]);
-                                            setUsuarios(
-                                                usuariosData
-                                                    .filter((u) => ROLES_EMPLEADO.includes(u.rol))
-                                                    .map((u) => ({
-                                                        ...u,
-                                                        esCliente: clientesData.some((c) => c.emailUsuario === u.email),
-                                                        cliente: clientesData.find((c) => c.emailUsuario === u.email)
-                                                    }))
-                                            );
-                                            setShowForm(false);
-                                        } catch (err) {
-                                            alert("Error al actualizar");
                                         }
-                                    }}
-                                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                                >
-                                    Guardar
-                                </button>
-                            </div>
+                                        await fetchData();
+                                        setShowForm(false);
+                                    } catch (e) {
+                                        alert("Error al actualizar");
+                                    }
+                                }}
+                                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                            >
+                                Guardar
+                            </button>
                         </div>
                     </div>
                 </div>
