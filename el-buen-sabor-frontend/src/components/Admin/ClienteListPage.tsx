@@ -156,7 +156,9 @@ export default function ClienteListPage() {
                                     type="text"
                                     className="w-full border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
                                     value={clienteEdit.nombre || ''}
-                                    onChange={(e) => setClienteEdit({ ...clienteEdit, nombre: e.target.value })}
+                                    readOnly // <-- AGREGADO
+
+                                //onChange={(e) => setClienteEdit({ ...clienteEdit, nombre: e.target.value })}
                                 />
                             </div>
                             <div>
@@ -166,7 +168,9 @@ export default function ClienteListPage() {
                                     type="text"
                                     className="w-full border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
                                     value={clienteEdit.apellido}
-                                    onChange={(e) => setClienteEdit({ ...clienteEdit, apellido: e.target.value })}
+                                    readOnly // <-- AGREGADO
+
+                                //onChange={(e) => setClienteEdit({ ...clienteEdit, apellido: e.target.value })}
                                 />
                             </div>
                             <div>
@@ -176,7 +180,9 @@ export default function ClienteListPage() {
                                     type="email"
                                     className="w-full border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
                                     value={clienteEdit.emailUsuario || ''}
-                                    onChange={(e) => setClienteEdit({ ...clienteEdit, emailUsuario: e.target.value })}
+                                    readOnly // <-- AGREGADO
+
+                                //onChange={(e) => setClienteEdit({ ...clienteEdit, emailUsuario: e.target.value })}
                                 />
                             </div>
                             <div>
