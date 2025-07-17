@@ -54,16 +54,12 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         password: formData.password,
       });
 
-      const {
-        id,
-        rol,
-        nombre = "",
-        apellido = "",
-        email: userEmail,
-        telefono = "",
-      } = res.data;
+      console.log("✅ Respuesta login:", res.data);
 
-      if (!rol || !userEmail) {
+      // ✅ La API devuelve { usuario: {...}, cambiarPassword: boolean }
+      const { usuario, cambiarPassword } = res.data;
+
+      if (!usuario?.rol || !usuario?.email) {
         console.error("❌ Datos de respuesta inválidos:", res.data);
         setErrors((prev) => ({
           ...prev,
@@ -72,14 +68,28 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         return;
       }
 
-      // En este ejemplo se arma el fullName usando apellido (ajustalo según necesites)
-      const fullName = `${apellido}`.trim();
-      login(id, rol, fullName || "Sin Nombre", userEmail, telefono);
+      // ✅ Si debe cambiar la contraseña inicial, guardamos el email y redirigimos
+      if (cambiarPassword) {
+        localStorage.setItem("email-cambio-inicial", usuario.email); // ✅ clave correcta
+        alert("Debes cambiar tu contraseña antes de continuar.");
+        navigate("/cambiar-password-inicial");
+        return;
+      }
+
+      // ✅ Login normal
+      const fullName = `${usuario.apellido}`.trim();
+      login(
+        usuario.id,
+        usuario.rol,
+        fullName || "Sin Nombre",
+        usuario.email,
+        usuario.telefono
+      );
 
       if (onSuccess) {
         onSuccess();
       } else {
-        switch (rol) {
+        switch (usuario.rol) {
           case "ADMINISTRADOR":
             navigate("/admin");
             break;
@@ -112,7 +122,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
   return (
     <div className="max-w-md mx-auto p-6">
-      {/* Bloque para login con Google */}
+      {/* 🔐 Login con Google */}
       <div className="mb-6 text-center">
         <GoogleLogin
           onSuccess={(credentialResponse) => {
@@ -129,7 +139,6 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                   usuario.telefono
                 );
                 alert("¡Login con Google exitoso!");
-                // Redirigir según rol
                 switch (usuario.rol) {
                   case "ADMINISTRADOR":
                     navigate("/admin");
@@ -171,7 +180,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         <div className="flex-grow h-px bg-gray-300"></div>
       </div>
 
-      {/* Formulario tradicional de login */}
+      {/* Formulario */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.general && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -193,8 +202,9 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               id="email"
               name="email"
               type="email"
-              className={`w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.email ? "border-red-300" : "border-gray-300"
-                }`}
+              className={`w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${
+                errors.email ? "border-red-300" : "border-gray-300"
+              }`}
               placeholder="tu@email.com"
               value={formData.email}
               onChange={handleInputChange}
@@ -219,8 +229,9 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               id="password"
               name="password"
               type={showPassword ? "text" : "password"}
-              className={`w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.password ? "border-red-300" : "border-gray-300"
-                }`}
+              className={`w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${
+                errors.password ? "border-red-300" : "border-gray-300"
+              }`}
               placeholder="Tu contraseña"
               value={formData.password}
               onChange={handleInputChange}

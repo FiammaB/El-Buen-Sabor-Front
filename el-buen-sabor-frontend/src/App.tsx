@@ -16,6 +16,8 @@ import RegisterPage from './components/Auth/components/Register-page.tsx';
 import RecoverPasswordForm from './components/Auth/components/RecoverPaswordForm.tsx';
 import VerifyCodeForm from './components/Auth/components/VerifyCodeForm.tsx';
 import ChangePasswordForm from './components/Auth/components/ChangePasswordForm.tsx';
+import CambiarPasswordInicial from './components/Auth/components/CambiarPasswordInicial.tsx';
+
 
 // 👤 Perfil
 import PerfilPage from "./components/Auth/components/PerfilPage.tsx";
@@ -92,6 +94,8 @@ function App() {
           <Route path="/recuperar" element={<RecoverPasswordForm />} />
           <Route path="/verificar-codigo" element={<VerifyCodeForm />} />
           <Route path="/cambiar-password" element={<ChangePasswordForm />} />
+          <Route path="/cambiar-password-inicial" element={<CambiarPasswordInicial />} />
+
 
 
           {/* 🧑 PERFIL MULTIROL */}
