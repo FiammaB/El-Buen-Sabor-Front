@@ -90,12 +90,13 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     try {
-      console.log("Id al traer el dom ", auth.id)
+      console.log("Id al traer el dom ", auth.id);
       const fetchAddresses = async () => {
         try {
-          const res = await fetch(`http://localhost:8080/api/domicilios/cliente/${auth.id}`);
+          const res = await fetch(`http://localhost:8080/api/domicilios/persona/${auth.id}`);
           const data = await res.json();
           console.log("Domicilios recibidos:", data);
+
           if (Array.isArray(data)) {
             setAddresses(data);
           } else {
@@ -109,9 +110,10 @@ export default function CheckoutPage() {
 
       fetchAddresses();
     } catch (e) {
-      console.log(e)
+      console.log(e);
     }
   }, [auth?.id]);
+
 
 
   useEffect(() => {
@@ -516,7 +518,7 @@ export default function CheckoutPage() {
                             <button
                               onClick={async () => {
                                 try {
-                                  const res = await fetch(`http://localhost:8080/api/domicilios/cliente/${auth.id}`, {
+                                  const res = await fetch(`http://localhost:8080/api/domicilios/persona/${auth.id}`, {
                                     method: "POST",
                                     headers: { "Content-Type": "application/json" },
                                     body: JSON.stringify({
