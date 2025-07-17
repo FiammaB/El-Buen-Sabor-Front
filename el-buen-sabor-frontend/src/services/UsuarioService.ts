@@ -1,4 +1,3 @@
-// src/services/UsuarioService.ts
 import axios from "axios";
 import type { UsuarioDTO } from "../models/DTO/UsuarioDTO";
 
@@ -32,7 +31,7 @@ export class UsuarioService {
     // Registrar cocinero (POST)
     async registrarCocinero(data: UsuarioDTO): Promise<string> {
         const res = await axios.post(`${API_URL}/registrar-cocinero`, data);
-        return res.data; // retorna un string: "Cocinero creado con ID: ..."
+        return res.data; // Retorna un string: "Cocinero creado con ID: ..."
     }
 
     // Registrar cajero (POST)
@@ -42,8 +41,8 @@ export class UsuarioService {
     }
 
     // Obtener perfil reducido por email
-    async getPerfil(email: string): Promise<{ id: number, usuario: UsuarioDTO }> {
-        const res = await axios.get<{ id: number, usuario: UsuarioDTO }>(`${API_URL}/perfil/${email}`);
+    async getPerfil(email: string): Promise<{ id: number; usuario: UsuarioDTO }> {
+        const res = await axios.get<{ id: number; usuario: UsuarioDTO }>(`${API_URL}/perfil/${email}`);
         return res.data;
     }
 
@@ -59,15 +58,16 @@ export class UsuarioService {
 
     async toggleBaja(id: number, baja: boolean): Promise<void> {
         return fetch(`${API_URL}/${id}/baja?baja=${baja}`, {
-            method: 'PATCH',
-        }).then(response => {
+            method: "PATCH",
+        }).then((response) => {
             if (!response.ok) {
-                throw new Error('No se pudo actualizar el estado de baja.');
+                throw new Error("No se pudo actualizar el estado de baja.");
             }
         });
     }
 
     async actualizarNombre(id: number, nombre: string): Promise<void> {
+        // ⚠️ Este endpoint del backend usa "nombre", no "username".
         await axios.patch(`${API_URL}/${id}/nombre`, { nombre });
     }
 }

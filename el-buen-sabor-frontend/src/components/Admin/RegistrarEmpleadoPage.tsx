@@ -1,4 +1,3 @@
-// src/admin/Empleados/RegistrarEmpleadoPage.tsx
 import { useState } from "react";
 import { UsuarioService } from "../../services/UsuarioService";
 import { ClienteService } from "../../services/ClienteService";
@@ -24,7 +23,9 @@ export default function RegistrarEmpleadoPage() {
     const usuarioService = new UsuarioService();
     const clienteService = new ClienteService();
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    ) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
@@ -33,26 +34,74 @@ export default function RegistrarEmpleadoPage() {
         setLoading(true);
         setOk(null);
         setError(null);
+
         try {
-            // 1. Crear usuario empleado
-            const usuario = await usuarioService.createUsuario({
-                nombre: form.username, // O username si querés guardar el nombre de usuario
-                email: form.email,
-                password: form.password,
-                rol: form.rol as any,
-                baja: false,
-            });
-            // 2. Crear persona asociada (empleado)
+            let usuario: any;
+
+            // ✅ 1. Crear usuario con el endpoint correcto según el rol
+            switch (form.rol) {
+                case "COCINERO":
+                    await usuarioService.registrarCocinero({
+                        username: form.username,
+                        email: form.email,
+                        password: form.password,
+                        rol: "COCINERO",
+                        baja: false,
+                    });
+                    usuario = await usuarioService.getAllUsuarios()
+                        .then(usuarios =>
+                            usuarios.find(u => u.email === form.email)
+                        );
+                    break;
+
+                case "CAJERO":
+                    await usuarioService.registrarCajero({
+                        username: form.username,
+                        email: form.email,
+                        password: form.password,
+                        rol: "CAJERO",
+                        baja: false,
+                    });
+                    usuario = await usuarioService.getAllUsuarios()
+                        .then(usuarios =>
+                            usuarios.find(u => u.email === form.email)
+                        );
+                    break;
+
+                case "DELIVERY":
+                case "ADMINISTRADOR":
+                    // Si no hay endpoint específico, usa createUsuario
+                    usuario = await usuarioService.createUsuario({
+                        username: form.username,
+                        email: form.email,
+                        password: form.password,
+                        rol: form.rol as any,
+                        baja: false,
+                    });
+                    break;
+
+                default:
+                    throw new Error("Rol no válido");
+            }
+
+            if (!usuario?.id) {
+                throw new Error("No se pudo obtener el usuario recién creado");
+            }
+
+            // ✅ 2. Crear persona asociada al empleado
             const empleadoData: PersonaEmpleadoCreateDTO = {
                 nombre: form.nombre,
                 apellido: form.apellido,
                 telefono: form.telefono,
                 fechaNacimiento: form.fechaNacimiento,
                 usuarioId: usuario.id!,
-                // imagenId y domicilioIds opcionales
             };
+
+            console.log("✅ Enviando persona al backend:", empleadoData);
+
             await clienteService.createEmpleadoPersona(empleadoData);
-            setOk("Empleado registrado correctamente.");
+
+            setOk("✅ Empleado registrado correctamente.");
             setForm({
                 username: "",
                 email: "",
@@ -67,7 +116,7 @@ export default function RegistrarEmpleadoPage() {
             setError(
                 err?.response?.data?.error ||
                 err?.message ||
-                "No se pudo registrar el empleado."
+                "❌ No se pudo registrar el empleado."
             );
         } finally {
             setLoading(false);
@@ -80,54 +129,120 @@ export default function RegistrarEmpleadoPage() {
             <form className="space-y-3" onSubmit={handleSubmit}>
                 <div>
                     <label className="block font-medium">Email</label>
-                    <input type="email" name="email" value={form.email} onChange={handleChange}
-                           className="w-full border rounded px-3 py-2" required />
+                    <input
+                        type="email"
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        className="w-full border rounded px-3 py-2"
+                        required
+                    />
                 </div>
+
                 <div>
                     <label className="block font-medium">Username</label>
-                    <input type="text" name="username" value={form.username} onChange={handleChange}
-                           className="w-full border rounded px-3 py-2" required />
+                    <input
+                        type="text"
+                        name="username"
+                        value={form.username}
+                        onChange={handleChange}
+                        className="w-full border rounded px-3 py-2"
+                        required
+                    />
                 </div>
+
                 <div>
                     <label className="block font-medium">Password</label>
-                    <input type="password" name="password" value={form.password} onChange={handleChange}
-                           className="w-full border rounded px-3 py-2" required />
+                    <input
+                        type="password"
+                        name="password"
+                        value={form.password}
+                        onChange={handleChange}
+                        className="w-full border rounded px-3 py-2"
+                        required
+                    />
                 </div>
+
                 <div>
                     <label className="block font-medium">Rol</label>
-                    <select name="rol" value={form.rol} onChange={handleChange} className="w-full border rounded px-3 py-2" required>
+                    <select
+                        name="rol"
+                        value={form.rol}
+                        onChange={handleChange}
+                        className="w-full border rounded px-3 py-2"
+                        required
+                    >
                         <option value="">Seleccione un rol</option>
-                        {ROLES_EMPLEADO.map(rol => (
-                            <option key={rol} value={rol}>{rol}</option>
+                        {ROLES_EMPLEADO.map((rol) => (
+                            <option key={rol} value={rol}>
+                                {rol}
+                            </option>
                         ))}
                     </select>
                 </div>
-                <div className="pt-2 border-t mt-2 font-semibold text-gray-700">Datos personales</div>
+
+                <div className="pt-2 border-t mt-2 font-semibold text-gray-700">
+                    Datos personales
+                </div>
+
                 <div>
                     <label className="block font-medium">Nombre</label>
-                    <input type="text" name="nombre" value={form.nombre} onChange={handleChange}
-                           className="w-full border rounded px-3 py-2" required />
+                    <input
+                        type="text"
+                        name="nombre"
+                        value={form.nombre}
+                        onChange={handleChange}
+                        className="w-full border rounded px-3 py-2"
+                        required
+                    />
                 </div>
+
                 <div>
                     <label className="block font-medium">Apellido</label>
-                    <input type="text" name="apellido" value={form.apellido} onChange={handleChange}
-                           className="w-full border rounded px-3 py-2" required />
+                    <input
+                        type="text"
+                        name="apellido"
+                        value={form.apellido}
+                        onChange={handleChange}
+                        className="w-full border rounded px-3 py-2"
+                        required
+                    />
                 </div>
+
                 <div>
                     <label className="block font-medium">Teléfono</label>
-                    <input type="text" name="telefono" value={form.telefono} onChange={handleChange}
-                           className="w-full border rounded px-3 py-2" required />
+                    <input
+                        type="text"
+                        name="telefono"
+                        value={form.telefono}
+                        onChange={handleChange}
+                        className="w-full border rounded px-3 py-2"
+                        required
+                    />
                 </div>
+
                 <div>
                     <label className="block font-medium">Fecha Nacimiento</label>
-                    <input type="date" name="fechaNacimiento" value={form.fechaNacimiento} onChange={handleChange}
-                           className="w-full border rounded px-3 py-2" required />
+                    <input
+                        type="date"
+                        name="fechaNacimiento"
+                        value={form.fechaNacimiento}
+                        onChange={handleChange}
+                        className="w-full border rounded px-3 py-2"
+                        required
+                    />
                 </div>
+
                 <div className="flex justify-end gap-2 mt-4">
-                    <button type="submit" disabled={loading} className="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="bg-orange-600 text-white px-6 py-2 rounded hover:bg-orange-700"
+                    >
                         {loading ? "Registrando..." : "Registrar"}
                     </button>
                 </div>
+
                 {ok && <div className="text-green-600 mt-2">{ok}</div>}
                 {error && <div className="text-red-600 mt-2">{error}</div>}
             </form>
