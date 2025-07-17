@@ -14,7 +14,7 @@ export default function EmpleadoListPage() {
     const [editUser, setEditUser] = useState<UsuarioDTO | null>(null);
     const [editCliente, setEditCliente] = useState<IClienteDTO | null>(null);
     const [showForm, setShowForm] = useState(false);
-
+    const [activeTab, setActiveTab] = useState<"usuario" | "persona">("usuario");
     const usuarioService = new UsuarioService();
     const clienteService = new ClienteService();
 
@@ -91,7 +91,7 @@ export default function EmpleadoListPage() {
                                 <td className="px-4 py-3">{emp.persona?.nombre || "-"}</td>
                                 <td className="px-4 py-3">{emp.persona?.apellido || "-"}</td>
                                 <td className="px-4 py-3">{emp.email}</td>
-                                <td className="px-4 py-3">{emp.nombre}</td>
+                                <td className="px-4 py-3">{emp.username}</td>
                                 <td className="px-4 py-3">{emp.rol}</td>
                                 <td className="px-4 py-3">{emp.persona?.telefono || "-"}</td>
                                 <td className="px-4 py-3">{emp.persona?.fechaNacimiento?.substring(0, 10) || "-"}</td>
@@ -136,62 +136,109 @@ export default function EmpleadoListPage() {
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                         <h2 className="text-xl font-semibold mb-4">Editar Empleado</h2>
-                        <div className="grid gap-3 max-h-[70vh] overflow-y-auto pr-2">
-                            {/* DATOS PERSONALES */}
-                            <input
-                                type="text"
-                                className="w-full border rounded px-3 py-2"
-                                value={editCliente?.nombre || ""}
-                                onChange={e => setEditCliente(editCliente ? { ...editCliente, nombre: e.target.value } : null)}
-                                placeholder="Nombre"
-                            />
-                            <input
-                                type="text"
-                                className="w-full border rounded px-3 py-2"
-                                value={editCliente?.apellido || ""}
-                                onChange={e => setEditCliente(editCliente ? { ...editCliente, apellido: e.target.value } : null)}
-                                placeholder="Apellido"
-                            />
-                            <input
-                                type="text"
-                                className="w-full border rounded px-3 py-2"
-                                value={editUser?.nombre || ""}
-                                onChange={e => setEditUser({ ...editUser, nombre: e.target.value })}
-                                placeholder="Username"
-                            />
-                            <input
-                                type="email"
-                                className="w-full border rounded px-3 py-2"
-                                value={editUser?.email || ""}
-                                disabled
-                                placeholder="Email"
-                            />
-                            <select
-                                className="w-full border rounded px-3 py-2"
-                                value={editUser?.rol}
-                                onChange={e => setEditUser({ ...editUser!, rol: e.target.value as any })}
+                        {/* Tabs */}
+                        <div className="flex mb-4 border-b">
+                            <button
+                                className={`px-4 py-2 font-medium focus:outline-none border-b-2 transition ${
+                                    activeTab === "usuario"
+                                        ? "border-orange-500 text-orange-600"
+                                        : "border-transparent text-gray-500 hover:text-orange-600"
+                                }`}
+                                onClick={() => setActiveTab("usuario")}
                             >
-                                {ROLES_EMPLEADO.map((rol) => (
-                                    <option key={rol} value={rol}>{rol}</option>
-                                ))}
-                            </select>
-                            <input
-                                type="text"
-                                className="w-full border rounded px-3 py-2"
-                                value={editCliente?.telefono || ""}
-                                onChange={e => setEditCliente(editCliente ? { ...editCliente, telefono: e.target.value } : null)}
-                                placeholder="Teléfono"
-                            />
-                            <input
-                                type="date"
-                                className="w-full border rounded px-3 py-2"
-                                value={editCliente?.fechaNacimiento?.substring(0, 10) || ""}
-                                onChange={e =>
-                                    setEditCliente(editCliente ? { ...editCliente, fechaNacimiento: e.target.value } : null)
-                                }
-                                placeholder="Fecha de nacimiento"
-                            />
+                                Usuario
+                            </button>
+                            <button
+                                className={`px-4 py-2 font-medium focus:outline-none border-b-2 transition ${
+                                    activeTab === "persona"
+                                        ? "border-orange-500 text-orange-600"
+                                        : "border-transparent text-gray-500 hover:text-orange-600"
+                                }`}
+                                onClick={() => setActiveTab("persona")}
+                            >
+                                Persona
+                            </button>
                         </div>
+
+                        <div className="grid gap-3 max-h-[60vh] overflow-y-auto pr-2">
+                            {activeTab === "usuario" ? (
+                                <>
+                                    <label className="block font-medium">Username</label>
+                                    <input
+                                        type="text"
+                                        className="w-full border rounded px-3 py-2"
+                                        value={editUser?.username || ""}
+                                        onChange={e =>
+                                            setEditUser(editUser ? { ...editUser, username: e.target.value } : null)
+                                        }
+                                        placeholder="Username"
+                                    />
+                                    <label className="block font-medium">Email</label>
+                                    <input
+                                        type="email"
+                                        className="w-full border rounded px-3 py-2"
+                                        value={editUser?.email || ""}
+                                        disabled
+                                    />
+                                    <label className="block font-medium">Rol</label>
+                                    <select
+                                        className="w-full border rounded px-3 py-2"
+                                        value={editUser?.rol}
+                                        onChange={e =>
+                                            setEditUser(editUser ? { ...editUser, rol: e.target.value as any } : null)
+                                        }
+                                    >
+                                        {ROLES_EMPLEADO.map(rol => (
+                                            <option key={rol} value={rol}>{rol}</option>
+                                        ))}
+                                    </select>
+                                </>
+                            ) : (
+                                <>
+                                    <label className="block font-medium">Nombre</label>
+                                    <input
+                                        type="text"
+                                        className="w-full border rounded px-3 py-2"
+                                        value={editCliente?.nombre || ""}
+                                        onChange={e =>
+                                            setEditCliente(editCliente ? { ...editCliente, nombre: e.target.value } : null)
+                                        }
+                                        placeholder="Nombre"
+                                    />
+                                    <label className="block font-medium">Apellido</label>
+                                    <input
+                                        type="text"
+                                        className="w-full border rounded px-3 py-2"
+                                        value={editCliente?.apellido || ""}
+                                        onChange={e =>
+                                            setEditCliente(editCliente ? { ...editCliente, apellido: e.target.value } : null)
+                                        }
+                                        placeholder="Apellido"
+                                    />
+                                    <label className="block font-medium">Teléfono</label>
+                                    <input
+                                        type="text"
+                                        className="w-full border rounded px-3 py-2"
+                                        value={editCliente?.telefono || ""}
+                                        onChange={e =>
+                                            setEditCliente(editCliente ? { ...editCliente, telefono: e.target.value } : null)
+                                        }
+                                        placeholder="Teléfono"
+                                    />
+                                    <label className="block font-medium">Fecha Nacimiento</label>
+                                    <input
+                                        type="date"
+                                        className="w-full border rounded px-3 py-2"
+                                        value={editCliente?.fechaNacimiento?.substring(0, 10) || ""}
+                                        onChange={e =>
+                                            setEditCliente(editCliente ? { ...editCliente, fechaNacimiento: e.target.value } : null)
+                                        }
+                                        placeholder="Fecha de nacimiento"
+                                    />
+                                </>
+                            )}
+                        </div>
+
                         <div className="flex justify-end gap-2 mt-4">
                             <button
                                 onClick={() => setShowForm(false)}
@@ -199,33 +246,50 @@ export default function EmpleadoListPage() {
                             >
                                 Cancelar
                             </button>
-                            <button
-                                onClick={async () => {
-                                    try {
-                                        // Actualiza usuario (solo datos editables)
-                                        await usuarioService.updateUsuario(editUser!.id!, {
-                                            nombre: editUser!.nombre,
-                                            rol: editUser!.rol,
-                                        });
-                                        // Actualiza persona/cliente
-                                        if (editCliente) {
-                                            await clienteService.updateCliente(editCliente.id, {
-                                                nombre: editCliente.nombre,
-                                                apellido: editCliente.apellido,
-                                                telefono: editCliente.telefono,
-                                                fechaNacimiento: editCliente.fechaNacimiento,
+                            {activeTab === "usuario" ? (
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            // Solo actualiza datos de usuario
+                                            await usuarioService.updateUsuario(editUser!.id!, {
+                                                username: editUser!.username,
+                                                email: editUser!.email,
+                                                rol: editUser!.rol,
                                             });
+                                            await fetchData();
+                                            setShowForm(false);
+                                        } catch (e) {
+                                            alert("Error al actualizar usuario");
                                         }
-                                        await fetchData();
-                                        setShowForm(false);
-                                    } catch (e) {
-                                        alert("Error al actualizar");
-                                    }
-                                }}
-                                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                            >
-                                Guardar
-                            </button>
+                                    }}
+                                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                                >
+                                    Guardar Usuario
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            // Solo actualiza datos de persona/cliente
+                                            if (editCliente) {
+                                                await clienteService.updateCliente(editCliente.id, {
+                                                    nombre: editCliente.nombre,
+                                                    apellido: editCliente.apellido,
+                                                    telefono: editCliente.telefono,
+                                                    fechaNacimiento: editCliente.fechaNacimiento,
+                                                });
+                                            }
+                                            await fetchData();
+                                            setShowForm(false);
+                                        } catch (e) {
+                                            alert("Error al actualizar persona");
+                                        }
+                                    }}
+                                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                                >
+                                    Guardar Persona
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

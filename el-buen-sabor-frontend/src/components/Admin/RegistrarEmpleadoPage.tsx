@@ -20,6 +20,7 @@ export default function RegistrarEmpleadoPage() {
     const [ok, setOk] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+
     const usuarioService = new UsuarioService();
     const clienteService = new ClienteService();
 
