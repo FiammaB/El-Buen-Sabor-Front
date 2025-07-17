@@ -38,37 +38,42 @@ export default function PerfilPage() {
   const [showRepetirPassword, setShowRepetirPassword] = useState(false);
 
   // Efecto para cargar los datos del perfil al inicio
-  useEffect(() => {
-    if (userEmail) {
-      axios
-        .get(`http://localhost:8080/api/usuarios/perfil/${userEmail}`)
-        .then((res) => {
-          const usuario = res.data.usuario;
-          const cliente = res.data.cliente; // Asumiendo que el backend envía también datos del cliente
+useEffect(() => {
+  if (userEmail) {
+    axios
+      .get(`http://localhost:8080/api/usuarios/perfil/${userEmail}`)
+      .then((res) => {
+        const perfil = res.data; // ✅ Es un PerfilDTO directo
 
-          setForm((prev) => ({
-            ...prev,
-            // Ajusta según tu estructura de respuesta del backend para nombre, apellido, telefono
-            // Es crucial que 'res.data.usuario' o 'res.data.cliente' contengan estos campos
-            nombre: usuario?.nombre || cliente?.nombre || "",
-            apellido: usuario?.apellido || cliente?.apellido || "",
-            telefono: usuario?.telefono || cliente?.telefono || "",
-            // Formatear fechaNacimiento a YYYY-MM-DD para input[type="date"]
-            fechaNacimiento: cliente?.fechaNacimiento ? new Date(cliente.fechaNacimiento).toISOString().split('T')[0] : "",
-          }));
-        })
-        .catch((err) => {
-          console.error("Error al cargar perfil:", err);
-          setErrors(prev => ({ ...prev, general: "Error al cargar los datos del perfil." }));
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
-      setErrors(prev => ({ ...prev, general: "No se pudo obtener el email del usuario para cargar el perfil." }));
-    }
-  }, [userEmail]); // Dependencia userEmail
+        setForm((prev) => ({
+          ...prev,
+          nombre: perfil.nombre || "",
+          apellido: perfil.apellido || "",
+          telefono: perfil.telefono || "",
+          fechaNacimiento: perfil.fechaNacimiento
+            ? new Date(perfil.fechaNacimiento).toISOString().split("T")[0]
+            : "",
+        }));
+      })
+      .catch((err) => {
+        console.error("Error al cargar perfil:", err);
+        setErrors((prev) => ({
+          ...prev,
+          general: "Error al cargar los datos del perfil.",
+        }));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  } else {
+    setLoading(false);
+    setErrors((prev) => ({
+      ...prev,
+      general: "No se pudo obtener el email del usuario para cargar el perfil.",
+    }));
+  }
+}, [userEmail]);
+ // Dependencia userEmail
 
   // Manejador genérico de cambios en los inputs
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
