@@ -47,7 +47,7 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {/*promociones */}
+        {/* 🎉 Promociones */}
         <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
           <h3 className="text-lg font-bold mb-2">🎉 Crear Promociones</h3>
           <p className="text-sm text-gray-600 mb-4">Agregá nuevas promociones para mostrar a los clientes.</p>
@@ -58,7 +58,8 @@ export default function AdminDashboard() {
             Promociónes ABM
           </button>
         </div>
-        {/*Movimiento Monetario*/}
+
+        {/* 💰 Movimiento Monetario */}
         <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
           <h3 className="text-lg font-bold mb-2">Movimientos Monetarios </h3>
           <p className="text-sm text-gray-600 mb-4">Administrar movimientos monetarios.</p>
@@ -69,7 +70,8 @@ export default function AdminDashboard() {
             Movimientos Monetarios
           </button>
         </div>
-        {/*Movimiento Monetario*/}
+
+        {/* 📈 Rankings */}
         <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
           <h3 className="text-lg font-bold mb-2">Rankings </h3>
           <p className="text-sm text-gray-600 mb-4">Ver Rankings.</p>
@@ -88,7 +90,10 @@ export default function AdminDashboard() {
             </button>
           </div>
         </div>
+
+        {/*
         {/* 👥 Registro de empleados */}
+        {/*
         <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
           <h3 className="text-lg font-bold mb-2">👥 Registrar Empleado</h3>
           <p className="text-sm text-gray-600 mb-4">Crear cuentas para cocineros o cajeros.</p>
@@ -107,6 +112,7 @@ export default function AdminDashboard() {
             </button>
           </div>
         </div>
+        */}
 
         {/* 🚪 Cerrar sesión */}
         <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
