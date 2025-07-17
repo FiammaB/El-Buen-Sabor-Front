@@ -8,5 +8,8 @@ export interface IArticuloInsumoResponseDTO extends IArticuloResponseDTO {
     stockMinimo: number;
     esParaElaborar: boolean;
     unidadMedidaId: number;
-    unidadMedida?: IUnidadMedidaResponseDTO; // Objeto anidado
+    unidadMedida?: IUnidadMedidaResponseDTO;
+
+
+    // Objeto anidado
 }

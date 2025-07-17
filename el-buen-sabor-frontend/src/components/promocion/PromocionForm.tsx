@@ -1,25 +1,30 @@
 // src/components/PromocionForm/PromocionForm.tsx
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react"; // <-- Añadir useMemo
 import { useForm } from "react-hook-form";
 import { crearPromocion, getPromocionById, updatePromocion } from "../../services/PromocionService";
-import { getArticulosManufacturados } from "../../services/ArticuloManufacturadoService";
+// Ya no necesitas ArticuloManufacturadoService si ArticuloService ya tiene el método
+// import { getArticulosManufacturados } from "../../services/ArticuloManufacturadoService";
+import { ArticuloService } from "../../services/ArticuloService"; // <-- ¡NUEVO! Importar la clase ArticuloService
+
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 
 import { useNavigate, useParams } from "react-router-dom";
 import { uploadImage } from "../../services/imagenService";
 import type { IArticuloManufacturadoResponseDTO } from "../../models/DTO/IAArticuloManufacturadoResponseDTO";
+import type { IArticuloInsumoResponseDTO } from "../../models/DTO/IAArticuloInsumoResponseDTO"; // Importar DTO de insumos
 import type { PromocionCreateDTO } from "../../models/DTO/PromocionCreateDTO";
-import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO"; // Usamos IImagenResponseDTO
-import type { IImagenResponseDTO } from "../../models/DTO/IImagenResponseDTO"; // Asegúrate de que esta interfaz esté definida correctamente
+
+import type { IImagenResponseDTO } from "../../models/DTO/IImagenResponseDTO";
 
 const MySwal = withReactContent(Swal);
 const tipos = ["HAPPY_HOUR", "PROMOCION_GENERAL"];
 
-interface ArticuloCantidad {
+interface ArticuloSeleccionado {
     id: number;
-    cantidad: number;
+    // La cantidad no se envía al backend para promociones, solo para mostrar en frontend si fuera necesario para manufacturados
+    cantidad?: number; // Hacemos opcional para insumos
 }
 
 interface FormularioPromocion {
@@ -33,6 +38,7 @@ interface FormularioPromocion {
     tipoPromocion: string;
     imagen?: FileList;
     articuloManufacturadoIds: number[];
+    articuloInsumoIds: number[]; // <-- ¡NUEVO! IDs de artículos insumos
 }
 
 const PromocionForm: React.FC = () => {
@@ -41,29 +47,44 @@ const PromocionForm: React.FC = () => {
     const navigate = useNavigate();
 
     const { register, handleSubmit, reset, setValue } = useForm<FormularioPromocion>();
-    const [articulosDisponibles, setArticulosDisponibles] = useState<IArticuloManufacturadoResponseDTO[]>([]);
-    const [selectedArticulos, setSelectedArticulos] = useState<ArticuloCantidad[]>([]);
+
+    // Instanciar ArticuloService una sola vez
+    const articuloService = useMemo(() => new ArticuloService(), []); // <-- ¡NUEVO! Instanciar el servicio con useMemo
+
+    const [articulosManufacturadosDisponibles, setArticulosManufacturadosDisponibles] = useState<IArticuloManufacturadoResponseDTO[]>([]);
+    const [articulosInsumosDisponibles, setArticulosInsumosDisponibles] = useState<IArticuloInsumoResponseDTO[]>([]); // <-- ¡NUEVO ESTADO!
+    const [selectedArticulosManufacturados, setSelectedArticulosManufacturados] = useState<ArticuloSeleccionado[]>([]);
+    const [selectedArticulosInsumos, setSelectedArticulosInsumos] = useState<ArticuloSeleccionado[]>([]); // <-- ¡NUEVO ESTADO!
     const [loadingForm, setLoadingForm] = useState<boolean>(true);
     const [isProcessing, setIsProcessing] = useState(false);
     const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
-    const [currentImageId, setCurrentImageId] = useState<number | null>(null); // <-- NUEVO ESTADO: Para el ID de la imagen actual
+    const [currentImageId, setCurrentImageId] = useState<number | null>(null);
 
     const handleVolver = () => {
         navigate("/admin/promociones");
     };
 
+    // Cargar artículos manufacturados e insumos disponibles al montar el componente
     useEffect(() => {
-        getArticulosManufacturados()
-            .then(data => {
-                const filteredData = data.filter((art: IArticuloManufacturadoResponseDTO) => art.id !== undefined && art.id !== null);
-                setArticulosDisponibles(filteredData);
-            })
-            .catch((error) => {
-                console.error("Error al cargar artículos manufacturados:", error);
-                MySwal.fire("Error", "No se pudieron cargar los artículos para la promoción.", "error");
-            });
-    }, []);
+        const loadArticulos = async () => {
+            try {
+                // Cargar Artículos Manufacturados
+                const manuData = await articuloService.findAllArticulosManufacturadosActivos(); // Usar el servicio instanciado
+                setArticulosManufacturadosDisponibles(manuData.filter(art => art.id !== undefined && art.id !== null));
 
+                // Cargar Artículos Insumos (solo los que NO son para elaborar y activos)
+                const insumoData = await articuloService.findAllArticulosInsumoActivos(); // Usar el servicio instanciado y su método filtrado
+                setArticulosInsumosDisponibles(insumoData.filter(ins => ins.id !== undefined && ins.id !== null)); // Ya filtrados por el service
+
+            } catch (error) {
+                console.error("Error al cargar artículos:", error);
+                MySwal.fire("Error", "No se pudieron cargar los artículos para la promoción.", "error");
+            }
+        };
+        loadArticulos();
+    }, [articuloService]); // Dependencia del servicio
+
+    // Cargar datos de la promoción para edición
     useEffect(() => {
         if (isEditing) {
             setLoadingForm(true);
@@ -78,23 +99,35 @@ const PromocionForm: React.FC = () => {
                     setValue("precioPromocional", promo.precioPromocional);
                     setValue("tipoPromocion", promo.tipoPromocion);
 
-                    if (promo.imagen) { // Si la promoción tiene una imagen
+                    if (promo.imagen) {
                         setCurrentImageUrl(promo.imagen.denominacion);
-                        setCurrentImageId(promo.imagen.id || null); // <-- Guardar el ID de la imagen existente
+                        setCurrentImageId(promo.imagen.id || null);
                     } else {
                         setCurrentImageUrl(null);
                         setCurrentImageId(null);
                     }
 
+                    // Precargar artículos manufacturados seleccionados
                     if (promo.articulosManufacturados) {
-                        setSelectedArticulos(
+                        setSelectedArticulosManufacturados(
                             promo.articulosManufacturados.map(art => ({
                                 id: art.id!,
-                                cantidad: 1,
+                                cantidad: 1, // Mantener cantidad si el formulario la usa para UI, aunque no se envíe al backend
                             }))
                         );
                     } else {
-                        setSelectedArticulos([]);
+                        setSelectedArticulosManufacturados([]);
+                    }
+
+                    // <-- ¡NUEVO! Precargar artículos insumos seleccionados
+                    if (promo.articulosInsumo) {
+                        setSelectedArticulosInsumos(
+                            promo.articulosInsumo.map(ins => ({
+                                id: ins.id!,
+                            }))
+                        );
+                    } else {
+                        setSelectedArticulosInsumos([]);
                     }
                 })
                 .catch(error => {
@@ -107,14 +140,16 @@ const PromocionForm: React.FC = () => {
                 });
         } else {
             setLoadingForm(false);
-            setCurrentImageUrl(null); // Limpiar imagen si es modo creación
-            setCurrentImageId(null); // Limpiar ID de imagen si es modo creación
+            setCurrentImageUrl(null);
+            setCurrentImageId(null);
         }
     }, [id, isEditing, setValue, navigate]);
 
-    const handleCheckboxChange = (articuloId: number, checked: boolean) => {
-        setSelectedArticulos(prev => {
+    // Manejador para checkboxes de Artículos Manufacturados
+    const handleCheckboxChangeManufacturado = (articuloId: number, checked: boolean) => {
+        setSelectedArticulosManufacturados(prev => {
             if (checked) {
+                // Aquí podrías añadir una cantidad por defecto si la usas en la UI
                 return [...prev, { id: articuloId, cantidad: 1 }];
             } else {
                 return prev.filter(art => art.id !== articuloId);
@@ -122,24 +157,36 @@ const PromocionForm: React.FC = () => {
         });
     };
 
-    const handleCantidadChange = (articuloId: number, cantidad: number) => {
-        setSelectedArticulos(prev =>
+    // Manejador para cantidades de Artículos Manufacturados (si aplica)
+    const handleCantidadChangeManufacturado = (articuloId: number, cantidad: number) => {
+        setSelectedArticulosManufacturados(prev =>
             prev.map(art =>
                 art.id === articuloId ? { ...art, cantidad: Number(cantidad) } : art
             )
         );
     };
 
+    // <-- ¡NUEVO! Manejador para checkboxes de Artículos Insumos
+    const handleCheckboxChangeInsumo = (articuloId: number, checked: boolean) => {
+        setSelectedArticulosInsumos(prev => {
+            if (checked) {
+                return [...prev, { id: articuloId }];
+            } else {
+                return prev.filter(ins => ins.id !== articuloId);
+            }
+        });
+    };
+
     const onSubmit = async (formData: FormularioPromocion) => {
         setIsProcessing(true);
-        let finalImageId: number | null = null; // <-- CAMBIO: Usaremos este para enviar
+        let finalImageId: number | null = null;
 
         // 1. Subir la imagen si hay una nueva seleccionada en el input de archivo
         if (formData.imagen && formData.imagen.length > 0) {
             try {
                 const response = await uploadImage(formData.imagen[0]);
                 const uploadedImage: IImagenResponseDTO = response.data;
-                finalImageId = uploadedImage.id || null; // Obtenemos el ID de la NUEVA imagen
+                finalImageId = uploadedImage.id || null;
                 MySwal.fire("Imagen subida", "La imagen se subió correctamente.", "success");
             } catch (imageError) {
                 console.error("Error al subir la imagen:", imageError);
@@ -148,15 +195,9 @@ const PromocionForm: React.FC = () => {
                 return;
             }
         } else if (isEditing && currentImageId !== null) {
-            // 2. Si estamos editando y NO se subió una nueva imagen,
-            // pero la promoción YA tenía una imagen (currentImageId no es null),
-            // REUTILIZAMOS el ID de la imagen existente.
             finalImageId = currentImageId;
             MySwal.fire("Advertencia", "No se seleccionó nueva imagen. Se mantendrá la existente.", "info");
         }
-        // 3. Si no se subió nueva imagen y no había existente (currentImageId es null),
-        // entonces finalImageId seguirá siendo null, lo cual es correcto.
-
 
         const dataToSend: PromocionCreateDTO = {
             denominacion: formData.denominacion,
@@ -167,9 +208,10 @@ const PromocionForm: React.FC = () => {
             horaHasta: formData.horaHasta + ":00",
             precioPromocional: Number(formData.precioPromocional),
             tipoPromocion: formData.tipoPromocion,
-            imagenId: finalImageId, // <-- CAMBIO: Enviamos el ID final determinado
-            articuloManufacturadoIds: selectedArticulos.map(art => art.id),
-            sucursalIds: [],
+            imagenId: finalImageId,
+            articuloManufacturadoIds: selectedArticulosManufacturados.map(art => art.id),
+            articuloInsumoIds: selectedArticulosInsumos.map(ins => ins.id), // <-- ¡NUEVO! IDs de artículos insumos
+            sucursalIds: [], // Asegúrate de manejar sucursales si son relevantes en el frontend
         };
 
         try {
@@ -181,9 +223,10 @@ const PromocionForm: React.FC = () => {
                 MySwal.fire("Éxito", "Promoción creada correctamente", "success");
             }
             reset();
-            setSelectedArticulos([]);
-            setCurrentImageUrl(null); // Limpiar URL de imagen después de guardar/actualizar
-            setCurrentImageId(null); // Limpiar ID de imagen después de guardar/actualizar
+            setSelectedArticulosManufacturados([]);
+            setSelectedArticulosInsumos([]); // Limpiar insumos seleccionados
+            setCurrentImageUrl(null);
+            setCurrentImageId(null);
             navigate("/admin/promociones");
         } catch (error) {
             console.error("Error al guardar la promoción:", error);
@@ -208,7 +251,7 @@ const PromocionForm: React.FC = () => {
                 Volver a la lista
             </button>
 
-
+            {/* Resto de campos de texto e imagen (Denominación, Descripción, Fechas, Horas, Precio, Tipo) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="form-group">
                     <label htmlFor="denominacion" className="block text-gray-700 text-sm font-bold mb-2">Denominación</label>
@@ -325,12 +368,13 @@ const PromocionForm: React.FC = () => {
                 )}
             </div>
 
+            {/* SECCIÓN ARTÍCULOS MANUFACTURADOS */}
             <h3 className="text-xl font-bold text-gray-800 mb-4">Artículos Manufacturados Incluidos</h3>
-            {articulosDisponibles.length === 0 && !loadingForm ? (
-                <p className="text-gray-600 mb-4">Cargando artículos o no hay artículos disponibles.</p>
+            {articulosManufacturadosDisponibles.length === 0 && !loadingForm ? (
+                <p className="text-gray-600 mb-4">Cargando artículos manufacturados o no hay artículos disponibles.</p>
             ) : (
                 Object.entries(
-                    articulosDisponibles.reduce((acc, art) => {
+                    articulosManufacturadosDisponibles.reduce((acc, art) => {
                         const categoria = art.categoria?.denominacion || "Sin categoría";
                         if (!acc[categoria]) acc[categoria] = [];
                         acc[categoria].push(art);
@@ -341,28 +385,68 @@ const PromocionForm: React.FC = () => {
                         <summary className="font-bold text-md text-gray-800 cursor-pointer">{categoria}</summary>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-3">
                             {articulos.map((art) => {
-                                const isSelected = selectedArticulos.some(selected => selected.id === art.id!);
+                                const isSelected = selectedArticulosManufacturados.some(selected => selected.id === art.id!);
                                 return (
                                     <div key={art.id} className="flex items-center space-x-2 border rounded-md p-3 bg-white">
                                         <input
                                             type="checkbox"
-                                            id={`art-${art.id}`}
+                                            id={`manu-art-${art.id}`}
                                             checked={isSelected}
-                                            onChange={(e) => handleCheckboxChange(art.id!, e.target.checked)}
+                                            onChange={(e) => handleCheckboxChangeManufacturado(art.id!, e.target.checked)}
                                             className="form-checkbox h-5 w-5 text-orange-600"
                                         />
-                                        <label htmlFor={`art-${art.id}`} className="flex-1 text-sm font-medium text-gray-800 cursor-pointer">
+                                        <label htmlFor={`manu-art-${art.id}`} className="flex-1 text-sm font-medium text-gray-800 cursor-pointer">
                                             {art.denominacion} (${art.precioVenta.toFixed(2)})
                                         </label>
                                         {isSelected && (
                                             <input
                                                 type="number"
                                                 min={1}
-                                                value={selectedArticulos.find(s => s.id === art.id!)?.cantidad || 1}
-                                                onChange={(e) => handleCantidadChange(art.id!, Number(e.target.value))}
+                                                value={selectedArticulosManufacturados.find(s => s.id === art.id!)?.cantidad || 1}
+                                                onChange={(e) => handleCantidadChangeManufacturado(art.id!, Number(e.target.value))}
                                                 className="w-16 px-2 py-1 border rounded-md text-center text-sm"
                                             />
                                         )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </details>
+                ))
+            )}
+
+            {/* <-- ¡NUEVO! SECCIÓN ARTÍCULOS INSUMOS */}
+            <h3 className="text-xl font-bold text-gray-800 mb-4 mt-8">Artículos Insumos Incluidos (No para Elaborar)</h3>
+            {articulosInsumosDisponibles.length === 0 && !loadingForm ? (
+                <p className="text-gray-600 mb-4">Cargando artículos insumos o no hay insumos disponibles (solo se muestran los que NO son para elaborar).</p>
+            ) : (
+                Object.entries(
+                    articulosInsumosDisponibles.reduce((acc, ins) => {
+                        // Usar la categoría del insumo para agrupar
+                        const categoria = ins.categoria?.denominacion || "Sin categoría";
+                        if (!acc[categoria]) acc[categoria] = [];
+                        acc[categoria].push(ins);
+                        return acc;
+                    }, {} as Record<string, IArticuloInsumoResponseDTO[]>)
+                ).map(([categoria, insumos]) => (
+                    <details key={categoria} className="mb-4 bg-gray-50 p-3 rounded-md shadow-sm">
+                        <summary className="font-bold text-md text-gray-800 cursor-pointer">{categoria}</summary>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-3">
+                            {insumos.map((ins) => {
+                                const isSelected = selectedArticulosInsumos.some(selected => selected.id === ins.id!);
+                                return (
+                                    <div key={ins.id} className="flex items-center space-x-2 border rounded-md p-3 bg-white">
+                                        <input
+                                            type="checkbox"
+                                            id={`insumo-art-${ins.id}`}
+                                            checked={isSelected}
+                                            onChange={(e) => handleCheckboxChangeInsumo(ins.id!, e.target.checked)}
+                                            className="form-checkbox h-5 w-5 text-orange-600"
+                                        />
+                                        <label htmlFor={`insumo-art-${ins.id}`} className="flex-1 text-sm font-medium text-gray-800 cursor-pointer">
+                                            {ins.denominacion} (${ins.precioCompra.toFixed(2)}) {/* Muestra precioCompra */}
+                                        </label>
+                                        {/* No hay input de cantidad para insumos aquí, ya que el backend no lo usa para promociones */}
                                     </div>
                                 );
                             })}

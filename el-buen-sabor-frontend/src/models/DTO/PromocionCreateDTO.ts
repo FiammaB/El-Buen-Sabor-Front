@@ -13,5 +13,7 @@ export interface PromocionCreateDTO {
     tipoPromocion: string; // String que representa el enum de Java (ej. "HAPPY_HOUR")
     imagenId?: number | null; // ID de la imagen en Cloudinary, opcional
     articuloManufacturadoIds: number[]; // IDs de los ArticulosManufacturados
+    articuloInsumoIds: number[];
     sucursalIds?: number[]; // Opcional, si las promociones son por sucursal
+
 }
