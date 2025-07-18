@@ -88,7 +88,9 @@ export default function CajeroPedidosPage() {
         try {
             await new PedidoService().actualizarEstadoPedido(pedido.id!, "CANCELADO");
             alert("Pedido cancelado exitosamente.");
-            fetchPedidos();
+            // Refrescá toda la lista
+            const nuevosPedidos = await new PedidoService().getAllPedidos();
+            setAllPedidos(nuevosPedidos);
         } catch (e: any) {
             alert("Error al cancelar el pedido: " + (e?.response?.data?.error || e.message));
         }
@@ -98,7 +100,6 @@ export default function CajeroPedidosPage() {
         const motivoAnulacion = prompt("Motivo de la devolución/anulación:");
         if (!motivoAnulacion) return;
         try {
-            // Usá el userId real cuando lo tengas en el contexto
             const usuarioAnuladorId = 1; // HARDCODE para test
             await new PedidoService().anularPedidoConNotaCredito(pedido.id!, {
                 usuarioAnuladorId,
@@ -106,11 +107,14 @@ export default function CajeroPedidosPage() {
             });
             await new PedidoService().actualizarEstadoPedido(pedido.id!, "DEVOLUCION");
             alert("Pedido anulado y Nota de Crédito enviada al cliente.");
-            fetchPedidos();
+            // Refrescá toda la lista
+            const nuevosPedidos = await new PedidoService().getAllPedidos();
+            setAllPedidos(nuevosPedidos);
         } catch (e: any) {
             alert("Error al generar la Nota de Crédito: " + (e?.response?.data?.error || e.message));
         }
     };
+
 
     useEffect(() => {
         fetchPedidos();
@@ -125,8 +129,12 @@ export default function CajeroPedidosPage() {
         const prox = getProximoEstado(pedido);
         if (!prox) return;
         await new PedidoService().actualizarEstadoPedido(pedido.id!, prox.estado);
-        fetchPedidos();
+
+        // Recargá toda la lista (esto actualiza tanto allPedidos como filteredPedidos)
+        const nuevosPedidos = await new PedidoService().getAllPedidos();
+        setAllPedidos(nuevosPedidos);
     };
+
 
     useEffect(() => {
         (async () => {
