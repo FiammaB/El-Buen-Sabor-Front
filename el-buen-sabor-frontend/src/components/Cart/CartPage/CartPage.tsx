@@ -9,7 +9,7 @@ import { useCart } from "../../Cart/context/cart-context" // Asegúrate de que e
 import type { ArticuloManufacturado } from '../../../models/Articulos/ArticuloManufacturado';
 import type { Articulo } from '../../../models/Articulos/Articulo'; // Importar Articulo para tipado
 import type { IPromocionDTO } from '../../../models/DTO/IPromocionDTO'; // Importar IPromocionDTO para tipado
-
+import { getPromociones } from '../../../services/PromocionService'; // Asegúrate de que esta ruta sea correcta
 export default function CartPage() {
     const {
         items,
@@ -22,7 +22,7 @@ export default function CartPage() {
     } = useCart()
 
     const [relatedProducts, setRelatedProducts] = useState<ArticuloManufacturado[]>([])
-
+    const [relatedPromos, setRelatedPromos] = useState<IPromocionDTO[]>([]);
     // Costo de envío, ahora 0 si el total es igual o mayor a 25
     const deliveryFee = totalAmount >= 25 ? 0 : 3.99
     const finalTotal = totalAmount + deliveryFee
@@ -33,6 +33,7 @@ export default function CartPage() {
                 setRelatedProducts([]); // Limpiar productos relacionados si el carrito está vacío
                 return;
             }
+
 
             // Obtener la categoría del primer artículo manufacturado en el carrito
             // Esto es para la sección "Te podría interesar" que sugiere productos de la misma categoría.
@@ -79,25 +80,37 @@ export default function CartPage() {
 
         fetchRelated();
     }, [items]); // Vuelve a ejecutar cuando los ítems del carrito cambien
-
+    useEffect(() => {
+        const fetchPromos = async () => {
+            try {
+                const todasLasPromos = await getPromociones();
+                // Filtramos solo las activas (que no estén de baja) y tomamos las 2 primeras
+                const promosActivas = todasLasPromos.filter(p => !p.baja).slice(0, 2);
+                setRelatedPromos(promosActivas);
+            } catch (error) {
+                console.error("Error al cargar promociones relacionadas:", error);
+            }
+        };
+        fetchPromos();
+    }, [items]);
     return (
         <div className="min-h-screen bg-gray-50">
-            <header className="bg-white shadow-sm sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center space-x-4">
-                            <a href='/landing' className="p-2 hover:bg-gray-100 rounded-full transition duration-200">
-                                <ArrowLeft className="w-6 h-6" />
-                            </a>
-                            <div>
-                                <h1 className="text-xl font-bold text-gray-900">Mi Carrito</h1>
-                                <p className="text-sm text-gray-500">{totalItems} productos</p>
-                            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-16">
+                    <div className="flex items-center space-x-4">
+                        <a href='/landing' className="p-2 hover:bg-gray-100 rounded-full transition duration-200">
+                            <ArrowLeft className="w-6 h-6" />
+                        </a>
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900">Mi Carrito</h2>
+                            <p className="text-sm text-gray-500">{totalItems} productos</p>
                         </div>
-                        <div className="text-2xl font-bold text-orange-500">El Buen Sabor</div>
                     </div>
+
                 </div>
-            </header>
+            </div>
+
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {items.length === 0 ? (
@@ -210,7 +223,37 @@ export default function CartPage() {
                                     })}
                                 </div>
                             </div>
-
+                            {  /* Mostrar promociones relacionadas*/}
+                            {relatedPromos.length > 0 && (
+                                <div className="bg-white rounded-2xl shadow-sm p-6 mt-6"> {/* Añadí un margen superior mt-6 */}
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4">¡Aprovecha nuestras promos!</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {/* 1. Mapeamos sobre 'relatedPromos' */}
+                                        {relatedPromos.map((promo) => (
+                                            <div key={promo.id} className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg">
+                                                <img
+                                                    src={promo.imagen?.denominacion || '/placeholder.svg?height=60&width=60'}
+                                                    alt={promo.denominacion}
+                                                    className="w-15 h-15 object-cover rounded-lg"
+                                                />
+                                                <div className="flex-1">
+                                                    {/* 2. Usamos los datos de la 'promo' */}
+                                                    <h4 className="font-medium text-gray-900 text-sm">{promo.denominacion}</h4>
+                                                    {/* 3. ¡CAMBIO IMPORTANTE! Usamos 'precioPromocional' */}
+                                                    <p className="text-orange-500 font-bold text-sm">${promo.precioPromocional.toFixed(2)}</p>
+                                                </div>
+                                                <button
+                                                    // 4. Pasamos el objeto 'promo' a la función addToCart
+                                                    onClick={() => addToCart(promo)}
+                                                    className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition duration-200"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             {/* Productos relacionados */}
                             {relatedProducts.length > 0 && (
                                 <div className="bg-white rounded-2xl shadow-sm p-6">

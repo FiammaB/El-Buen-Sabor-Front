@@ -7,33 +7,30 @@ import {
   Plus,
   Minus,
   ArrowLeft,
-  Clock,
-  ChevronRight,
-  Heart,
-  X,
+
+
 } from "lucide-react";
 import { useCart } from "../../components/Cart/context/cart-context";
 import { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
-// Eliminamos la importación de ArticuloInsumo
 import { Articulo } from "../../models/Articulos/Articulo";
 import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO";
-import { getPromocionById } from "../../services/PromocionService";
-import {ArticuloInsumo} from "../../models/Articulos/ArticuloInsumo.ts";
+import { getPromocionById, getPromociones } from "../../services/PromocionService";
+import { ArticuloInsumo } from "../../models/Articulos/ArticuloInsumo.ts";
 
-// Reducimos el tipo para que sea solo ArticuloManufacturado o IPromocionDTO
-type ProductDetailType = ArticuloManufacturado | IPromocionDTO;
+// Se mantiene tu tipo unificado
+type ProductDetailType = Articulo | IPromocionDTO;
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addToCart, isInCart, getItemQuantity, totalItems, removeFromCart } =
-    useCart();
+  const { addToCart, getItemQuantity, updateQuantity } = useCart();
 
   const [producto, setProducto] = useState<ProductDetailType | null>(null);
   const [related, setRelated] = useState<ArticuloManufacturado[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [relatedPromos, setRelatedPromos] = useState<IPromocionDTO[]>([]);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -42,26 +39,18 @@ export default function ProductDetailPage() {
       let fetchedProduct: ProductDetailType | null = null;
 
       try {
-        // 1. Intentar cargar como ArticuloManufacturado
+        // Tu lógica para cargar el producto principal (Manufacturado, Promo o Insumo)
         const res = await fetch(`http://localhost:8080/api/articuloManufacturado/${id}`);
         if (res.ok) {
-          fetchedProduct = Object.setPrototypeOf(
-              await res.json(),
-              ArticuloManufacturado.prototype
-          ) as ArticuloManufacturado;
+          fetchedProduct = Object.setPrototypeOf(await res.json(), ArticuloManufacturado.prototype) as ArticuloManufacturado;
         } else if (res.status === 404) {
-          // 2. Intentar cargar como Promoción
           try {
             const promo = await getPromocionById(Number(id));
             fetchedProduct = promo;
           } catch {
-            // 3. Si no es promoción, intentar cargar como ArticuloInsumo
             const insumoRes = await fetch(`http://localhost:8080/api/articuloInsumo/${id}`);
             if (insumoRes.ok) {
-              fetchedProduct = Object.setPrototypeOf(
-                  await insumoRes.json(),
-                  ArticuloInsumo.prototype
-              ) as ArticuloInsumo;
+              fetchedProduct = Object.setPrototypeOf(await insumoRes.json(), ArticuloInsumo.prototype) as ArticuloInsumo;
             } else {
               throw new Error("Producto no encontrado.");
             }
@@ -73,6 +62,21 @@ export default function ProductDetailPage() {
         if (fetchedProduct) {
           setProducto(fetchedProduct);
           setQuantity(getItemQuantity(fetchedProduct.id || 0) || 1);
+
+          // =======================================================
+          // ✅ AQUÍ ESTÁ LA LÓGICA CORREGIDA PARA BUSCAR PROMOCIONES
+          // =======================================================
+          try {
+            const allPromos = await getPromociones();
+            const relatedP = allPromos
+              .filter(p => !p.baja && p.id !== fetchedProduct?.id)
+              .slice(0, 2);
+            setRelatedPromos(relatedP);
+          } catch (promoError) {
+            console.error("Error al cargar promociones relacionadas:", promoError);
+          }
+          // =======================================================
+
         } else {
           setError("Producto no encontrado.");
         }
@@ -85,8 +89,9 @@ export default function ProductDetailPage() {
     };
 
     if (id) fetchProductDetails();
-  }, [id, getItemQuantity]);
+  }, [id]);
 
+  // Tu segundo useEffect para buscar productos relacionados se mantiene igual
   useEffect(() => {
     const fetchRelated = async () => {
       if (
@@ -114,8 +119,28 @@ export default function ProductDetailPage() {
     fetchRelated();
   }, [producto]);
 
-  const increaseQty = () => setQuantity((q) => Math.min(q + 1, 10));
-  const decreaseQty = () => setQuantity((q) => Math.max(q - 1, 1));
+  const increaseQty = () => {
+
+    const newQuantity = Math.min(quantity + 1, 10);
+
+    setQuantity(newQuantity);
+
+    if (producto && getItemQuantity(producto.id ?? 0) > 0) {
+      updateQuantity(producto.id ?? 0, newQuantity);
+    }
+  };
+
+  const decreaseQty = () => {
+
+    const newQuantity = Math.max(quantity - 1, 1);
+
+    setQuantity(newQuantity);
+
+
+    if (producto && getItemQuantity(producto.id ?? 0) > 0) {
+      updateQuantity(producto.id ?? 0, newQuantity);
+    }
+  };
 
   const handleAddToCart = () => {
     if (!producto) return;
@@ -133,21 +158,11 @@ export default function ProductDetailPage() {
   if (!producto) return null;
 
   const isArticuloManufacturado = producto instanceof ArticuloManufacturado;
-  // Eliminamos isArticuloInsumo
-  const isPromocion = !isArticuloManufacturado && 'precioPromocional' in producto; // Simplificamos la comprobación
+  const isPromocion = 'precioPromocional' in producto;
 
 
   return (
     <div className="min-h-screen bg-white">
-      {totalItems > 0 && (
-        <a
-          href="/cart"
-          className="text-white fixed bottom-[30px] right-[30px] rounded-full font-bold bg-green-500 p-8 z-50 text-white"
-        >
-          IR AL CARRITO
-        </a>
-      )}
-
       <div className="max-w-6xl mx-auto px-4 py-10">
         <button
           onClick={() => navigate(-1)}
@@ -158,71 +173,28 @@ export default function ProductDetailPage() {
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* ... Tu JSX para la imagen principal ... */}
           <div className="relative w-full h-80 bg-gray-100 rounded-2xl overflow-hidden">
             <img
               src={producto.imagen?.denominacion || "/placeholder.svg"}
               alt={producto.denominacion}
               className="w-full h-full object-cover"
             />
-            {isArticuloManufacturado && producto.tiempoEstimadoMinutos && (
-              <div className="absolute top-3 left-3 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                <Clock className="inline w-4 h-4 mr-1" />
-                {producto.tiempoEstimadoMinutos} min
-              </div>
-            )}
-            {isPromocion && (
-              <div className="absolute top-3 left-3 bg-red-600 text-white px-3 py-1 rounded-full text-sm">
-                ¡Oferta Especial!
-              </div>
-            )}
           </div>
 
           <div className="space-y-6">
+            {/* ... Tu JSX para los detalles del producto, precio y botones ... */}
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 {producto.denominacion}
               </h1>
-              {/* Solo muestra la categoría si es ArticuloManufacturado */}
-              {isArticuloManufacturado && producto.categoria?.denominacion && (
-                <p className="text-sm text-gray-500 mt-1">
-                  {producto.categoria.denominacion}
-                </p>
-              )}
-              {isPromocion && (
-                <p className="text-sm text-red-500 font-semibold mt-1">
-                  Promoción
-                </p>
-              )}
             </div>
-
-            {isArticuloManufacturado && (
-              <p className="text-gray-700 text-lg leading-relaxed">
-                {producto.descripcion || "Un producto delicioso, preparado al momento."}
-              </p>
-            )}
-
-            {/* Eliminado el bloque de ArticuloInsumo */}
-
-            {isPromocion && (
-              <div className="text-gray-700 text-base space-y-1">
-                <p>{producto.descripcionDescuento || "Aprovecha esta increíble oferta!"}</p>
-                {producto.articulosManufacturados && producto.articulosManufacturados.length > 0 && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    Incluye: {producto.articulosManufacturados.map(a => a.denominacion).join(', ')}
-                  </p>
-                )}
-                {producto.articulosInsumo && producto.articulosInsumo.length > 0 && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    Bebidas/Extras: {producto.articulosInsumo.map(a => a.denominacion).join(', ')}
-                  </p>
-                )}
-              </div>
-            )}
-
+            <p className="text-gray-700 text-lg leading-relaxed">
+              {isArticuloManufacturado ? producto.descripcion : (isPromocion ? producto.descripcionDescuento : "")}
+            </p>
             <div className="text-4xl font-bold text-orange-500">
-              {isPromocion ? `$${producto.precioPromocional?.toFixed(2)}` : `$${producto.precioVenta?.toFixed(2)}`}
+              {isPromocion ? `$${producto.precioPromocional?.toFixed(2)}` : `$${(producto as Articulo).precioVenta?.toFixed(2)}`}
             </div>
-
             <div className="flex items-center gap-4">
               <button
                 onClick={decreaseQty}
@@ -238,114 +210,84 @@ export default function ProductDetailPage() {
                 <Plus className="w-4 h-4" />
               </button>
             </div>
-
-            <button
-              onClick={handleAddToCart}
-              className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-semibold flex justify-center items-center gap-2 text-lg"
-            >
+            <button onClick={handleAddToCart} className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-semibold flex justify-center items-center gap-2 text-lg">
               <ShoppingCart className="w-5 h-5" />
-              {getItemQuantity(producto.id || 0) > 0
-                ? `Agregado al carrito`
-                : "Agregar al carrito"}
+              {getItemQuantity(producto.id || 0) > 0 ? `Agregado al carrito` : "Agregar al carrito"}
             </button>
           </div>
         </div>
 
-        {/* ─────────────── Productos relacionados ─────────────── */}
-        {related.length > 0 && (
-          <div className="mt-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-              También podría interesarte
-              <ChevronRight className="w-5 h-5 ml-1" />
-            </h2>
+        {/* --- SECCIÓN DE PROMOCIONES RELACIONADAS (CON BOTONES INTERACTIVOS) --- */}
+        {relatedPromos.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm p-6 mt-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">¡Aprovecha nuestras promos!</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {relatedPromos.map((promo) => (
+                <div key={promo.id} className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg">
+                  <img src={promo.imagen?.denominacion || '/placeholder.svg'} alt={promo.denominacion} className="w-16 h-16 object-cover rounded-lg" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900 text-sm">{promo.denominacion}</h4>
+                    <p className="text-orange-500 font-bold text-sm">${promo.precioPromocional.toFixed(2)}</p>
+                  </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {related.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => navigate(`/producto/${item.id}`)}
-                  className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200"
-                >
-                  <div className="relative">
-                    <img
-                      src={
-                        item.imagen
-                          ? item.imagen.denominacion
-                          : "/placeholder.svg?height=200&width=300"
-                      }
-                      alt={item.denominacion}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
-                    />
-                    <button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition duration-200">
-                      <Heart className="w-4 h-4 text-gray-400" />
-                    </button>
-                    {item.tiempoEstimadoMinutos && (
-                      <div className="absolute bottom-3 left-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-sm">
-                        <Clock className="w-3 h-3 inline mr-1" />
-                        {item.tiempoEstimadoMinutos} min
-                      </div>
+                  {/* --- Lógica de botones interactivos --- */}
+                  <div className="flex items-center gap-2">
+                    {getItemQuantity(promo.id) > 0 ? (
+                      <>
+                        <button onClick={() => updateQuantity(promo.id, getItemQuantity(promo.id) - 1)} className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition">
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="font-bold">{getItemQuantity(promo.id)}</span>
+                        <button onClick={() => updateQuantity(promo.id, getItemQuantity(promo.id) + 1)} className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition">
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <button onClick={() => addToCart(promo)} className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition">
+                        <Plus className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
 
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-gray-900 text-lg line-clamp-2">
-                        {item.denominacion}
-                      </h3>
-                      <div className="flex items-center space-x-1 ml-2">
-                        <span className="text-lg font-bold text-orange-500">
-                          ${item.precioVenta}
-                        </span>
-                      </div>
-                    </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {item.descripcion || "Delicioso producto artesanal"}
-                    </p>
-
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-gray-500">
-                        {item.categoria?.denominacion || "Producto especial"}
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(item);
-                        }}
-                        className={`p-2 rounded-full transition duration-200 ${isInCart(item.id || 1)
-                          ? "bg-green-500 text-white"
-                          : "bg-orange-500 text-white hover:bg-orange-600"
-                          }`}
-                      >
-                        {isInCart(item.id || 1) ? (
-                          <div className="flex gap-2">
-                            <span className="text-xs font-bold">
-                              {getItemQuantity(item.id || 0)}
-                            </span>
-                            <Plus className="w-4 h-4" />
-                          </div>
-                        ) : (
-                          <Plus className="w-4 h-4" />
-                        )}
-                      </button>
-                      {isInCart(item.id || 1) ? (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeFromCart(item.id || 0);
-                            }}
-                            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-200"
-                            title="Eliminar del carrito"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ) : (
-                        ""
-                      )}
-                    </div>
+        {/* --- SECCIÓN DE PRODUCTOS RELACIONADOS (TU ESTILO) --- */}
+        {/* --- SECCIÓN DE PRODUCTOS RELACIONADOS (CON ESTILO DE LISTA Y BOTONES INTERACTIVOS) --- */}
+        {related.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm p-6 mt-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">También podría interesarte</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {related.map((relatedProd) => (
+                <div key={relatedProd.id} className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg">
+                  <img src={relatedProd.imagen?.denominacion || '/placeholder.svg'} alt={relatedProd.denominacion} className="w-16 h-16 object-cover rounded-lg" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900 text-sm">{relatedProd.denominacion}</h4>
+                    <p className="text-orange-500 font-bold text-sm">${relatedProd.precioVenta.toFixed(2)}</p>
                   </div>
+
+                  {/* --- Lógica de botones interactivos --- */}
+                  <div className="flex items-center gap-2">
+                    {getItemQuantity(relatedProd.id ?? 0) > 0 ? (//Argument of type 'number | undefined' is not assignable to parameter of type 'number'. Type 'undefined' is not assignable to type 'number'.
+                      <>
+                        <button onClick={() => updateQuantity(relatedProd.id ?? 0, getItemQuantity(relatedProd.id ?? 0) - 1)} className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition">
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="font-bold">{getItemQuantity(relatedProd.id ?? 0)}</span>
+                        <button onClick={() => updateQuantity(relatedProd.id ?? 0, getItemQuantity(relatedProd.id ?? 0) + 1)} className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition">
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <button onClick={() => addToCart(relatedProd)} className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition">
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
                 </div>
               ))}
             </div>

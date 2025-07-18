@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
-
+import Layout from './components/Landing/Layout';
 // 🌐 Páginas públicas
 import Landing from './components/Landing/Landing';
 import CartPage from './components/Cart/CartPage/CartPage';
@@ -49,15 +49,19 @@ import ReporteMonetarioPage from "./components/Reportes/ReporteMonetarioPage.tsx
 // 👨‍🍳 Panel Cocinero
 import CocineroAdminLayout from "./components/Cocinero/CocineroAdminLayout.tsx";
 import PedidosPage from "./components/Pedidos/PedidosPage.tsx";
+import PerfilCocineroPage from "./components/Auth/components/PerfilCocineroPage.tsx";
 
 // 💵 Panel Cajero
 import CajeroAdminLayout from "./components/Cajero/CajeroAdminLayout.tsx";
 import CajeroPedidosPage from "./components/Cajero/CajeroPedidosPage.tsx";
+import PerfilCajeroPage from "./components/Auth/components/PerfilCajeroPage.tsx";
 
 // 🚚 Panel Delivery
 import DeliveryAdminLayout from "./components/Delivery/DeliveryAdminLayout.tsx";
 import DeliveryPedidosPage from "./components/Delivery/DeliveryPedidosPage.tsx";
 import VerPedidoPage from "./components/Delivery/VerPedidoPage.tsx";
+import PerfilDeliveryPage from "./components/Auth/components/PerfilDeliveryPage.tsx";
+
 // 📦 Pedidos del Cliente
 import HistorialPedidos from './components/Cliente/HistorialPedidos.tsx';
 import PedidoDetalle from './components/Pedidos/PedidoDetalle.tsx';
@@ -76,16 +80,18 @@ function App() {
         <Routes>
 
           {/* 🌍 RUTAS PÚBLICAS */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/landing" element={<Landing />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
-          <Route path="/order-failed" element={<OrderFailed />} />
-          <Route path="/producto/:id" element={<ProductDetailPage />} />
-          <Route path="/explore" element={<ExplorarPage />} />
-          <Route path="/promociones" element={<PromocionList />} />
+          <Route path="/" element={<Layout />}>
 
+            <Route path="/" element={<Landing />} />
+            <Route path="/landing" element={<Landing />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+            <Route path="/order-failed" element={<OrderFailed />} />
+            <Route path="/producto/:id" element={<ProductDetailPage />} />
+            <Route path="/explore" element={<ExplorarPage />} />
+
+          </Route>
           {/* 🔐 LOGIN / REGISTER */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -205,6 +211,7 @@ function App() {
             <Route path="categorias-manufacturado" element={<CategoriaManufacturadoPage />} />
             <Route path="compra-ingredientes" element={<CompraIngredientesPage />} />
             <Route path="control-stock" element={<ControlStockPage />} />
+            <Route path="perfil" element={<PerfilCocineroPage />} />
           </Route>
 
           {/* 💵 PANEL CAJERO */}
@@ -217,6 +224,7 @@ function App() {
             }
           >
             <Route path="caja" element={<CajeroPedidosPage />} />
+            <Route path="perfil" element={<PerfilCajeroPage />} />
           </Route>
 
           {/* 🚚 PANEL DELIVERY */}
@@ -230,6 +238,7 @@ function App() {
           >
             <Route path="pedidos" element={<DeliveryPedidosPage />} />
             <Route path="pedido/:pedidoId" element={<VerPedidoPage />} />
+              <Route path="perfil" element={<PerfilDeliveryPage />} />
           </Route>
 
           {/* 🚧 RUTA CUALQUIERA: fallback */}

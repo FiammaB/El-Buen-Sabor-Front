@@ -7,11 +7,11 @@ import { ArticuloInsumo } from "../../models/Articulos/ArticuloInsumo";
 import { Articulo } from "../../models/Articulos/Articulo";
 import { useAuth } from "../Auth/Context/AuthContext";
 import { Link } from "react-router-dom";
-import { Search, Clock, Truck, CreditCard, ShoppingBag, Menu, X, Heart, Plus, Ban, Minus } from 'lucide-react'; // Import Ban and Minus icons
+import { Search, Clock, Truck, ShoppingBag, X, Plus, Ban, Minus } from 'lucide-react'; // Import Ban and Minus icons
 import { useCart } from "../Cart/context/cart-context"; // Asegúrate de esta ruta
 import type { Categoria } from "../../models/Categoria/Categoria";
 
-import { useNavigate } from "react-router-dom";
+
 import { getPromociones } from "../../services/PromocionService.ts";
 import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO";
 
@@ -20,8 +20,8 @@ type AnyArticuloDisplay = Articulo;
 
 export default function Landing() {
 
-	const { id, role, logout, username } = useAuth();
-	const navigate = useNavigate();
+	const { id, role, } = useAuth();
+
 
 	console.log("ROL DETECTADO:", role);
 	console.log("ID DETECTADO:", id)
@@ -29,10 +29,6 @@ export default function Landing() {
 	const [articulos, setArticulos] = useState<AnyArticuloDisplay[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
-	const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-	const [headerSearch, setHeaderSearch] = useState<string>("");
-	const [showHeaderSuggestions, setShowHeaderSuggestions] = useState<boolean>(false);
 
 	const [mainSearch, setMainSearch] = useState<string>("");
 
@@ -61,7 +57,7 @@ export default function Landing() {
 	};
 
 	const categoriasVisibles = [
-		"Pizza", "Empanada", "Hamburguesa", "Sanguche", "Lomito", "Bebida"
+		"Pizza", "Empanada", "Hamburguesa", "Sanguche", "Lomito", "Bebida", "Postre", "Pasta", "Ensalada", "Picada", "Sushi", "Taco", "Burrito", "Wrap", "Tortilla", "Galleta", "Helado", "Tarta", "Sopa", "Pescado", "Mariscos", "Asado", "Pollo", "Vegetariano", "Vegano", "Desayuno", "Brunch", "Comida Rápida", "Comida Saludable"
 	];
 
 	useEffect(() => {
@@ -80,7 +76,9 @@ export default function Landing() {
 	const steps = [
 		{ icon: <Search className="w-8 h-8" />, title: 'Encuentra tu comida', description: 'Explora miles de restaurantes y encuentra exactamente lo que deseas' },
 		{ icon: <ShoppingBag className="w-8 h-8" />, title: 'Haz tu pedido', description: 'Selecciona tus platillos favoritos y personaliza tu orden' },
-		{ icon: <Truck className="w-8 h-8" />, title: 'Recibe en casa', description: 'Rápida entrega directo a tu puerta en el tiempo estimado' }
+		{ icon: <Truck className="w-8 h-8" />, title: 'Recibe en casa', description: 'Rápida entrega directo a tu puerta en el tiempo estimado' },
+
+
 	];
 
 	const articulosFiltradosPrincipal = articulos.filter(a => {
@@ -110,243 +108,14 @@ export default function Landing() {
 		fetchPromos();
 	}, []);
 
-	const articulosFiltradosHeader = articulos.filter(a => {
-		return headerSearch
-			? (
-				a.denominacion?.toLowerCase().includes(headerSearch.toLowerCase()) ||
-				(a instanceof ArticuloManufacturado && a.descripcion && a.descripcion.toLowerCase().includes(headerSearch.toLowerCase()))
-			)
-			: false;
-	});
+
 
 	return (
 		<div className="min-h-screen bg-white ebs-landing">
 
-			{/* Take to cart si tiene algo */}
-			{totalItems > 0 && (
-				<a
-					href="/cart"
-					className="text-white fixed bottom-[30px] right-[30px] rounded-full font-bold bg-green-500 p-8 z-50 text-white"
-				>
-					IR AL CARRITO
-				</a>
-			)}
-
-			{/* Header */}
-			<header className="bg-white shadow-sm sticky top-0 z-50">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex justify-between items-center h-16">
-						{/* Logo */}
-						<div className="flex items-center">
-							<div className="text-2xl font-bold text-orange-500">
-								El Buen Sabor
-							</div>
-						</div>
-						{/* Desktop Search Bar (Header) */}
-						<nav className="hidden md:flex items-center space-x-8">
-							<div className="relative w-64">
-								<input
-									type="text"
-									value={headerSearch}
-									onFocus={() => setShowHeaderSuggestions(true)}
-									onBlur={() => setTimeout(() => setShowHeaderSuggestions(false), 150)}
-									onChange={e => setHeaderSearch(e.target.value)}
-									placeholder="Buscar productos..."
-									className="px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 transition w-full"
-								/>
-								{/* Dropdown de sugerencias */}
-								{showHeaderSuggestions && headerSearch && articulosFiltradosHeader.length > 0 && (
-									<div className="absolute left-0 top-12 w-full bg-white border rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
-										{articulosFiltradosHeader.slice(0, 6).map(a => (
-											<div
-												key={a.id}
-												className="px-4 py-2 cursor-pointer hover:bg-orange-100 flex items-center"
-												onMouseDown={() => {
-													navigate(`/producto/${a.id}`);
-													setShowHeaderSuggestions(false);
-													setHeaderSearch('');
-												}}
-											>
-												<img
-													src={a.imagen?.denominacion || "/placeholder.svg"}
-													alt={a.denominacion}
-													className="w-8 h-8 rounded mr-3 object-cover"
-												/>
-												<div>
-													<div className="font-medium">{a.denominacion}</div>
-													<div className="text-xs text-gray-500">${a.precioVenta?.toFixed(2)}</div>
-												</div>
-											</div>
-										))}
-										{articulosFiltradosHeader.length > 6 && (
-											<div className="px-4 py-2 text-sm text-gray-600 cursor-pointer hover:bg-orange-50"
-												onMouseDown={() => {
-													navigate(`/explore?search=${encodeURIComponent(headerSearch)}`);
-													setShowHeaderSuggestions(false);
-													setHeaderSearch('');
-												}}>
-												Ver todos los resultados...
-											</div>
-										)}
-									</div>
-								)}
-								{/* Si no hay resultados */}
-								{showHeaderSuggestions && headerSearch && articulosFiltradosHeader.length === 0 && (
-									<div className="absolute left-0 top-12 w-full bg-white border rounded-xl shadow-lg z-50 p-4 text-gray-500">
-										No se encontraron productos.
-									</div>
-								)}
-							</div>
-						</nav>
-						{/* Desktop Navigation */}
-						<nav className="hidden md:flex items-center space-x-8">
-							<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Inicio</a>
-
-							<Link to="/promociones" className="text-gray-700 hover:text-orange-500 transition duration-200">
-								Promociones
-							</Link>
-
-						</nav>
-						{/* Botones para usuarios no logueados */}
-						{!role && (
-							<div className="hidden md:flex items-center space-x-4">
-								<a
-									href="/login"
-									className="text-gray-700 hover:text-orange-500 transition duration-200 font-medium"
-								>
-									Iniciar Sesión
-								</a>
-								<a
-									href="/register"
-									className="bg-orange-500 text-white px-6 py-2 rounded-full hover:bg-orange-600 transition duration-200 font-medium"
-								>
-									Registrarse
-								</a>
-							</div>
-						)}
-						{/*LOGIN Y REGISTRO*/}
-
-						{role === "ADMINISTRADOR" && (
-							<div className="flex items-center space-x-4">
-								<span className="text-indigo-700 font-bold">Admin: {username}</span>
-								<a
-									href="/admin/dashboard"
-									className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
-								>
-									Panel Admin
-								</a>
-								<button
-									onClick={logout}
-									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-								>
-									Cerrar Sesión
-								</button>
-							</div>
-						)}
 
 
-						{role === "CAJERO" && (
-							<div className="flex items-center space-x-4">
-								<span className="text-purple-700 font-bold">Cajero: {username}</span>
-								<a
-									href="/cajero/caja"
-									className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition"
-								>
-									Caja
-								</a>
-								<button
-									onClick={logout}
-									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-								>
-									Cerrar Sesión
-								</button>
-							</div>
-						)}
 
-						{role === "COCINERO" && (
-							<div className="flex items-center space-x-4">
-								<span className="text-green-700 font-bold">Cocinero: {username}</span>
-								<a
-									href="/cocinero/pedidos"
-									className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
-								>
-									Cocina
-								</a>
-								<button
-									onClick={logout}
-									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-								>
-									Cerrar Sesión
-								</button>
-							</div>
-						)}
-
-						{role === "CLIENTE" && (
-							<div className="flex items-center space-x-4">
-								<span className="text-orange-700 font-bold">{username}</span>
-								<button
-									onClick={() => navigate("/cliente")}
-									className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
-								>
-									Mi Cuenta
-								</button>
-								<button
-									onClick={logout}
-									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-								>
-									Cerrar Sesión
-								</button>
-							</div>
-						)}
-
-						{role === "DELIVERY" && (
-							<div className="flex items-center space-x-4">
-								<span className="text-blue-700 font-bold">Delivery: {username}</span>
-								<a
-									href="/delivery/pedidos"
-									className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-								>
-									Pedidos
-								</a>
-								<button
-									onClick={logout}
-									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-								>
-									Cerrar Sesión
-								</button>
-							</div>
-						)}
-
-						{/* Mobile menu button */}
-						<button
-							className="md:hidden p-2"
-							onClick={() => setIsMenuOpen(!isMenuOpen)}
-						>
-							{isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-						</button>
-					</div>
-
-					{/* Mobile Navigation */}
-					{isMenuOpen && (
-						<div className="md:hidden py-4 border-t">
-							<div className="flex flex-col space-y-4">
-								<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Inicio</a>
-
-								<a href="#" className="text-gray-700 hover:text-orange-500 transition duration-200">Promociones</a>
-
-								<div className="flex flex-col space-y-2 pt-4 border-t">
-									<button className="text-gray-700 hover:text-orange-500 transition duration-200 font-medium text-left">
-										Iniciar Sesión
-									</button>
-									<button className="bg-orange-500 text-white px-6 py-2 rounded-full hover:bg-orange-600 transition duration-200 font-medium w-fit">
-										Registrarse
-									</button>
-								</div>
-							</div>
-						</div>
-					)}
-				</div>
-			</header>
 
 			{/* Hero Section */}
 			<section className="relative bg-gradient-to-br from-orange-50 to-orange-100 py-16 lg:py-24
@@ -386,19 +155,18 @@ export default function Landing() {
 						) : (
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
 								{promociones.map((promo) => (
-									<div // Ya no es un Link completo, para que los botones sean clicables
+									<div
 										key={promo.id}
-										className={`${promo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-white'} rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200`}
+										className={`card-container bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group border hover:border-orange-200 ${promo.baja ? 'item-agotado' : ''}`}
 									>
+
 										<div className="relative">
 											<img
 												src={promo.imagen?.denominacion || "/placeholder.svg?height=200&width=300"}
 												alt={promo.denominacion}
 												className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
 											/>
-											<button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition duration-200">
-												<Heart className="w-4 h-4 text-gray-400" />
-											</button>
+
 										</div>
 
 										<div className="p-6">
@@ -435,8 +203,9 @@ export default function Landing() {
 														{getItemQuantity(promo.id || 0) > 0 && (
 															<button
 																onClick={(e) => { e.stopPropagation(); updateQuantity(promo.id || 0, getItemQuantity(promo.id || 0) - 1); }}
-																className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-200"
+																className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
 																title="Disminuir cantidad"
+																disabled={promo.baja}
 															>
 																<Minus className="w-4 h-4" />
 															</button>
@@ -447,27 +216,30 @@ export default function Landing() {
 															<span className="font-bold text-lg">{getItemQuantity(promo.id || 0)}</span>
 														)}
 
-														{/* Botón para aumentar cantidad o añadir al carrito */}
+														{/* Botón para aumentar (+) o añadir al carrito, SIEMPRE VISIBLE */}
 														<button
 															onClick={(e) => { e.stopPropagation(); addToCart(promo); }}
-															className={`p-2 rounded-full transition duration-200 ${getItemQuantity(promo.id || 0) > 0
-																? "bg-green-500 text-white hover:bg-green-600" // Verde si ya está en el carrito
-																: "bg-orange-500 text-white hover:bg-orange-600" // Naranja si se añade por primera vez
+															className={`p-2 rounded-full transition duration-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed ${getItemQuantity(promo.id || 0) > 0
+																? "bg-green-500 text-white hover:bg-green-600"
+																: "bg-orange-500 text-white hover:bg-orange-600"
 																}`}
 															title="Aumentar cantidad"
+															disabled={promo.baja}
 														>
 															<Plus className="w-4 h-4" />
 														</button>
 
-														{/* Botón para eliminar TODAS las unidades, visible si hay > 0 */}
+														{/* Botón para eliminar (X), solo aparece si hay items en el carrito */}
 														{getItemQuantity(promo.id || 0) > 0 && (
 															<button
 																onClick={(e) => { e.stopPropagation(); removeFromCart(promo.id || 0); }}
-																className="p-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition duration-200 ml-2"
+																className="p-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition duration-200 ml-2 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
 																title="Eliminar todas las unidades del carrito"
+																disabled={promo.baja}
 															>
 																<X className="w-3 h-3" />
 															</button>
+
 														)}
 													</>
 												)}
@@ -477,8 +249,13 @@ export default function Landing() {
 											{/* Enlace para ver detalles de la promoción */}
 											<div className="mt-4">
 												<Link
-													to={`/producto/${promo.id}`}
-													className={`${promo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-orange-400 hover:bg-orange-500'} text-center text-white py-2 block mx-auto mt-4 rounded-md transition duration-200`}
+													to={`/producto/${promo.id}`} // o articulo.id
+													className={`${promo.baja // o articulo.baja
+														? 'bg-gray-300 text-gray-500 cursor-not-allowed pointer-events-none'
+														: 'bg-orange-400 hover:bg-orange-500 text-white'
+														} text-center py-2 block mx-auto mt-4 rounded-md transition duration-200`}
+													// Esta línea es clave para deshabilitar la navegación en links
+													onClick={(e) => { if (promo.baja) e.preventDefault(); }} // o articulo.baja
 												>
 													Ver detalles
 												</Link>
@@ -555,7 +332,7 @@ export default function Landing() {
 							{articulosFiltradosPrincipal.map((articulo) => (
 								<div
 									key={articulo.id}
-									className={`${articulo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-white'}  rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group border hover:border-orange-200`}
+									className={`card-container bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group border hover:border-orange-200 ${articulo.baja ? 'item-agotado' : ''}`}
 								>
 									<div className="relative">
 										<img
@@ -608,8 +385,9 @@ export default function Landing() {
 													{getItemQuantity(articulo.id || 0) > 0 && (
 														<button
 															onClick={(e) => { e.stopPropagation(); updateQuantity(articulo.id || 0, getItemQuantity(articulo.id || 0) - 1); }}
-															className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-200"
+															className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
 															title="Disminuir cantidad"
+															disabled={articulo.baja}
 														>
 															<Minus className="w-4 h-4" />
 														</button>
@@ -620,35 +398,44 @@ export default function Landing() {
 														<span className="font-bold text-lg">{getItemQuantity(articulo.id || 0)}</span>
 													)}
 
-													{/* Botón para aumentar cantidad o añadir al carrito */}
+													{/* Botón para aumentar (+) o añadir al carrito, SIEMPRE VISIBLE */}
 													<button
 														onClick={(e) => { e.stopPropagation(); addToCart(articulo); }}
-														className={`p-2 rounded-full transition duration-200 ${getItemQuantity(articulo.id || 0) > 0
-															? "bg-green-500 text-white hover:bg-green-600" // Verde si ya está en el carrito
-															: "bg-orange-500 text-white hover:bg-orange-600" // Naranja si se añade por primera vez
+														className={`p-2 rounded-full transition duration-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed ${getItemQuantity(articulo.id || 0) > 0
+															? "bg-green-500 text-white hover:bg-green-600"
+															: "bg-orange-500 text-white hover:bg-orange-600"
 															}`}
 														title="Aumentar cantidad"
+														disabled={articulo.baja}
 													>
 														<Plus className="w-4 h-4" />
 													</button>
 
-													{/* Botón para eliminar TODAS las unidades, visible si hay > 0 */}
+													{/* Botón para eliminar (X), solo aparece si hay items en el carrito */}
 													{getItemQuantity(articulo.id || 0) > 0 && (
 														<button
 															onClick={(e) => { e.stopPropagation(); removeFromCart(articulo.id || 0); }}
-															className="p-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition duration-200 ml-2"
+															className="p-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition duration-200 ml-2 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
 															title="Eliminar todas las unidades del carrito"
+															disabled={articulo.baja}
 														>
 															<X className="w-3 h-3" />
 														</button>
 													)}
+
 												</>
 											)}
 										</div>
 										<Link
-											to={`/producto/${articulo.id}`}
-											className={`${articulo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-orange-400 hover:bg-orange-500'} text-center text-white py-2 block mx-auto mt-4 rounded-md transition duration-200`}>
-											Ver detalle
+											to={`/producto/${articulo.id}`} // o articulo.id
+											className={`${articulo.baja // o articulo.baja
+												? 'bg-gray-300 text-gray-500 cursor-not-allowed pointer-events-none'
+												: 'bg-orange-400 hover:bg-orange-500 text-white'
+												} text-center py-2 block mx-auto mt-4 rounded-md transition duration-200`}
+											// Esta línea es clave para deshabilitar la navegación en links
+											onClick={(e) => { if (articulo.baja) e.preventDefault(); }} // o articulo.baja
+										>
+											Ver detalles
 										</Link>
 									</div>
 								</div>
@@ -704,78 +491,7 @@ export default function Landing() {
 			</section>
 
 
-			{/* Footer */}
-			<footer className="bg-gray-900 text-white py-16">
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-						<div>
-							<div className="text-2xl font-bold text-orange-500 mb-6">
-								El Buen Sabor
-							</div>
-							<p className="text-gray-400 mb-6 leading-relaxed">
-								La mejor comida de tu ciudad, entregada directo a tu puerta. Rápido, seguro y delicioso.
-							</p>
-							<div className="flex space-x-4">
-								<div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-orange-500 transition duration-200 cursor-pointer">
-									<span className="text-sm font-bold">f</span>
-								</div>
-								<div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-orange-500 transition duration-200 cursor-pointer">
-									<span className="text-sm font-bold">t</span>
-								</div>
-								<div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-orange-500 transition duration-200 cursor-pointer">
-									<span className="text-sm font-bold">ig</span>
-								</div>
-							</div>
-						</div>
 
-						<div>
-							<h3 className="font-semibold text-lg mb-6">Empresa</h3>
-							<ul className="space-y-4">
-								<li><a href="#" className="text-gray-400 hover:text-white transition duration-200">Acerca de nosotros</a></li>
-								<li><a href="#" className="text-gray-400 hover:text-white transition duration-200">Carreras</a></li>
-								<li><a href="#" className="text-gray-400 hover:text-white transition duration-200">Prensa</a></li>
-								<li><a href="#" className="text-gray-400 hover:text-white transition duration-200">Blog</a></li>
-							</ul>
-						</div>
-
-						<div>
-							<h3 className="font-semibold text-lg mb-6">Para restaurantes</h3>
-							<ul className="space-y-4">
-								<li><a href="#" className="text-gray-400 hover:text-white transition duration-200">Únete como socio</a></li>
-								<li><a href="#" className="text-gray-400 hover:text-white transition duration-200">Centro de ayuda</a></li>
-								<li><a href="#" className="text-gray-400 hover:text-white transition duration-200">Promociones</a></li>
-								<li><a href="#" className="text-gray-400 hover:text-white transition duration-200">Recursos</a></li>
-							</ul>
-						</div>
-
-						<div>
-							<h3 className="font-semibold text-lg mb-6">Soporte</h3>
-							<ul className="space-y-4">
-								<li><a href="#" className="text-gray-400 hover:text-white transition duration-200">Centro de ayuda</a></li>
-								<li><a href="#" className="text-gray-400 hover:text-white transition duration-200">Contáctanos</a></li>
-								<li><a href="#" className="text-gray-400 hover:text-white transition duration-200">Política de privacidad</a></li>
-								<li><a href="#" className="text-gray-400 hover:text-white transition duration-200">Términos de servicio</a></li>
-							</ul>
-						</div>
-					</div>
-
-					<div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-						<p className="text-gray-400 text-sm">
-							© 2024 El Buen Sabor. Todos los derechos reservados.
-						</p>
-						<div className="flex items-center space-x-6 mt-4 md:mt-0">
-							<div className="flex items-center space-x-2 text-gray-400">
-								<CreditCard className="w-4 h-4" />
-								<span className="text-sm">Pagos seguros</span>
-							</div>
-							<div className="flex items-center space-x-2 text-gray-400">
-								<Truck className="w-4 h-4" />
-								<span className="text-sm">Entrega garantizada</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</footer>
 		</div>
 	)
 }

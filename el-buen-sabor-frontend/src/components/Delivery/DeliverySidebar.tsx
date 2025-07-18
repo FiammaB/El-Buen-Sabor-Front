@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 
 const navItems = [
     { href: "/delivery/pedidos", label: "Pedidos para Entregar" },
+    { href: "/delivery/perfil", label: "Mi Perfil" }, // ✅ Nuevo botón
 ];
 
 export default function DeliverySidebar() {

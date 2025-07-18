@@ -6,9 +6,11 @@ const navItems = [
     { href: "/cocinero/productos", label: "Productos" },
     { href: "/cocinero/ingredientes", label: "Ingredientes" },
     { href: "/cocinero/compra-ingredientes", label: "Compra de Ingredientes" },
-    { href: "/cocinero/categorias-insumo", label: "Rubros de Igredientes" },
+    { href: "/cocinero/categorias-insumo", label: "Rubros de Ingredientes" },
     { href: "/cocinero/categorias-manufacturado", label: "Rubros de Productos" },
     { href: "/cocinero/control-stock", label: "Control de Stock" },
+    // ✅ NUEVO: Perfil del cocinero
+    { href: "/cocinero/perfil", label: "👤 Mi Perfil" },
 ];
 
 export default function CocineroSidebar() {
