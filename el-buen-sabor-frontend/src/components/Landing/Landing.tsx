@@ -7,7 +7,7 @@ import { ArticuloInsumo } from "../../models/Articulos/ArticuloInsumo";
 import { Articulo } from "../../models/Articulos/Articulo";
 import { useAuth } from "../Auth/Context/AuthContext";
 import { Link } from "react-router-dom";
-import { Search, Clock, Truck, CreditCard, ShoppingBag, Menu, X, Heart, Plus, Ban, Minus } from 'lucide-react'; // Import Ban and Minus icons
+import { Search, Clock, Truck, CreditCard, ShoppingBag, Menu, X, Plus, Ban, Minus } from 'lucide-react'; // Import Ban and Minus icons
 import { useCart } from "../Cart/context/cart-context"; // Asegúrate de esta ruta
 import type { Categoria } from "../../models/Categoria/Categoria";
 
@@ -61,7 +61,7 @@ export default function Landing() {
 	};
 
 	const categoriasVisibles = [
-		"Pizza", "Empanada", "Hamburguesa", "Sanguche", "Lomito", "Bebida"
+		"Pizza", "Empanada", "Hamburguesa", "Sanguche", "Lomito", "Bebida", "Postre", "Pasta", "Ensalada", "Picada", "Sushi", "Taco", "Burrito", "Wrap", "Tortilla", "Galleta", "Helado", "Tarta", "Sopa", "Pescado", "Mariscos", "Asado", "Pollo", "Vegetariano", "Vegano", "Desayuno", "Brunch", "Comida Rápida", "Comida Saludable"
 	];
 
 	useEffect(() => {
@@ -386,19 +386,18 @@ export default function Landing() {
 						) : (
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
 								{promociones.map((promo) => (
-									<div // Ya no es un Link completo, para que los botones sean clicables
+									<div
 										key={promo.id}
-										className={`${promo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-white'} rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group cursor-pointer border hover:border-orange-200`}
+										className={`card-container bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group border hover:border-orange-200 ${promo.baja ? 'item-agotado' : ''}`}
 									>
+
 										<div className="relative">
 											<img
 												src={promo.imagen?.denominacion || "/placeholder.svg?height=200&width=300"}
 												alt={promo.denominacion}
 												className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
 											/>
-											<button className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 transition duration-200">
-												<Heart className="w-4 h-4 text-gray-400" />
-											</button>
+
 										</div>
 
 										<div className="p-6">
@@ -435,8 +434,9 @@ export default function Landing() {
 														{getItemQuantity(promo.id || 0) > 0 && (
 															<button
 																onClick={(e) => { e.stopPropagation(); updateQuantity(promo.id || 0, getItemQuantity(promo.id || 0) - 1); }}
-																className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-200"
+																className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
 																title="Disminuir cantidad"
+																disabled={promo.baja}
 															>
 																<Minus className="w-4 h-4" />
 															</button>
@@ -447,27 +447,30 @@ export default function Landing() {
 															<span className="font-bold text-lg">{getItemQuantity(promo.id || 0)}</span>
 														)}
 
-														{/* Botón para aumentar cantidad o añadir al carrito */}
+														{/* Botón para aumentar (+) o añadir al carrito, SIEMPRE VISIBLE */}
 														<button
 															onClick={(e) => { e.stopPropagation(); addToCart(promo); }}
-															className={`p-2 rounded-full transition duration-200 ${getItemQuantity(promo.id || 0) > 0
-																? "bg-green-500 text-white hover:bg-green-600" // Verde si ya está en el carrito
-																: "bg-orange-500 text-white hover:bg-orange-600" // Naranja si se añade por primera vez
+															className={`p-2 rounded-full transition duration-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed ${getItemQuantity(promo.id || 0) > 0
+																? "bg-green-500 text-white hover:bg-green-600"
+																: "bg-orange-500 text-white hover:bg-orange-600"
 																}`}
 															title="Aumentar cantidad"
+															disabled={promo.baja}
 														>
 															<Plus className="w-4 h-4" />
 														</button>
 
-														{/* Botón para eliminar TODAS las unidades, visible si hay > 0 */}
+														{/* Botón para eliminar (X), solo aparece si hay items en el carrito */}
 														{getItemQuantity(promo.id || 0) > 0 && (
 															<button
 																onClick={(e) => { e.stopPropagation(); removeFromCart(promo.id || 0); }}
-																className="p-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition duration-200 ml-2"
+																className="p-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition duration-200 ml-2 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
 																title="Eliminar todas las unidades del carrito"
+																disabled={promo.baja}
 															>
 																<X className="w-3 h-3" />
 															</button>
+
 														)}
 													</>
 												)}
@@ -477,8 +480,13 @@ export default function Landing() {
 											{/* Enlace para ver detalles de la promoción */}
 											<div className="mt-4">
 												<Link
-													to={`/producto/${promo.id}`}
-													className={`${promo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-orange-400 hover:bg-orange-500'} text-center text-white py-2 block mx-auto mt-4 rounded-md transition duration-200`}
+													to={`/producto/${promo.id}`} // o articulo.id
+													className={`${promo.baja // o articulo.baja
+														? 'bg-gray-300 text-gray-500 cursor-not-allowed pointer-events-none'
+														: 'bg-orange-400 hover:bg-orange-500 text-white'
+														} text-center py-2 block mx-auto mt-4 rounded-md transition duration-200`}
+													// Esta línea es clave para deshabilitar la navegación en links
+													onClick={(e) => { if (promo.baja) e.preventDefault(); }} // o articulo.baja
 												>
 													Ver detalles
 												</Link>
@@ -555,7 +563,7 @@ export default function Landing() {
 							{articulosFiltradosPrincipal.map((articulo) => (
 								<div
 									key={articulo.id}
-									className={`${articulo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-white'}  rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group border hover:border-orange-200`}
+									className={`card-container bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 group border hover:border-orange-200 ${articulo.baja ? 'item-agotado' : ''}`}
 								>
 									<div className="relative">
 										<img
@@ -608,8 +616,9 @@ export default function Landing() {
 													{getItemQuantity(articulo.id || 0) > 0 && (
 														<button
 															onClick={(e) => { e.stopPropagation(); updateQuantity(articulo.id || 0, getItemQuantity(articulo.id || 0) - 1); }}
-															className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-200"
+															className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
 															title="Disminuir cantidad"
+															disabled={articulo.baja}
 														>
 															<Minus className="w-4 h-4" />
 														</button>
@@ -620,35 +629,44 @@ export default function Landing() {
 														<span className="font-bold text-lg">{getItemQuantity(articulo.id || 0)}</span>
 													)}
 
-													{/* Botón para aumentar cantidad o añadir al carrito */}
+													{/* Botón para aumentar (+) o añadir al carrito, SIEMPRE VISIBLE */}
 													<button
 														onClick={(e) => { e.stopPropagation(); addToCart(articulo); }}
-														className={`p-2 rounded-full transition duration-200 ${getItemQuantity(articulo.id || 0) > 0
-															? "bg-green-500 text-white hover:bg-green-600" // Verde si ya está en el carrito
-															: "bg-orange-500 text-white hover:bg-orange-600" // Naranja si se añade por primera vez
+														className={`p-2 rounded-full transition duration-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed ${getItemQuantity(articulo.id || 0) > 0
+															? "bg-green-500 text-white hover:bg-green-600"
+															: "bg-orange-500 text-white hover:bg-orange-600"
 															}`}
 														title="Aumentar cantidad"
+														disabled={articulo.baja}
 													>
 														<Plus className="w-4 h-4" />
 													</button>
 
-													{/* Botón para eliminar TODAS las unidades, visible si hay > 0 */}
+													{/* Botón para eliminar (X), solo aparece si hay items en el carrito */}
 													{getItemQuantity(articulo.id || 0) > 0 && (
 														<button
 															onClick={(e) => { e.stopPropagation(); removeFromCart(articulo.id || 0); }}
-															className="p-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition duration-200 ml-2"
+															className="p-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition duration-200 ml-2 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
 															title="Eliminar todas las unidades del carrito"
+															disabled={articulo.baja}
 														>
 															<X className="w-3 h-3" />
 														</button>
 													)}
+
 												</>
 											)}
 										</div>
 										<Link
-											to={`/producto/${articulo.id}`}
-											className={`${articulo.baja ? 'saturate-0 cursor-not-allowed pointer-events-none' : 'bg-orange-400 hover:bg-orange-500'} text-center text-white py-2 block mx-auto mt-4 rounded-md transition duration-200`}>
-											Ver detalle
+											to={`/producto/${articulo.id}`} // o articulo.id
+											className={`${articulo.baja // o articulo.baja
+												? 'bg-gray-300 text-gray-500 cursor-not-allowed pointer-events-none'
+												: 'bg-orange-400 hover:bg-orange-500 text-white'
+												} text-center py-2 block mx-auto mt-4 rounded-md transition duration-200`}
+											// Esta línea es clave para deshabilitar la navegación en links
+											onClick={(e) => { if (articulo.baja) e.preventDefault(); }} // o articulo.baja
+										>
+											Ver detalles
 										</Link>
 									</div>
 								</div>

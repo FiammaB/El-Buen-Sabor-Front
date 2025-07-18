@@ -73,3 +73,34 @@
   margin-top: 0;
   color: #ff6600;
 }
+/* --- Estilos para la banderita "SIN STOCK" --- */
+
+/* El contenedor de la tarjeta necesita posicionamiento relativo
+para que la banderita se posicione correctamente sobre él. */
+.card-container {
+  position: relative;
+}
+
+/* Esta clase combina todos los estilos para un item agotado */
+.item-agotado {
+  filter: saturate(0); /* Pone todo en escala de grises */
+  cursor: not-allowed;
+  pointer-events: none; /* Deshabilita cualquier clic o interacción */
+}
+
+/* Aquí creamos la banderita visualmente */
+.item-agotado::after {
+  content: 'SIN STOCK';
+  position: absolute;
+  top: 20px;       /* Distancia desde arriba */
+  right: -30px;      /* Distancia desde la derecha (negativo para que sobresalga) */
+  background-color: #b91c1c; /* Un rojo oscuro (red-700 de Tailwind) */
+  color: white;
+  padding: 4px 35px; /* Espaciado interno (vertical y horizontal) */
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  transform: rotate(45deg); /* La magia de la rotación */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra sutil */
+  z-index: 10; /* Asegura que esté por encima de la imagen */
+}
