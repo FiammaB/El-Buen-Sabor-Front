@@ -1,6 +1,5 @@
 "use client"
 
-import type React from "react"
 
 import { useState, useEffect } from "react"
 // <-- CAMBIO CLAVE AQUÍ: Añade Shield a las importaciones
@@ -8,7 +7,7 @@ import { ArrowLeft, CreditCard, MapPin, Truck, ShoppingBag, Check, Shield } from
 import { useCart } from "../../components/Cart/context/cart-context"
 import { PedidoService } from "../../services/PedidoService"
 import { MercadoPagoService } from "../../services/MercadoPagoService"
-import { FormaPago, TipoEnvio } from "../../models/DTO/IPedidoDTO"
+import { EstadoPedido, FormaPago, TipoEnvio } from "../../models/DTO/IPedidoDTO"
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO"
 import { useNavigate } from "react-router-dom"
 import LoginForm from "../../components/Auth/components/LoginForm"
@@ -16,7 +15,7 @@ import { useAuth } from "../Auth/Context/AuthContext";
 
 // Importaciones adicionales para tipado
 import type { Articulo } from "../../models/Articulos/Articulo";
-import type { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
+
 import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO";
 
 interface Localidad {
@@ -161,10 +160,7 @@ export default function CheckoutPage() {
   const deliveryFee = deliveryType === TipoEnvio.DELIVERY ? (totalAmount >= 25 ? 0 : 3.99) : 0
   const finalTotal = totalAmount + deliveryFee
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setCustomerInfo((prev) => ({ ...prev, [name]: value }))
-  }
+
 
   const handleSubmitOrder = async () => {
     setIsProcessing(true)
@@ -194,7 +190,7 @@ export default function CheckoutPage() {
 
       const pedido: IPedidoDTO = {
         fechaPedido: new Date().toISOString().split('T')[0],
-        estado: "A_CONFIRMAR",
+        estado: EstadoPedido.A_CONFIRMAR,
         tipoEnvio: deliveryType,
         formaPago: paymentMethod,
         total: finalTotal,
@@ -259,8 +255,8 @@ export default function CheckoutPage() {
     if (currentStep === "confirmation") setCurrentStep("payment")
     else if (currentStep === "payment") setCurrentStep("delivery")
     else if (currentStep === "delivery" && !username) setCurrentStep("information")
-    else if (currentStep === "delivery" && username) navigate("/")
-    else navigate("/cart")
+    else if (currentStep === "delivery" && username) navigate("/cart")
+    else navigate("/")
   }
 
   if (items.length === 0 && !isComplete) {
@@ -284,22 +280,22 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button onClick={goToPreviousStep} className="p-2 hover:bg-gray-100 rounded-full transition duration-200">
-                <ArrowLeft className="w-6 h-6" />
-              </button>
-              <div>
-                <h1 className="text-[20px] font-bold text-gray-900">Checkout</h1>
-                <p className="text-sm text-gray-500">{totalItems} productos</p>
-              </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-4">
+            <button onClick={goToPreviousStep} className="p-2 hover:bg-gray-100 rounded-full transition duration-200">
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <div>
+              <h2 className="text-[15px] font-bold text-gray-900">Checkout</h2>
+              <p className="text-sm text-gray-500">{totalItems} productos</p>
             </div>
-            <a href="/" className="text-2xl font-bold text-orange-500">El Buen Sabor</a>
           </div>
+
         </div>
-      </header>
+      </div>
+
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -797,7 +793,7 @@ export default function CheckoutPage() {
                   {items.map((item) => {
                     // <-- CAMBIO CLAVE AQUÍ: Lógica para la URL de la imagen (sin prefijo local)
                     let imageUrl: string = "/placeholder.svg?height=48&width=48"; // Default
-                    let itemDisplayName: string = item.purchasableItem.denominacion;
+                    const itemDisplayName: string = item.purchasableItem.denominacion;
 
                     if (item.purchasableItem.tipo === 'articulo') {
                       const articulo = item.purchasableItem as Articulo;
