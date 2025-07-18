@@ -1,21 +1,40 @@
-import type { IArticuloManufacturadoResponseDTO } from './IAArticuloManufacturadoResponseDTO';
 import type { IImagenResponseDTO } from './IImagenResponseDTO';
 import type { IArticuloInsumoResponseDTO } from './IAArticuloInsumoResponseDTO';
-export interface IPromocionDTO {
-    id: number; // El ID de la promoción, crucial para el ABM
-    denominacion: string;
-    descripcionDescuento: string; // Coincide con tu backend
-    fechaDesde: string; // Formato "YYYY-MM-DD"
-    fechaHasta: string; // Formato "YYYY-MM-DD"
-    horaDesde: string; // Formato "HH:MM:SS"
-    horaHasta: string; // Formato "HH:MM:SS"
-    precioPromocional: number;
 
-    // <-- CAMBIO CLAVE: Asegura que tipoPromocion esté aquí
-    tipoPromocion: "HAPPY_HOUR" | "PROMOCION_GENERAL" | string; // Puede ser un enum o string genérico
-    articulosInsumo?: IArticuloInsumoResponseDTO[];
-    imagen?: IImagenResponseDTO; // La imagen de la promoción
-    articulosManufacturados: IArticuloManufacturadoResponseDTO[]; // Los artículos que componen la promoción
-    sucursales?: { id: number; denominacion: string }[]; // Las sucursales asociadas a la promoción
-    baja?: boolean; // Para la baja lógica
+// Esta interfaz es para el artículo manufacturado dentro del detalle
+export interface IArticuloManufacturadoDTO {
+    id: number;
+    denominacion: string;
+}
+
+// Esta interfaz representa una línea de detalle en la promoción (con cantidad)
+export interface IPromocionDetalleDTO {
+    id: number;
+    cantidad: number;
+    articuloManufacturado: IArticuloManufacturadoDTO;
+}
+
+// Esta es la interfaz principal y corregida de la Promoción
+export interface IPromocionDTO {
+    id: number;
+    denominacion: string;
+    descripcionDescuento: string;
+    fechaDesde: string;
+    fechaHasta: string;
+    horaDesde: string;
+    horaHasta: string;
+    precioPromocional: number;
+    tipoPromocion: string;
+    baja: boolean; // Propiedad 'baja' correctamente definida
+
+    imagen?: IImagenResponseDTO;
+    
+    // SE ELIMINA LA PROPIEDAD ANTIGUA
+    // articulosManufacturados: IArticuloManufacturadoResponseDTO[]; 
+    
+    // SE AÑADE LA NUEVA PROPIEDAD EN SU LUGAR
+    promocionDetalles: IPromocionDetalleDTO[];
+
+    articulosInsumos?: IArticuloInsumoResponseDTO[];
+    sucursales?: { id: number; denominacion: string }[];
 }

@@ -108,11 +108,11 @@ const PromocionForm: React.FC = () => {
                     }
 
                     // Precargar artículos manufacturados seleccionados
-                    if (promo.articulosManufacturados) {
+                    if (promo.promocionDetalles) {
                         setSelectedArticulosManufacturados(
-                            promo.articulosManufacturados.map(art => ({
-                                id: art.id!,
-                                cantidad: 1, // Mantener cantidad si el formulario la usa para UI, aunque no se envíe al backend
+                            promo.promocionDetalles.map(detalle => ({
+                            id: detalle.articuloManufacturado.id,
+                                cantidad: detalle.cantidad, // Mantener cantidad si el formulario la usa para UI, aunque no se envíe al backend
                             }))
                         );
                     } else {
@@ -120,9 +120,9 @@ const PromocionForm: React.FC = () => {
                     }
 
                     // <-- ¡NUEVO! Precargar artículos insumos seleccionados
-                    if (promo.articulosInsumo) {
+                    if (promo.articulosInsumos) {
                         setSelectedArticulosInsumos(
-                            promo.articulosInsumo.map(ins => ({
+                            promo.articulosInsumos.map(ins => ({
                                 id: ins.id!,
                             }))
                         );
@@ -209,7 +209,11 @@ const PromocionForm: React.FC = () => {
             precioPromocional: Number(formData.precioPromocional),
             tipoPromocion: formData.tipoPromocion,
             imagenId: finalImageId,
-            articuloManufacturadoIds: selectedArticulosManufacturados.map(art => art.id),
+            //articuloManufacturadoIds: selectedArticulosManufacturados.map(art => art.id),
+            promocionDetalles: selectedArticulosManufacturados.map(art => ({
+                cantidad: art.cantidad || 1,
+                articuloManufacturado: { id: art.id } // <-- ¡CAMBIO CLAVE AQUÍ!
+            })),
             articuloInsumoIds: selectedArticulosInsumos.map(ins => ins.id), // <-- ¡NUEVO! IDs de artículos insumos
             sucursalIds: [], // Asegúrate de manejar sucursales si son relevantes en el frontend
         };

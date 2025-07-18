@@ -150,13 +150,24 @@ const PromocionList: React.FC = () => {
                                     </p>
                                     <p className="text-orange-500 font-bold text-xl mt-2">${promo.precioPromocional.toFixed(2)}</p>
 
-                                    {promo.articulosManufacturados && promo.articulosManufacturados.length > 0 && (
+                                    {/* --- BLOQUE CORREGIDO PARA MOSTRAR AMBOS TIPOS DE ARTÍCULOS --- */}
+                                    {(promo.promocionDetalles?.length > 0 || promo.articulosInsumos?.length > 0) && (
                                         <div className="mt-2 text-sm text-gray-700">
                                             <span className="font-semibold">Incluye:</span>
                                             <ul className="list-disc list-inside text-xs text-gray-600 mt-1">
-                                                {promo.articulosManufacturados.map((art) => (
-                                                    <li key={art.id}>{art.denominacion}</li>
+
+                                                {/* Mapea y muestra los artículos manufacturados */}
+                                                {promo.promocionDetalles?.map((detalle) => (
+                                                    <li key={`detalle-${detalle.id}`}>
+                                                        {detalle.cantidad}x {detalle.articuloManufacturado.denominacion}
+                                                    </li>
                                                 ))}
+
+                                                {/* Mapea y muestra los artículos insumos */}
+                                                {promo.articulosInsumos?.map((insumo) => (
+                                                    <li key={`insumo-${insumo.id}`}>{insumo.denominacion}</li>
+                                                ))}
+
                                             </ul>
                                         </div>
                                     )}
