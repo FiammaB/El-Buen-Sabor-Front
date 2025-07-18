@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
-
+import Layout from './components/Landing/Layout';
 // 🌐 Páginas públicas
 import Landing from './components/Landing/Landing';
 import CartPage from './components/Cart/CartPage/CartPage';
@@ -76,16 +76,18 @@ function App() {
         <Routes>
 
           {/* 🌍 RUTAS PÚBLICAS */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/landing" element={<Landing />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
-          <Route path="/order-failed" element={<OrderFailed />} />
-          <Route path="/producto/:id" element={<ProductDetailPage />} />
-          <Route path="/explore" element={<ExplorarPage />} />
-          <Route path="/promociones" element={<PromocionList />} />
+          <Route path="/" element={<Layout />}>
 
+            <Route path="/" element={<Landing />} />
+            <Route path="/landing" element={<Landing />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+            <Route path="/order-failed" element={<OrderFailed />} />
+            <Route path="/producto/:id" element={<ProductDetailPage />} />
+            <Route path="/explore" element={<ExplorarPage />} />
+
+          </Route>
           {/* 🔐 LOGIN / REGISTER */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
