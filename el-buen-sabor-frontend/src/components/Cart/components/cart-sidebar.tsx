@@ -47,7 +47,7 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     <img
                       src={
                         item.articulo.imagen?.denominacion && item.articulo.imagen.denominacion.length > 0
-                          ? item.articulo.imagen.denominacion
+                          ? item.articulo.imagen.denominacion//Property 'articulo' does not exist on type 'CartItem'
                           : "/placeholder.svg?height=60&width=60"
                       }
                       alt={item.articulo.denominacion}

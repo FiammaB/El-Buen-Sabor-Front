@@ -3,7 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect, useState } from "react"
 import { Articulo } from '../../../models/Articulos/Articulo';
-import { ArticuloManufacturado } from "../../../models/Articulos/ArticuloManufacturado";
+
 import type { IPromocionDTO } from "../../../models/DTO/IPromocionDTO";
 
 
