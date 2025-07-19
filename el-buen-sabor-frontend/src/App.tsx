@@ -102,34 +102,36 @@ function App() {
           <Route path="/cambiar-password" element={<ChangePasswordForm />} />
           <Route path="/cambiar-password-inicial" element={<CambiarPasswordInicial />} />
 
+          <Route path="/" element={<Layout />}>
 
+            {/* 🧑 PERFIL MULTIROL */}
+            <Route
+              path="/perfil"
+              element={
+                <ProtectedRoute role={["ADMINISTRADOR", "CLIENTE", "COCINERO", "CAJERO"]}>
+                  <PerfilPage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* 🧑 PERFIL MULTIROL */}
-          <Route
-            path="/perfil"
-            element={
-              <ProtectedRoute role={["ADMINISTRADOR", "CLIENTE", "COCINERO", "CAJERO"]}>
-                <PerfilPage />
-              </ProtectedRoute>
-            }
-          />
-          {/* ✅ RUTAS PARA EL HISTORIAL DE PEDIDOS DEL CLIENTE (Solo Cliente) */}
-          <Route
-            path="/historial-pedidos"
-            element={
-              <ProtectedRoute role="CLIENTE">
-                <HistorialPedidos />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/historial-pedidos/:id"
-            element={
-              <ProtectedRoute role="CLIENTE">
-                <PedidoDetalle />
-              </ProtectedRoute>
-            }
-          />
+            {/* ✅ RUTAS PARA EL HISTORIAL DE PEDIDOS DEL CLIENTE (Solo Cliente) */}
+            <Route
+              path="/historial-pedidos"
+              element={
+                <ProtectedRoute role="CLIENTE">
+                  <HistorialPedidos />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/historial-pedidos/:id"
+              element={
+                <ProtectedRoute role="CLIENTE">
+                  <PedidoDetalle />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
 
 
 
@@ -238,7 +240,7 @@ function App() {
           >
             <Route path="pedidos" element={<DeliveryPedidosPage />} />
             <Route path="pedido/:pedidoId" element={<VerPedidoPage />} />
-              <Route path="perfil" element={<PerfilDeliveryPage />} />
+            <Route path="perfil" element={<PerfilDeliveryPage />} />
           </Route>
 
           {/* 🚧 RUTA CUALQUIERA: fallback */}

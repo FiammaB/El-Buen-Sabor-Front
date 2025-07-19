@@ -1,7 +1,7 @@
 // src/dto/ClienteReporteDTO.ts
 
 export interface ClienteReporteDTO {
-    idCliente: number;
+    idPersona: number;
     nombre: string;
     apellido: string;
     cantidadPedidos: number;

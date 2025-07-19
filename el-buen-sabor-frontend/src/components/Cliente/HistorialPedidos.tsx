@@ -153,73 +153,73 @@ export default function HistorialPedidos() {
                 <div className="overflow-x-auto bg-white rounded-lg shadow-md">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
-                        <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                N° Pedido
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Fecha
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Total
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Estado
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Acciones
-                            </th>
-                        </tr>
+                            <tr>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    N° Pedido
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Fecha
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Total
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Estado
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Acciones
+                                </th>
+                            </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                        {pedidosFiltrados.length === 0 ? (
-                            <tr>
-                                <td colSpan={5} className="text-center py-8 text-gray-500">
-                                    No hay pedidos que coincidan con el filtro seleccionado.
-                                </td>
-                            </tr>
-                        ) : (
-                            pedidosFiltrados.map((pedido) => (
-                                <tr key={pedido.id} className="hover:bg-gray-100">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        #{pedido.id}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {new Date(pedido.fechaPedido).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        ${pedido.total?.toFixed(2)}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {pedido.estado.replace(/_/g, ' ')}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button
-                                            onClick={() => handleVerDetalle(pedido.id)}
-                                            className="text-indigo-600 hover:text-indigo-900 mr-4"
-                                        >
-                                            Ver Detalle
-                                        </button>
-                                        {pedido.factura?.urlPdf && (
-                                            <div className="inline-flex space-x-2">
-                                                <button
-                                                    onClick={() => handleVisualizarFactura(pedido.id)}
-                                                    className="text-blue-600 hover:text-blue-900"
-                                                >
-                                                    Visualizar
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDescargarFactura(pedido.id)}
-                                                    className="text-green-600 hover:text-green-900"
-                                                >
-                                                    Descargar
-                                                </button>
-                                            </div>
-                                        )}
+                            {pedidosFiltrados.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="text-center py-8 text-gray-500">
+                                        No hay pedidos que coincidan con el filtro seleccionado.
                                     </td>
                                 </tr>
-                            ))
-                        )}
+                            ) : (
+                                pedidosFiltrados.map((pedido) => (
+                                    <tr key={pedido.id} className="hover:bg-gray-100">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            #{pedido.id}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {new Date(pedido.fechaPedido).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            ${pedido.total?.toFixed(2)}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {pedido.estado.replace(/_/g, ' ')}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button
+                                                onClick={() => handleVerDetalle(pedido.id!)}
+                                                className="text-indigo-600 hover:text-indigo-900 mr-4"
+                                            >
+                                                Ver Detalle
+                                            </button>
+                                            {pedido.factura?.urlPdf && (
+                                                <div className="inline-flex space-x-2">
+                                                    <button
+                                                        onClick={() => handleVisualizarFactura(pedido.id!)}//Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+                                                        className="text-blue-600 hover:text-blue-900"
+                                                    >
+                                                        Visualizar
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDescargarFactura(pedido.id!)}
+                                                        className="text-green-600 hover:text-green-900"
+                                                    >
+                                                        Descargar
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>

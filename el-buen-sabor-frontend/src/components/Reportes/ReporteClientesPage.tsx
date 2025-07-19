@@ -75,7 +75,7 @@ const ReporteClientesPage: React.FC = () => {
         }
 
         const datosParaExcel = clientes.map(c => ({
-            "ID Cliente": c.idCliente,
+            "ID Cliente": c.idPersona,
             "Nombre": c.nombre,
             "Total Gastado": c.totalGastado,
             "Cantidad de Pedidos": c.cantidadPedidos,
@@ -183,7 +183,7 @@ const ReporteClientesPage: React.FC = () => {
                                     </thead>
                                     <tbody className="divide-y divide-gray-200">
                                         {clientes.map((c) => (
-                                            <tr key={c.idCliente} className="hover:bg-gray-50">
+                                            <tr key={c.idPersona} className="hover:bg-gray-50">
                                                 <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{c.nombre}</td>
                                                 <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-800">{c.apellido}</td>
                                                 <td className="py-3 px-4 whitespace-nowrap text-center text-sm font-medium text-blue-600">{c.cantidadPedidos}</td>
@@ -191,7 +191,7 @@ const ReporteClientesPage: React.FC = () => {
                                                 <td className="py-3 px-4 whitespace-nowrap text-sm">
                                                     <button
                                                         className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors text-xs"
-                                                        onClick={() => navigate(`/admin/clientes/${c.idCliente}/pedidos`)} // <-- CAMBIO CLAVE AQUÍ
+                                                        onClick={() => navigate(`/admin/clientes/${c.idPersona}/pedidos`)} // <-- CAMBIO CLAVE AQUÍ
                                                     >
                                                         Ver Pedidos
                                                     </button>
