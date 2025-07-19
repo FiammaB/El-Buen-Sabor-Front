@@ -119,7 +119,7 @@ export default function PedidosPage() {
 
                   // 1. Manufacturados sueltos
                   const manufacturadosSuelto = pedido.detalles
-                      .filter(det => det.articuloManufacturado)
+                      .filter(det => det.articuloManufacturado && !det.promocion)
                       .map(det => ({
                         id: det.articuloManufacturado?.id,
                         denominacion: det.articuloManufacturado?.denominacion,
@@ -129,43 +129,29 @@ export default function PedidosPage() {
                       }));
 
                   // 2. Manufacturados de promociones
-                  const manufacturadosPromo: {
-                    id?: number,
-                    denominacion?: string,
-                    cantidad: number,
-                    preparacion?: string,
-                    detalles?: any[]
-                  }[] = [];
+                  const manufacturadosPromo = [];
                   pedido.detalles
-                      .filter(det => det.promocion && det.promocion.articulosManufacturados && det.promocion.articulosManufacturados.length)
+                      .filter(det => det.promocion && det.promocion.promocionDetalles)
                       .forEach(det => {
-                        det.promocion.articulosManufacturados.forEach(am => {
+                        det.promocion.promocionDetalles.forEach(pd => {
                           manufacturadosPromo.push({
-                            id: am.id,
-                            denominacion: am.denominacion,
-                            cantidad: det.cantidad,
-                            preparacion: am.preparacion,
-                            detalles: am.detalles,
+                            id: pd.articuloManufacturado?.id,
+                            denominacion: pd.articuloManufacturado?.denominacion,
+                            cantidad: (pd.cantidad || 0) * (det.cantidad || 1), // OJO: cantidad total es la de la promo * la cantidad de la promo pedida
+                            preparacion: pd.articuloManufacturado?.preparacion,
+                            detalles: pd.articuloManufacturado?.detalles,
                           });
                         });
                       });
 
                   // AGRUPAR MANUFACTURADOS por id
-                  const agrupados: {
-                    [key: string]: {
-                      id?: number;
-                      denominacion?: string;
-                      cantidad: number;
-                      preparacion?: string;
-                      detalles?: any[];
-                    }
-                  } = {};
-                  [...manufacturadosPromo, ...manufacturadosSuelto].forEach(am => {
-                    const key = am.id ?? am.denominacion ?? Math.random();
-                    if (agrupados[key]) {
-                      agrupados[key].cantidad += am.cantidad;
+                  const agrupados = {};
+                  [...manufacturadosSuelto, ...manufacturadosPromo].forEach(am => {
+                    if (!am.id) return;
+                    if (agrupados[am.id]) {
+                      agrupados[am.id].cantidad += am.cantidad;
                     } else {
-                      agrupados[key] = { ...am };
+                      agrupados[am.id] = { ...am };
                     }
                   });
                   const manufacturadosAgrupados = Object.values(agrupados);
