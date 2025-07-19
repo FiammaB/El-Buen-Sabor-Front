@@ -135,10 +135,9 @@ export default function DeliveryPedidosPage() {
                                     <tr>
                                         <td colSpan={7} className="bg-gray-50 pl-8 py-2">
                                             <h4 className="font-semibold mb-2">Detalle del Pedido</h4>
-                                            {/* Agrupado por tipo */}
-                                            {/* 1. Promociones */}
+                                            {/* 1. Promociones con agrupado de insumos y manufacturados */}
                                             {(() => {
-                                                // Agrupar promociones
+                                                // Agrupar promociones y acumular cantidades
                                                 const promosMap = new Map();
                                                 pedido.detalles?.forEach(det => {
                                                     if (det.promocion) {
@@ -159,47 +158,78 @@ export default function DeliveryPedidosPage() {
                                                         }
                                                     }
                                                 });
+
                                                 if (promosMap.size > 0) {
+                                                    // Agrupar insumos y manufacturados de todas las promos (con cantidad * cantidad de la promo pedida)
+                                                    const totalInsumos: Record<number, { denominacion: string, cantidad: number }> = {};
+                                                    const totalManufacturados: Record<number, { denominacion: string, cantidad: number }> = {};
+
+                                                    [...promosMap.values()].forEach((promo: any) => {
+                                                        // Insumos
+                                                        promo.articulosInsumos?.forEach((ins: any) => {
+                                                            if (!totalInsumos[ins.id]) {
+                                                                totalInsumos[ins.id] = {
+                                                                    denominacion: ins.denominacion,
+                                                                    cantidad: 0,
+                                                                };
+                                                            }
+                                                            totalInsumos[ins.id].cantidad += promo.cantidad; // Acumulá cantidad total de promo pedida
+                                                        });
+                                                        // Manufacturados (por modelo nuevo, viene en promo.promocionDetalles)
+                                                        if (promo.promocionDetalles?.length) {
+                                                            promo.promocionDetalles.forEach((detalle: any) => {
+                                                                const am = detalle.articuloManufacturado;
+                                                                if (!am) return;
+                                                                if (!totalManufacturados[am.id]) {
+                                                                    totalManufacturados[am.id] = {
+                                                                        denominacion: am.denominacion,
+                                                                        cantidad: 0,
+                                                                    };
+                                                                }
+                                                                // Cantidad es la de la promo * cantidad del detalle (por ejemplo 2 promos, cada una trae 1 pizza = 2 pizzas total)
+                                                                totalManufacturados[am.id].cantidad += promo.cantidad * detalle.cantidad;
+                                                            });
+                                                        }
+                                                    });
+
                                                     return (
                                                         <div className="mb-2">
                                                             <span className="font-bold text-purple-700">Promociones:</span>
                                                             <ul className="ml-3 mt-1 list-disc">
                                                                 {[...promosMap.values()].map((promo: any, i) => (
                                                                     <li key={i} className="mb-2">
-                                                                        <span className="font-bold">{promo.denominacion}</span> (x{promo.cantidad})
+                                                                        <span className="font-bold text-red-500">{promo.denominacion}</span> (x{promo.cantidad})
                                                                         <span className="text-gray-500"> (Total: ${promo.subTotal?.toFixed(2)})</span>
-                                                                        {/* Lista de artículos de la promo */}
-                                                                        {promo.articulosInsumo?.length > 0 && (
-                                                                            <div className="ml-2 text-blue-900 text-xs">
-                                                                                <strong>Insumos: </strong>
-                                                                                {promo.articulosInsumo.map((ins: any, j: number) => (
-                                                                                    <span key={j}>
-                                                                                        ({promo.cantidad}x) {ins.denominacion}
-                                                                                        {ins.precioVenta && (
-                                                                                            <> <span className="text-gray-500">(${ins.precioVenta?.toFixed(2)})</span></>
-                                                                                        )}
-                                                                                        {j < promo.articulosInsumo.length - 1 ? ", " : ""}
-                                                                                     </span>
-                                                                                ))}
-                                                                            </div>
-                                                                        )}
-                                                                        {promo.articulosManufacturados?.length > 0 && (
-                                                                            <div className="ml-2 text-green-900 text-xs">
-                                                                                <strong>Manufacturados: </strong>
-                                                                                {promo.articulosManufacturados.map((am: any, j: number) => (
-                                                                                    <span key={j}>
-                                                                                        ({promo.cantidad}x) {am.denominacion}
-                                                                                        {am.precioVenta && (
-                                                                                            <> <span className="text-gray-500">(${am.precioVenta?.toFixed(2)})</span></>
-                                                                                        )}
-                                                                                        {j < promo.articulosManufacturados.length - 1 ? ", " : ""}
-                                                                                    </span>
-                                                                                ))}
-                                                                            </div>
-                                                                        )}
                                                                     </li>
                                                                 ))}
                                                             </ul>
+                                                            {/* MANUFACTURADOS agrupados de todas las promos */}
+                                                            {Object.values(totalManufacturados).length > 0 && (
+                                                                <div className="ml-2 text-green-900">
+                                                                    <strong>Manufacturados:</strong>
+                                                                    <ul className="ml-5 list-disc">
+                                                                        {Object.values(totalManufacturados).map((am: any, j) => (
+                                                                            <li key={j}>
+                                                                                {am.denominacion} (x{am.cantidad})
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+
+                                                            {/* INSUMOS agrupados de todas las promos */}
+                                                            {Object.values(totalInsumos).length > 0 && (
+                                                                <div className="ml-2 text-blue-900">
+                                                                    <strong>Insumos:</strong>
+                                                                    <ul className="ml-5 list-disc">
+                                                                        {Object.values(totalInsumos).map((ins: any, j) => (
+                                                                            <li key={j}>
+                                                                                {ins.denominacion} (x{ins.cantidad})
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     );
                                                 }
