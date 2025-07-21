@@ -58,12 +58,7 @@ export default function ClientePanelHeader() {
                             >
                                 Inicio
                             </button>
-                            <button
-                                className="text-gray-700 font-bold text-left"
-                                disabled
-                            >
-                                {username}
-                            </button>
+                            <span className="text-blue-700 font-bold">{username}</span>
                             <button
                                 onClick={() => {
                                     logout();

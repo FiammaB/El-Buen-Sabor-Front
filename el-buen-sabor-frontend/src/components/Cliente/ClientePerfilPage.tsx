@@ -1,3 +1,4 @@
+//src/pages/cliente/ClientePerfilPage.tsx
 import { useEffect, useState } from "react";
 import { useAuth } from "../Auth/Context/AuthContext";
 import axios from "axios";

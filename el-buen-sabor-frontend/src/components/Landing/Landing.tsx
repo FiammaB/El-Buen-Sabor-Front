@@ -112,11 +112,6 @@ export default function Landing() {
 
 	return (
 		<div className="min-h-screen bg-white ebs-landing">
-
-
-
-
-
 			{/* Hero Section */}
 			<section className="relative bg-gradient-to-br from-orange-50 to-orange-100 py-16 lg:py-24
                                 items-center justify-center">

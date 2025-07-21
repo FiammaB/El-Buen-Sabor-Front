@@ -186,7 +186,7 @@ function App() {
             path="/cliente"
             element={
               <ProtectedRoute role="CLIENTE">
-                <PerfilPage />
+                <ClienteAdminLayout />
               </ProtectedRoute>
             }
           >
