@@ -32,8 +32,7 @@ type PerfilDTO = {
 };
 
 export default function ClientePerfilPage() {
-  const { email } = useAuth();
-  const [perfil, setPerfil] = useState<PerfilDTO | null>(null);
+  const { email, login, id, role } = useAuth(); const [perfil, setPerfil] = useState<PerfilDTO | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -117,6 +116,10 @@ export default function ClientePerfilPage() {
         repetirPassword: form.repetirPassword || null,
       });
 
+      // Volvemos a "loguear" al usuario con los datos actualizados del formulario
+      // para refrescar el AuthContext y el localStorage.
+      const nombreCompleto = `${form.nombre} ${form.apellido}`.trim();
+      login(id!, role!, nombreCompleto, email, form.telefono);
       setMsg("Perfil actualizado exitosamente.");
       setEditMode(false);
     } catch (error: any) {
@@ -182,9 +185,8 @@ export default function ClientePerfilPage() {
 
         {msg && (
           <div
-            className={`my-4 text-sm ${
-              msg.includes("exitosamente") ? "text-green-600" : "text-red-600"
-            }`}
+            className={`my-4 text-sm ${msg.includes("exitosamente") ? "text-green-600" : "text-red-600"
+              }`}
           >
             {msg}
           </div>
@@ -299,9 +301,8 @@ export default function ClientePerfilPage() {
       </form>
       {msg && (
         <div
-          className={`my-4 text-sm ${
-            msg.includes("exitosamente") ? "text-green-600" : "text-red-600"
-          }`}
+          className={`my-4 text-sm ${msg.includes("exitosamente") ? "text-green-600" : "text-red-600"
+            }`}
         >
           {msg}
         </div>

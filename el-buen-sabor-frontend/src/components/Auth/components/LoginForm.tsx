@@ -77,7 +77,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       }
 
       // ✅ Login normal
-      const fullName = `${usuario.apellido}`.trim();
+      const fullName = `${usuario.nombre} ${usuario.apellido}`.trim();
       login(
         usuario.id,
         usuario.rol,
@@ -202,9 +202,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               id="email"
               name="email"
               type="email"
-              className={`w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${
-                errors.email ? "border-red-300" : "border-gray-300"
-              }`}
+              className={`w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.email ? "border-red-300" : "border-gray-300"
+                }`}
               placeholder="tu@email.com"
               value={formData.email}
               onChange={handleInputChange}
@@ -229,9 +228,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               id="password"
               name="password"
               type={showPassword ? "text" : "password"}
-              className={`w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${
-                errors.password ? "border-red-300" : "border-gray-300"
-              }`}
+              className={`w-full pl-10 pr-10 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.password ? "border-red-300" : "border-gray-300"
+                }`}
               placeholder="Tu contraseña"
               value={formData.password}
               onChange={handleInputChange}
