@@ -24,7 +24,16 @@ function getProximoEstado(pedido: IPedidoDTO): { estado: string, label: string }
         return { estado: "PAGADO", label: "Marcar como Pagado" };
     }
     if (pedido.estado === "PAGADO") {
-        const tieneManufacturados = pedido.detalles?.some(det => !!det.articuloManufacturado);
+        // Revisa manufacturados sueltos
+        const tieneManufacturadosSueltos = pedido.detalles?.some(det => !!det.articuloManufacturado);
+        // Revisa manufacturados dentro de promociones
+        const tieneManufacturadosEnPromo = pedido.detalles?.some(det =>
+            det.promocion &&
+            det.promocion.promocionDetalles?.some((promoDet: any) => !!promoDet.articuloManufacturado)
+        );
+
+        const tieneManufacturados = tieneManufacturadosSueltos || tieneManufacturadosEnPromo;
+
         if (tieneManufacturados) {
             return { estado: "EN_COCINA", label: "Pasar a En Cocina" };
         } else {
