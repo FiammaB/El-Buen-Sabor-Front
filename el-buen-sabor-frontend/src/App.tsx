@@ -193,7 +193,7 @@ function App() {
             <Route path="perfil" element={<ClientePerfilPage />} />
             <Route path="pedidos" element={<HistorialPedidos />} />
             <Route path="pedidos/:id" element={<PedidoDetalle />} />
-            {/* Si sumás más páginas, agregalas acá */}
+
           </Route>
 
 

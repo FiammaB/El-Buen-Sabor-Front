@@ -17,7 +17,7 @@ export default function Layout() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [headerSearch, setHeaderSearch] = useState<string>("");
     const [showHeaderSuggestions, setShowHeaderSuggestions] = useState<boolean>(false);
-
+    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     // Lógica para el buscador del header que movimos de Landing
     const [articulos, setArticulos] = useState<Articulo[]>([]);
     const articuloService = new ArticuloService();
@@ -203,38 +203,46 @@ export default function Layout() {
                         )}
 
                         {role === "CLIENTE" && (
-                            <div className="flex items-center space-x-4">
-                                <span className="text-orange-700 font-bold">{username}</span>
+                            <div className="relative">
+                                {/* Botón que abre/cierra el menú */}
                                 <button
-                                    onClick={() => navigate("/cliente/perfil")}
-                                    className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition"
+                                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                                    className="flex items-center space-x-2 bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600 transition"
                                 >
-                                    Mi Cuenta
+                                    <span className="font-bold">{username}</span>
+                                    {/* Pequeña flecha para indicar que es un menú */}
+                                    <svg className={`w-4 h-4 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
-                                <button
-                                    onClick={logout}
-                                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-                                >
-                                    Cerrar Sesión
-                                </button>
-                            </div>
-                        )}
 
-                        {role === "DELIVERY" && (
-                            <div className="flex items-center space-x-4">
-                                <span className="text-blue-700 font-bold">Delivery: {username}</span>
-                                <a
-                                    href="/delivery/pedidos"
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-                                >
-                                    Pedidos
-                                </a>
-                                <button
-                                    onClick={logout}
-                                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-                                >
-                                    Cerrar Sesión
-                                </button>
+                                {/* El menú desplegable (aparece si isProfileMenuOpen es true) */}
+                                {isProfileMenuOpen && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
+                                        <Link
+                                            to="/cliente/perfil"
+                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-100"
+                                            onClick={() => setIsProfileMenuOpen(false)} // Cierra el menú al hacer clic
+                                        >
+                                            Mi Perfil
+                                        </Link>
+                                        <Link
+                                            to="/cliente/pedidos"
+                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-100"
+                                            onClick={() => setIsProfileMenuOpen(false)} // Cierra el menú al hacer clic
+                                        >
+                                            Mis Pedidos
+                                        </Link>
+                                        <div className="border-t my-1"></div> {/* Un separador visual */}
+                                        <button
+                                            onClick={() => {
+                                                logout();
+                                                setIsProfileMenuOpen(false); // Cierra el menú
+                                            }}
+                                            className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                        >
+                                            Cerrar Sesión
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
 
