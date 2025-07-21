@@ -1,34 +1,34 @@
 import { useState } from "react";
-import { ArrowLeft, Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, User } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../Auth/Context/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
 
-// Tipado opcional que puede venir como props
 type RegisterProps = {
-  rolDestino?: "CLIENTE" | "COCINERO" | "CAJERO";
+  rolDestino?: "CLIENTE" | "COCINERO" | "CAJERO" | "DELIVERY";
   endpoint?: string;
 };
 
 export default function RegisterPage(props: RegisterProps) {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [searchParams] = useSearchParams(); // ⬅️ Para leer el parámetro ?rol= desde la URL
+  const [searchParams] = useSearchParams();
 
-  // 🧠 Determinamos el rol según prop o parámetro de URL (fallback: CLIENTE)
-  const rolDestino = props.rolDestino ?? searchParams.get("rol")?.toUpperCase() ?? "CLIENTE";
+  // 🧠 Determinamos el rol (por prop o URL ?rol=)
+  const rolDestino =
+    props.rolDestino ?? searchParams.get("rol")?.toUpperCase() ?? "CLIENTE";
 
-  // 🧠 Definimos el endpoint según el rol o prop
+  // 🧠 Endpoint dinámico según rol
   const endpoint =
     props.endpoint ??
     (rolDestino === "COCINERO"
       ? "/api/usuarios/registrar-cocinero"
       : rolDestino === "CAJERO"
-        ? "/api/usuarios/registrar-cajero"
-        : "/api/auth/register");
-
-  // Formulario y errores--------------------------- CONST PARA VALIDAR EDAD, EMAIL ---------------------------------------------
+      ? "/api/usuarios/registrar-cajero"
+      : rolDestino === "DELIVERY"
+      ? "/api/usuarios/registrar-delivery"
+      : "/api/auth/register");
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -37,7 +37,7 @@ export default function RegisterPage(props: RegisterProps) {
     phone: "",
     password: "",
     confirmPassword: "",
-    dateOfBirth: "", // <--- AGREGAR ESTO
+    dateOfBirth: "",
     acceptTerms: false,
   });
 
@@ -49,7 +49,7 @@ export default function RegisterPage(props: RegisterProps) {
     password: "",
     confirmPassword: "",
     acceptTerms: "",
-    dateOfBirth: "", // <--- AGREGAR ESTO
+    dateOfBirth: "",
     general: "",
   });
 
@@ -57,7 +57,6 @@ export default function RegisterPage(props: RegisterProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 🎯 Manejo de campos del formulario
   const handleInputChange = (e: any) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -67,8 +66,6 @@ export default function RegisterPage(props: RegisterProps) {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-
-  // ✅ Validación de datos antes de enviar
   const validateForm = () => {
     const newErrors = {
       firstName: "",
@@ -78,20 +75,22 @@ export default function RegisterPage(props: RegisterProps) {
       password: "",
       confirmPassword: "",
       acceptTerms: "",
+      dateOfBirth: "",
       general: "",
     };
 
     if (!formData.firstName.trim()) {
       newErrors.firstName = "El nombre es requerido";
-    }else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(formData.firstName)) {
-      newErrors.firstName = "El nombre solo puede contener letras y espacios";
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(formData.firstName)) {
+      newErrors.firstName =
+        "El nombre solo puede contener letras y espacios";
     }
     if (!formData.lastName.trim()) {
       newErrors.lastName = "El apellido es requerido";
-    }else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(formData.lastName)) {
-      newErrors.lastName = "El apellido solo puede contener letras y espacios";
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(formData.lastName)) {
+      newErrors.lastName =
+        "El apellido solo puede contener letras y espacios";
     }
-    
     if (!formData.email) {
       newErrors.email = "El email es requerido";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -110,7 +109,7 @@ export default function RegisterPage(props: RegisterProps) {
       newErrors.password = "Debe contener al menos una letra mayúscula";
     } else if (!/[a-z]/.test(formData.password)) {
       newErrors.password = "Debe contener al menos una letra minúscula";
-    } else if (!/[!@#$%^&*(),.?":{}|<>_\-+=]/.test(formData.password)) {
+    } else if (!/[!@#$%^&*(),.?\":{}|<>_\-+=]/.test(formData.password)) {
       newErrors.password = "Debe contener al menos un símbolo";
     }
     if (!formData.confirmPassword) {
@@ -119,27 +118,25 @@ export default function RegisterPage(props: RegisterProps) {
       newErrors.confirmPassword = "No coinciden";
     }
 
-     // --- NUEVAS VALIDACIONES PARA FECHA DE NACIMIENTO Y EDAD ---
     if (!formData.dateOfBirth) {
-        newErrors.dateOfBirth = "La fecha de nacimiento es requerida";
+      newErrors.dateOfBirth = "La fecha de nacimiento es requerida";
     } else {
-        const today = new Date();
-        const birthDate = new Date(formData.dateOfBirth);
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
+      const today = new Date();
+      const birthDate = new Date(formData.dateOfBirth);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age < 13) {
+        newErrors.dateOfBirth =
+          "Debes tener al menos 13 años para registrarte";
+      } else if (age > 99) {
+        newErrors.dateOfBirth =
+          "Tu edad no puede ser mayor a 99 años";
+      }
+    }
 
-        if (age < 13) {
-            newErrors.dateOfBirth = "Debes tener al menos 13 años para registrarte";
-        } else if (age > 99) {
-            newErrors.dateOfBirth = "Tu edad no puede ser mayor a 99 años";
-        }
-    }
-    if (rolDestino === "CLIENTE" && !formData.acceptTerms) {
-      newErrors.acceptTerms = "Debes aceptar los términos";
-    }
     if (rolDestino === "CLIENTE" && !formData.acceptTerms) {
       newErrors.acceptTerms = "Debes aceptar los términos";
     }
@@ -148,7 +145,6 @@ export default function RegisterPage(props: RegisterProps) {
     return Object.values(newErrors).every((error) => !error);
   };
 
-  // 🚀 Registro en backend
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -163,33 +159,37 @@ export default function RegisterPage(props: RegisterProps) {
         email: formData.email,
         telefono: formData.phone,
         password: formData.password,
-        fechaNacimiento: formData.dateOfBirth, // <--- CAMBIAR ESTO
+        fechaNacimiento: formData.dateOfBirth,
       };
 
       const res = await axios.post(`http://localhost:8080${endpoint}`, payload, {
         headers: {
-          Authorization: rolDestino !== "CLIENTE"
-            ? `Bearer ${localStorage.getItem("token")}`
-            : undefined,
+          Authorization:
+            rolDestino !== "CLIENTE"
+              ? `Bearer ${localStorage.getItem("token")}`
+              : undefined,
         },
       });
 
       if (rolDestino === "CLIENTE") {
         const usuario = res.data;
-
         login(
-          usuario.id,                          // 🆔 ID que devuelve el backend
-          usuario.rol,                         // 🎭 Rol ("CLIENTE")
-          `${usuario.nombre} ${usuario.apellido}`, // 🧑 Nombre completo
+          usuario.id,
+          usuario.rol,
+          `${usuario.nombre} ${usuario.apellido}`,
           usuario.email,
           usuario.telefono
         );
-
         alert("¡Registro exitoso!");
         navigate("/cliente");
-      }
-      else {
-        alert(`${rolDestino === "COCINERO" ? "Cocinero" : "Cajero"} registrado correctamente`);
+      } else {
+        alert(
+          rolDestino === "COCINERO"
+            ? "Cocinero registrado correctamente"
+            : rolDestino === "CAJERO"
+            ? "Cajero registrado correctamente"
+            : "Delivery registrado correctamente"
+        );
         setFormData({
           firstName: "",
           lastName: "",
@@ -197,14 +197,13 @@ export default function RegisterPage(props: RegisterProps) {
           phone: "",
           password: "",
           confirmPassword: "",
+          dateOfBirth: "",
           acceptTerms: false,
         });
       }
     } catch (error: any) {
       console.error("Error en registro:", error);
-
       const mensaje = error?.response?.data?.error;
-
       if (typeof mensaje === "string") {
         if (mensaje.includes("email")) {
           setErrors((prev) => ({ ...prev, email: mensaje }));
@@ -219,19 +218,24 @@ export default function RegisterPage(props: RegisterProps) {
           general: `Error al registrar ${rolDestino.toLowerCase()}`,
         }));
       }
+    } finally {
+      setIsLoading(false);
     }
-
   };
 
-  // 🖼️ Textos dinámicos por rol
-  const titulo = rolDestino === "CLIENTE" ? "Crear Cuenta" : `Registrar ${rolDestino.toLowerCase()}`;
-  const subtitulo = rolDestino === "CLIENTE" ? "¡Únete a nosotros!" : `Nuevo ${rolDestino.toLowerCase()}`;
+  const titulo =
+    rolDestino === "CLIENTE"
+      ? "Crear Cuenta"
+      : `Registrar ${rolDestino.toLowerCase()}`;
+  const subtitulo =
+    rolDestino === "CLIENTE"
+      ? "¡Únete a nosotros!"
+      : `Nuevo ${rolDestino.toLowerCase()}`;
   const descripcion =
     rolDestino === "CLIENTE"
       ? "Crea tu cuenta y disfruta de nuestros deliciosos platos"
       : `Completa los datos del nuevo ${rolDestino.toLowerCase()}`;
 
-  // 🎨 Render del formulario
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
@@ -246,7 +250,9 @@ export default function RegisterPage(props: RegisterProps) {
               </button>
               <h1 className="text-xl font-bold text-gray-900">{titulo}</h1>
             </div>
-            <div className="text-2xl font-bold text-orange-500">El Buen Sabor</div>
+            <div className="text-2xl font-bold text-orange-500">
+              El Buen Sabor
+            </div>
           </div>
         </div>
       </header>
@@ -263,16 +269,17 @@ export default function RegisterPage(props: RegisterProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* 🛑 Error general */}
               {errors.general && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <p className="text-sm text-red-700">{errors.general}</p>
                 </div>
               )}
 
-              {/* 👤 Nombre */}
+              {/* Nombre */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Nombre</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Nombre
+                </label>
                 <input
                   name="firstName"
                   type="text"
@@ -280,12 +287,16 @@ export default function RegisterPage(props: RegisterProps) {
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                 />
-                {errors.firstName && <p className="text-sm text-red-600">{errors.firstName}</p>}
+                {errors.firstName && (
+                  <p className="text-sm text-red-600">{errors.firstName}</p>
+                )}
               </div>
 
-              {/* 👤 Apellido */}
+              {/* Apellido */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Apellido</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Apellido
+                </label>
                 <input
                   name="lastName"
                   type="text"
@@ -293,12 +304,16 @@ export default function RegisterPage(props: RegisterProps) {
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                 />
-                {errors.lastName && <p className="text-sm text-red-600">{errors.lastName}</p>}
+                {errors.lastName && (
+                  <p className="text-sm text-red-600">{errors.lastName}</p>
+                )}
               </div>
 
-              {/* ✉️ Email */}
+              {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
                 <input
                   name="email"
                   type="email"
@@ -306,12 +321,16 @@ export default function RegisterPage(props: RegisterProps) {
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                 />
-                {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
+                {errors.email && (
+                  <p className="text-sm text-red-600">{errors.email}</p>
+                )}
               </div>
 
-              {/* 📞 Teléfono */}
+              {/* Teléfono */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Teléfono</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Teléfono
+                </label>
                 <input
                   name="phone"
                   type="text"
@@ -319,27 +338,35 @@ export default function RegisterPage(props: RegisterProps) {
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                 />
-                {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
+                {errors.phone && (
+                  <p className="text-sm text-red-600">{errors.phone}</p>
+                )}
               </div>
 
-
-            {/* 🎂 Fecha de Nacimiento */} {/* <--- AGREGAR ESTE BLOQUE */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Fecha de Nacimiento - Formato: mes/dia/año</label>
-              <input
-                name="dateOfBirth"
-                type="date"
-                value={formData.dateOfBirth}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              />
-              {errors.dateOfBirth && <p className="text-sm text-red-600">{errors.dateOfBirth}</p>}
-            </div>
-            {/* --------------------------------------------------------------------------- */}
-
-              {/* 🔒 Contraseña */}
+              {/* Fecha nacimiento */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Contraseña</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Fecha de Nacimiento
+                </label>
+                <input
+                  name="dateOfBirth"
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                />
+                {errors.dateOfBirth && (
+                  <p className="text-sm text-red-600">
+                    {errors.dateOfBirth}
+                  </p>
+                )}
+              </div>
+
+              {/* Contraseña */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Contraseña
+                </label>
                 <div className="relative">
                   <input
                     name="password"
@@ -356,12 +383,16 @@ export default function RegisterPage(props: RegisterProps) {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
-                {errors.password && <p className="text-sm text-red-600">{errors.password}</p>}
+                {errors.password && (
+                  <p className="text-sm text-red-600">{errors.password}</p>
+                )}
               </div>
 
-              {/* 🔁 Repetir contraseña */}
+              {/* Repetir contraseña */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Repetir contraseña</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Repetir contraseña
+                </label>
                 <div className="relative">
                   <input
                     name="confirmPassword"
@@ -372,16 +403,26 @@ export default function RegisterPage(props: RegisterProps) {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    onClick={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
                     className="absolute right-2 top-2"
                   >
-                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showConfirmPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
                   </button>
                 </div>
-                {errors.confirmPassword && <p className="text-sm text-red-600">{errors.confirmPassword}</p>}
+                {errors.confirmPassword && (
+                  <p className="text-sm text-red-600">
+                    {errors.confirmPassword}
+                  </p>
+                )}
               </div>
 
-              {/* ✅ Checkbox solo para clientes */}
+              {/* Checkbox términos solo para clientes */}
               {rolDestino === "CLIENTE" && (
                 <div className="flex items-center">
                   <input
@@ -393,15 +434,27 @@ export default function RegisterPage(props: RegisterProps) {
                   />
                   <label className="ml-2 text-sm text-gray-600">
                     Acepto los{" "}
-                    <button onClick={() => navigate("/terms")} className="text-orange-600 font-medium">términos</button>{" "}
+                    <button
+                      onClick={() => navigate("/terms")}
+                      className="text-orange-600 font-medium"
+                    >
+                      términos
+                    </button>{" "}
                     y la{" "}
-                    <button onClick={() => navigate("/privacy")} className="text-orange-600 font-medium">privacidad</button>
+                    <button
+                      onClick={() => navigate("/privacy")}
+                      className="text-orange-600 font-medium"
+                    >
+                      privacidad
+                    </button>
                   </label>
                 </div>
               )}
-              {errors.acceptTerms && <p className="text-sm text-red-600">{errors.acceptTerms}</p>}
+              {errors.acceptTerms && (
+                <p className="text-sm text-red-600">{errors.acceptTerms}</p>
+              )}
 
-              {/* 🧡 Botón enviar */}
+              {/* Botón enviar */}
               <button
                 type="submit"
                 disabled={isLoading}
@@ -410,7 +463,6 @@ export default function RegisterPage(props: RegisterProps) {
                 {isLoading ? "Registrando..." : "Crear Cuenta"}
               </button>
 
-              {/* 🔐 Link a login para clientes */}
               {rolDestino === "CLIENTE" && (
                 <p className="text-sm text-center text-gray-600">
                   ¿Ya tenés una cuenta?{" "}
@@ -424,6 +476,7 @@ export default function RegisterPage(props: RegisterProps) {
                 </p>
               )}
             </form>
+
             {rolDestino === "CLIENTE" && (
               <div className="pt-6 border-t border-gray-200 text-center space-y-4">
                 <p className="text-sm text-gray-500">O registrate con</p>
@@ -431,7 +484,11 @@ export default function RegisterPage(props: RegisterProps) {
                   <GoogleLogin
                     onSuccess={(credentialResponse) => {
                       const token = credentialResponse.credential;
-                      axios.post("http://localhost:8080/api/auth/google", { token })
+                      axios
+                        .post(
+                          "http://localhost:8080/api/auth/google",
+                          { token }
+                        )
                         .then((res) => {
                           const usuario = res.data;
                           login(
@@ -445,7 +502,10 @@ export default function RegisterPage(props: RegisterProps) {
                           navigate("/cliente");
                         })
                         .catch((err) => {
-                          console.error("❌ Error al loguear con Google", err);
+                          console.error(
+                            "❌ Error al loguear con Google",
+                            err
+                          );
                           alert("Falló el login con Google.");
                         });
                     }}
@@ -456,7 +516,6 @@ export default function RegisterPage(props: RegisterProps) {
                 </div>
               </div>
             )}
-
           </div>
         </div>
       </div>
