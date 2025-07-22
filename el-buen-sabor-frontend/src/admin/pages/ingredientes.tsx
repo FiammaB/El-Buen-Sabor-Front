@@ -164,6 +164,8 @@ export default function Ingredientes() {
       errores.push("El precio de compra debe ser mayor a 0.");
     if (formData.stockActual === undefined || formData.stockActual < 0)
       errores.push("El stock actual no puede ser negativo.");
+    if (formData.stockActual > 999999)
+      errores.push("El stock actual no puede ser mayor a 999999.");
     if (formData.stockMinimo === undefined || formData.stockMinimo < 0)
       errores.push("El stock mínimo no puede ser negativo.");
     if (formData.precioVenta === undefined || formData.precioVenta < 0) // <-- Validación para precioVenta
@@ -371,13 +373,15 @@ export default function Ingredientes() {
                 <div>
                   <label htmlFor="stockActual" className="block text-sm font-medium text-gray-700 mb-1">Stock actual</label>
                   <input
-                    type="number"
-                    id="stockActual"
-                    value={formData.stockActual ?? ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, stockActual: e.target.value === "" ? undefined : parseFloat(e.target.value) })
-                    }
-                    className="border border-gray-300 rounded p-2 w-full"
+                      type="number"
+                      id="stockActual"
+                      value={formData.stockActual ?? ""}
+                      onChange={(e) =>
+                          setFormData({ ...formData, stockActual: e.target.value === "" ? undefined : parseFloat(e.target.value) })
+                      }
+                      className="border border-gray-300 rounded p-2 w-full"
+                      min={0}
+                      max={999999}
                   />
                 </div>
 
