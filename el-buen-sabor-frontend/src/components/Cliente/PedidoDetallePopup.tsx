@@ -59,16 +59,66 @@ export default function PedidoDetallePopup({ pedido, onClose }: PedidoDetallePop
                         <b>Artículos:</b>
                         <ul className="ml-4 list-disc">
                             {pedido.detalles?.map(det => (
-                                <li key={det.id}>
-                                    {det.articuloManufacturado
-                                        ? det.articuloManufacturado.denominacion
-                                        : det.articuloInsumo?.denominacion}
-                                    {" x "}
-                                    {det.cantidad} - ${det.subTotal?.toFixed(2)}
+                                <li key={det.id} className="mb-2">
+                                    {det.promocion ? (
+                                        <div>
+                                            <div className="font-bold text-purple-700">
+                                                {det.promocion.denominacion} (x{det.cantidad})<br />
+                                                <span className="font-normal text-sm text-gray-500">
+                                                    Precio unitario: ${det.promocion.precioPromocional?.toFixed(2)}
+                                                </span>
+                                                <span className="ml-2 font-bold text-green-700">
+                                                    Subtotal: ${det.subTotal?.toFixed(2)}
+                                                </span>
+                                            </div>
+                                            {/* Manufacturados dentro de la promo */}
+                                            {det.promocion.promocionDetalles && det.promocion.promocionDetalles.length > 0 && (
+                                                <div className="ml-3 text-sm">
+                                                    <span className="font-semibold text-green-800">Manufacturados:</span>
+                                                    <ul className="ml-4 list-disc">
+                                                        {det.promocion.promocionDetalles.map((detalle, i) => (
+                                                            <li key={i}>
+                                                                {detalle.articuloManufacturado?.denominacion || "-"} (x{(detalle.cantidad ?? 1) * (det.cantidad ?? 1)})
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                            {/* Insumos dentro de la promo */}
+                                            {det.promocion.articulosInsumos && det.promocion.articulosInsumos.length > 0 && (
+                                                <div className="ml-3 text-sm">
+                                                    <span className="font-semibold text-blue-800">Insumos:</span>
+                                                    <ul className="ml-4 list-disc">
+                                                        {det.promocion.articulosInsumos.map((ins, i) => (
+                                                            <li key={i}>
+                                                                {ins.denominacion} (x{det.cantidad})
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Artículo manufacturado o insumo suelto */}
+                                            <span className={det.articuloManufacturado ? "font-bold text-green-800" : "font-bold text-blue-800"}>
+                                                {det.articuloManufacturado?.denominacion || det.articuloInsumo?.denominacion}
+                                            </span>
+                                            {" x "}
+                                            {det.cantidad}
+                                            <span className="ml-2 text-gray-500">
+                                                (${(det.articuloManufacturado?.precioVenta ?? det.articuloInsumo?.precioVenta)?.toFixed(2)})
+                                            </span>
+                                            <span className="ml-2 text-green-700 font-bold">
+                                                (Subtotal: ${det.subTotal?.toFixed(2)})
+                                            </span>
+                                        </>
+                                    )}
                                 </li>
                             ))}
                         </ul>
                     </div>
+
                 </div>
             </div>
         </div>
