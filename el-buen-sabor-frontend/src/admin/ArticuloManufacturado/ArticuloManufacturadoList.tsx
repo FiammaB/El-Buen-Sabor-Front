@@ -34,6 +34,7 @@ const ArticuloManufacturadoList: React.FC = () => {
   }, []);
 
   const handleCreateClick = () => {
+    setError(null);
     setSelectedArticulo(null); // Limpiar cualquier artículo seleccionado para crear uno nuevo
     setShowForm(true); // Mostrar el formulario
   };

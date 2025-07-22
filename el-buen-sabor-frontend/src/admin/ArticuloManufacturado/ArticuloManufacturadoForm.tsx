@@ -234,7 +234,18 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
             setError('Ya existe un artículo manufacturado con ese nombre.');
             return;
         }
-
+        if (formData.tiempoEstimadoMinutos == null || formData.tiempoEstimadoMinutos <= 0) {
+            setError('Debe indicar el tiempo estimado en minutos.');
+            return;
+        }
+        if (formData.tiempoEstimadoMinutos > 360) {
+            setError('El tiempo estimado no puede ser mayor a 360 minutos.');
+            return;
+        }
+        if (!formData.preparacion || formData.preparacion.trim() === "") {
+            setError('Debe indicar una preparación.');
+            return;
+        }
         // Prepara el payload limpio (sólo IDs, nunca objetos)
         const payload = {
             denominacion: formData.denominacion,
@@ -342,11 +353,26 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                     <label>Tiempo Estimado (minutos):</label>
-                    <input type="number" name="tiempoEstimadoMinutos" value={formData.tiempoEstimadoMinutos} onChange={handleChange} required min="0" style={{ width: '100%', padding: '8px' }} />
+                    <input
+                        type="number"
+                        name="tiempoEstimadoMinutos"
+                        value={formData.tiempoEstimadoMinutos}
+                        onChange={handleChange}
+                        required
+                        min="0"
+                        max="360"
+                        style={{ width: '100%', padding: '8px' }}
+                    />
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                     <label>Preparación:</label>
-                    <textarea name="preparacion" value={formData.preparacion} onChange={handleChange} style={{ width: '100%', padding: '8px' }} />
+                    <textarea
+                        name="preparacion"
+                        value={formData.preparacion}
+                        onChange={handleChange}
+                        style={{ width: '100%', padding: '8px' }}
+                        required
+                    />
                 </div>
 
                 {/* Selector de Categoría */}
