@@ -314,23 +314,8 @@ export default function CajeroPedidosPage() {
                                     <td className="p-2 text-center">
                                         {pedido.fechaPedido?.slice(0, 10)}
                                     </td>
-                                    <td className="p-2 text-center">
-                                        $
-                                        {pedido.detalles
-                                            ? pedido.detalles
-                                                .reduce((acc, det) => {
-                                                    if (det.articuloManufacturado) {
-                                                        return acc + (det.cantidad || 0) * (det.articuloManufacturado.precioVenta || 0);
-                                                    } else if (det.articuloInsumo) {
-                                                        return acc + (det.cantidad || 0) * (det.articuloInsumo.precioVenta || 0);
-                                                    } else if (det.promocion) {
-                                                        return acc + (det.cantidad || 0) * (det.promocion.precioPromocional || 0);
-                                                    } else {
-                                                        return acc;
-                                                    }
-                                                }, 0)
-                                                .toFixed(2)
-                                            : "-"}
+                                    <td className="p-2 text-center font-semibold text-green-700">
+                                        ${pedido.total?.toFixed(2) ?? "-"}
                                     </td>
                                     <td className="p-2 text-center">
                                         {getProximoEstado(pedido) ? (
