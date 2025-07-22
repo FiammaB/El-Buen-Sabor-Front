@@ -210,27 +210,9 @@ const RankingProductosPage: React.FC = () => {
                         </div>
                         {/* Contenedor de gráficos */}
                         <div className="flex flex-wrap justify-center gap-8 mt-8">
-                            {/* Gráfico de barras */}
-                            <div style={{ width: 600, height: 300 }}>
-                                <h4 className="text-center mb-2 font-semibold">
-                                    Cantidad Vendida por Producto
-                                </h4>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={productos}>
-                                        <XAxis dataKey="nombreProducto" />
-                                        <YAxis />
-                                        <Tooltip />
-                                        <Legend />
-                                        <Bar
-                                            dataKey="cantidadVendida"
-                                            fill="#8884d8"
-                                            name="Cantidad Vendida"
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
+
                             {/* Gráfico de torta */}
-                            <div style={{ width: 400, height: 300 }}>
+                            <div style={{ width: '100%', height: 400, maxWidth: '600px', margin: 'auto' }}>
                                 <h4 className="text-center mb-2 font-semibold">
                                     Distribución de Ventas por Producto
                                 </h4>
@@ -242,8 +224,8 @@ const RankingProductosPage: React.FC = () => {
                                             nameKey="name"
                                             cx="50%"
                                             cy="50%"
-                                            outerRadius={100}
-                                            label
+                                            outerRadius={120} // Hacemos el radio un poco más grande
+                                        // label // <-- ELIMINAMOS ESTA LÍNEA PARA QUITAR LAS ETIQUETAS SOBREPUESTAS
                                         >
                                             {dataTorta.map((_, i) => (
                                                 <Cell key={`cell-${i}`} fill={colores[i % colores.length]} />
