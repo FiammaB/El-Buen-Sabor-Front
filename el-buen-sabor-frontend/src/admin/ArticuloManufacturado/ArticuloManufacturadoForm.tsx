@@ -36,7 +36,7 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
         const fetchMasterData = async () => {
             try {
                 setLoadingMasterData(true);
-
+                setError(null);
                 // Cargar categorías
                 const categoriasData = await categoriaService.getAll();
                 setCategorias(categoriasData);
@@ -140,6 +140,7 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                 ...prev,
                 imagen: new Imagen(imagenSubida.denominacion, imagenSubida.id)
             }));
+            setError(null);
         } catch (uploadError) {
             console.error('Error al subir la imagen al backend:', uploadError);
             setError('Error al subir la imagen. Inténtalo de nuevo.');
@@ -263,7 +264,7 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                 await articuloService.createArticuloManufacturado(payload);
                 alert('Artículo manufacturado creado exitosamente.');
             }
-
+            setError(null);
             onSave();
         } catch (err) {
             let errorMessage = 'Error desconocido al guardar el artículo.';
