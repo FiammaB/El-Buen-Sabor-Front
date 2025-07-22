@@ -68,12 +68,25 @@ const RankingProductosPage: React.FC = () => {
         }
 
         const datosParaExcel = productos.map((p) => ({
+            "Fecha": p.fechaVenta, // <-- NUEVA COLUMNA
             "Nombre Producto": p.nombreProducto,
             "Cantidad Vendida": p.cantidadVendida,
+            "Precio Unitario": p.precioVenta,
+            "Total Ingresos": p.cantidadVendida * p.precioVenta,
         }));
 
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.json_to_sheet(datosParaExcel);
+
+        // Ajustar el ancho de las columnas (opcional pero recomendado)
+        ws['!cols'] = [
+            { wch: 12 }, // Ancho para Fecha
+            { wch: 40 }, // Ancho para Nombre Producto
+            { wch: 15 }, // Ancho para Cantidad
+            { wch: 15 }, // Ancho para Precio
+            { wch: 15 }  // Ancho para Total
+        ];
+
         XLSX.utils.book_append_sheet(wb, ws, "Productos Más Vendidos");
         XLSX.writeFile(wb, `ranking_productos_${desde}_${hasta}.xlsx`);
 
