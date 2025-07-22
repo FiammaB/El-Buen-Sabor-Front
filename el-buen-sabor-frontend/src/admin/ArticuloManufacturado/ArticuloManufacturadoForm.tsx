@@ -380,6 +380,9 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                 {/* Campo para URL de Imagen (ahora es un input de texto) */}
                 <div style={{marginBottom: '15px'}}>
                     <label>Imagen del Artículo:</label>
+                    <div style={{ fontSize: '0.85em', color: '#e67e22', marginBottom: '3px' }}>
+                        Tamaño máximo: [1MB]
+                    </div>
                     <input
                         type="file"
                         accept="image/*" // Aceptar solo archivos de imagen

@@ -98,7 +98,7 @@ export default function AdminClientePedidosPage() { // Renombrado para claridad
         <div className="min-h-screen bg-gray-50 p-8">
             <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-8">
                 <div className="flex items-center mb-6">
-                    <button onClick={() => navigate('/admin/reportes/clientes')} className="p-2 hover:bg-gray-100 rounded-full transition duration-200">
+                    <button onClick={() => navigate('/admin/ranking-clientes')} className="p-2 hover:bg-gray-100 rounded-full transition duration-200">
                         <ArrowLeft className="w-6 h-6 text-gray-700" />
                     </button>
                     <h2 className="text-3xl font-bold text-gray-900 ml-4 flex-1 text-center">Pedidos del Cliente: {clienteId}</h2>

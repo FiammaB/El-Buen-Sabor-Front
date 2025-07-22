@@ -1,7 +1,7 @@
 // src/components/Cliente/PedidoDetallePopup.tsx
 import React from "react";
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO";
-import { X } from "lucide-react";
+import { X, ExternalLink, Download } from "lucide-react";
 import { PedidoService } from "../../services/PedidoService";
 
 interface PedidoDetallePopupProps {
@@ -12,7 +12,7 @@ interface PedidoDetallePopupProps {
 export default function PedidoDetallePopup({ pedido, onClose }: PedidoDetallePopupProps) {
     const pedidoService = new PedidoService();
 
-    // Descargar PDF usando downloadFacturaPdf (fuerza descarga)
+    // Descargar PDF
     const handleDescargarFactura = async () => {
         try {
             const blob = await pedidoService.downloadFacturaPdf(pedido.id);
@@ -29,6 +29,18 @@ export default function PedidoDetallePopup({ pedido, onClose }: PedidoDetallePop
         }
     };
 
+    // Visualizar PDF (abre en nueva pestaña)
+    const handleVisualizarFactura = async () => {
+        try {
+            const blob = await pedidoService.downloadFacturaPdf(pedido.id);
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            setTimeout(() => window.URL.revokeObjectURL(url), 30000);
+        } catch (err) {
+            alert("No se pudo visualizar la factura. Verifica que exista y que el servidor esté funcionando.");
+        }
+    };
+
     if (!pedido) return null;
 
     return (
@@ -37,7 +49,9 @@ export default function PedidoDetallePopup({ pedido, onClose }: PedidoDetallePop
                 <button onClick={onClose} className="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
                     <X className="w-6 h-6" />
                 </button>
-                <h2 className="text-xl font-bold mb-4 text-orange-600">Detalle del Pedido #{pedido.id}</h2>
+                <h2 className="text-xl font-bold mb-4 text-orange-600">
+                    Detalle del Pedido #{pedido.id}
+                </h2>
                 <div className="space-y-2">
                     <div>
                         <b>Fecha:</b> {new Date(pedido.fechaPedido).toLocaleString()}
@@ -118,7 +132,25 @@ export default function PedidoDetallePopup({ pedido, onClose }: PedidoDetallePop
                             ))}
                         </ul>
                     </div>
-
+                    {/* BOTONES DE ACCIONES PARA FACTURA */}
+                    {pedido.factura?.urlPdf && (
+                        <div className="flex gap-3 mt-4">
+                            <button
+                                onClick={handleVisualizarFactura}
+                                className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 flex items-center gap-2"
+                            >
+                                <ExternalLink className="w-4 h-4" />
+                                Visualizar Factura
+                            </button>
+                            <button
+                                onClick={handleDescargarFactura}
+                                className="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 flex items-center gap-2"
+                            >
+                                <Download className="w-4 h-4" />
+                                Descargar Factura
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -165,7 +165,7 @@ export default function PedidoDetalle() {
 
             <div className="flex justify-between items-center mt-6">
                 <button
-                    onClick={() => navigate('/historial-pedidos')}
+                    onClick={() => navigate(`/admin/clientes/${pedido.persona.id}/pedidos`)}
                     className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
                 >
                     Volver al Historial
