@@ -1,9 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-// Tipos válidos de rol
 export type UserRole = "ADMINISTRADOR" | "CLIENTE" | "COCINERO" | "CAJERO" | "DELIVERY" | null;
 
-// Interface del contexto
 interface AuthContextType {
     id: number | null;
     isAuthenticated: boolean;
@@ -15,10 +13,8 @@ interface AuthContextType {
     logout: () => void;
 }
 
-// Crear contexto
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Proveedor del contexto
 function AuthProvider({ children }: { children: React.ReactNode }) {
     const [id, setId] = useState<number | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -27,74 +23,61 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     const [email, setEmail] = useState<string | null>(null);
     const [telefono, setTelefono] = useState<string | null>(null);
 
-    console.log("ENTRA")
-    console.log(email)
-
-    // Al montar: recuperar sesión desde localStorage
+    // 🔹 Carga inicial desde localStorage
     useEffect(() => {
-        console.log("Local str id:", localStorage.getItem("role"))
         const storedId = localStorage.getItem("id");
         const storedRole = localStorage.getItem("role");
         const storedUsername = localStorage.getItem("username");
         const storedEmail = localStorage.getItem("email");
         const storedTelefono = localStorage.getItem("telefono");
 
-        console.log("ID: ", storedId) // ID: null (necesito ayuda con esto)
+        console.log("Recuperando sesión:", { storedId, storedRole, storedUsername });
 
         if (
             storedRole &&
             ["ADMINISTRADOR", "CLIENTE", "COCINERO", "CAJERO", "DELIVERY"].includes(storedRole) &&
             storedUsername
         ) {
-            setId(storedId ? Number(storedId) : null)
+            setId(storedId ? Number(storedId) : null);
             setRole(storedRole as UserRole);
             setUsername(storedUsername);
             setEmail(storedEmail);
             setTelefono(storedTelefono);
             setIsAuthenticated(true);
         } else {
-            console.log("ENTRA ACA Y REINICIA DATOS")
-            setIsAuthenticated(false);
-            setId(null)
-            setRole(null);
-            setUsername(null);
-            setEmail(null);
-            setTelefono(null);
-            localStorage.removeItem("role");
-            localStorage.removeItem("username");
-            localStorage.removeItem("email");
-            localStorage.removeItem("telefono");
+            console.log("No hay sesión válida, limpiando datos");
+            logout();
         }
     }, []);
 
-    // Función para login
     const login = (userId: number, userRole: UserRole, userName: string, userEmail: string, userTelefono: string) => {
         if (!userRole || !userName) return;
-        console.log("Id de usuario en funcion login: ", userId)
-        setId(userId)
+        console.log("LOGIN()", { userId, userRole, userName, userEmail, userTelefono });
+
+        setId(userId);
         setIsAuthenticated(true);
         setRole(userRole);
         setUsername(userName);
         setEmail(userEmail);
         setTelefono(userTelefono);
+
         localStorage.setItem("id", userId.toString());
         localStorage.setItem("role", userRole);
         localStorage.setItem("username", userName);
         localStorage.setItem("email", userEmail);
         localStorage.setItem("telefono", userTelefono);
-        console.log("LOGIN()", { userRole, userName, userEmail, userTelefono });
     };
 
-
-    // Función para logout
     const logout = () => {
-        console.log("Cerrando sesion...")
+        console.log("Cerrando sesión");
         setId(null);
         setIsAuthenticated(false);
         setRole(null);
         setUsername(null);
         setEmail(null);
         setTelefono(null);
+
+        localStorage.removeItem("id");
         localStorage.removeItem("role");
         localStorage.removeItem("username");
         localStorage.removeItem("email");
@@ -102,21 +85,18 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider
-            value={{ id, isAuthenticated, role, username, email, telefono, login, logout }}
-        >
+        <AuthContext.Provider value={{ id, isAuthenticated, role, username, email, telefono, login, logout }}>
             {children}
         </AuthContext.Provider>
     );
 }
 
-// Hook personalizado para usar el contexto
 function useAuth() {
     const context = useContext(AuthContext);
     if (!context) {
         throw new Error("useAuth debe usarse dentro de <AuthProvider>");
     }
-    console.log("USE AUTH CONTEXT DATOS", context)
+    console.log("USE AUTH CONTEXT DATOS", context);
     return context;
 }
 
