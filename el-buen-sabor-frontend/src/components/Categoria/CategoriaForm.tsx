@@ -98,6 +98,14 @@ export function CategoriaForm({
 		}
 	};
 
+	const handleDenominacionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const valor = e.target.value;
+		// Solo letras, espacios y tildes (mayúsculas o minúsculas)
+		if (/^[A-Za-zÁÉÍÓÚáéíóúÑñüÜ\s]*$/.test(valor)) {
+			setDenominacion(valor);
+		}
+	};
+
 	return (
 		<div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
 			<div ref={wrapperRef} className="bg-white rounded-xl shadow-lg p-8 min-w-[300px] w-full max-w-md">
@@ -110,7 +118,7 @@ export function CategoriaForm({
 						<input
 							type="text"
 							value={denominacion}
-							onChange={e => setDenominacion(e.target.value)}
+							onChange={handleDenominacionChange}
 							required
 							className="border rounded p-2"
 							disabled={loading}
