@@ -4,7 +4,28 @@ import { ClienteService } from "../../services/ClienteService";
 import type { PersonaEmpleadoCreateDTO } from "../../models/DTO/PersonaEmpleadoCreateDTO";
 
 const ROLES_EMPLEADO = ["ADMINISTRADOR", "COCINERO", "CAJERO", "DELIVERY"];
+function soloLetras(texto: string) {
+    // Permite letras, tildes y espacios
+    return /^[A-Za-zÁÉÍÓÚáéíóúÑñüÜ\s]+$/.test(texto.trim());
+}
 
+function soloNumeros(texto: string) {
+    return /^[0-9]*$/.test(texto);
+}
+
+function validarEmail(email: string) {
+    // Valida que tenga @ y punto, y final apropiado (mínimo 2 letras)
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+}
+
+function edad(fechaNacimiento: string) {
+    const hoy = new Date();
+    const fnac = new Date(fechaNacimiento);
+    let edad = hoy.getFullYear() - fnac.getFullYear();
+    const m = hoy.getMonth() - fnac.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < fnac.getDate())) edad--;
+    return edad;
+}
 export default function RegistrarEmpleadoPage() {
     const [form, setForm] = useState({
         username: "",
@@ -35,6 +56,37 @@ export default function RegistrarEmpleadoPage() {
         setLoading(true);
         setOk(null);
         setError(null);
+
+        if (!soloLetras(form.nombre)) {
+            setError("El nombre solo debe contener letras y espacios.");
+            setLoading(false);
+            return;
+        }
+        if (!soloLetras(form.apellido)) {
+            setError("El apellido solo debe contener letras y espacios.");
+            setLoading(false);
+            return;
+        }
+        if (!soloNumeros(form.telefono) || form.telefono.length > 14) {
+            setError("El teléfono debe tener solo números y hasta 14 dígitos.");
+            setLoading(false);
+            return;
+        }
+        if (!validarEmail(form.email)) {
+            setError("El email no es válido.");
+            setLoading(false);
+            return;
+        }
+        if (!form.fechaNacimiento) {
+            setError("Debe ingresar una fecha de nacimiento.");
+            setLoading(false);
+            return;
+        }
+        if (edad(form.fechaNacimiento) > 100) {
+            setError("La fecha de nacimiento no puede ser mayor a 100 años.");
+            setLoading(false);
+            return;
+        }
 
         try {
             let usuario: any;
@@ -123,6 +175,7 @@ export default function RegistrarEmpleadoPage() {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="max-w-lg mx-auto p-6 bg-white rounded-2xl shadow mt-8">

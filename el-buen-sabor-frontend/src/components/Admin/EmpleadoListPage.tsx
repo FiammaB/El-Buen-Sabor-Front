@@ -6,7 +6,23 @@ import type { IClienteDTO } from "../../models/DTO/IClienteDTO";
 import { Pencil, Trash2, Check, Loader2 } from "lucide-react";
 
 const ROLES_EMPLEADO = ["ADMINISTRADOR", "COCINERO", "CAJERO", "DELIVERY"];
-
+function soloLetras(texto: string) {
+    return /^[A-Za-zÁÉÍÓÚáéíóúÑñüÜ\s]+$/.test(texto.trim());
+}
+function soloNumeros(texto: string) {
+    return /^[0-9]*$/.test(texto);
+}
+function validarEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+}
+function edad(fechaNacimiento: string) {
+    const hoy = new Date();
+    const fnac = new Date(fechaNacimiento);
+    let edad = hoy.getFullYear() - fnac.getFullYear();
+    const m = hoy.getMonth() - fnac.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < fnac.getDate())) edad--;
+    return edad;
+}
 export default function EmpleadoListPage() {
     const [loading, setLoading] = useState(false);
     const [usuarios, setUsuarios] = useState<UsuarioDTO[]>([]);
@@ -249,6 +265,14 @@ export default function EmpleadoListPage() {
                             {activeTab === "usuario" ? (
                                 <button
                                     onClick={async () => {
+                                        if (!soloLetras(editUser?.username || "")) {
+                                            alert("El username solo debe contener letras y espacios.");
+                                            return;
+                                        }
+                                        if (!validarEmail(editUser?.email || "")) {
+                                            alert("El email no es válido.");
+                                            return;
+                                        }
                                         try {
                                             // Solo actualiza datos de usuario
                                             await usuarioService.updateUsuario(editUser!.id!, {
@@ -269,16 +293,35 @@ export default function EmpleadoListPage() {
                             ) : (
                                 <button
                                     onClick={async () => {
+                                        // Validaciones antes de actualizar
+                                        if (!soloLetras(editCliente?.nombre || "")) {
+                                            alert("El nombre solo debe contener letras y espacios.");
+                                            return;
+                                        }
+                                        if (!soloLetras(editCliente?.apellido || "")) {
+                                            alert("El apellido solo debe contener letras y espacios.");
+                                            return;
+                                        }
+                                        if (!soloNumeros(editCliente?.telefono || "") || (editCliente?.telefono || "").length > 14) {
+                                            alert("El teléfono debe tener solo números y hasta 14 dígitos.");
+                                            return;
+                                        }
+                                        if (!editCliente?.fechaNacimiento) {
+                                            alert("Debe ingresar una fecha de nacimiento.");
+                                            return;
+                                        }
+                                        if (edad(editCliente?.fechaNacimiento || "") > 100) {
+                                            alert("La fecha de nacimiento no puede ser mayor a 100 años.");
+                                            return;
+                                        }
+                                        // Si pasa validaciones, actualizá
                                         try {
-                                            // Solo actualiza datos de persona/cliente
-                                            if (editCliente) {
-                                                await clienteService.updateCliente(editCliente.id, {
-                                                    nombre: editCliente.nombre,
-                                                    apellido: editCliente.apellido,
-                                                    telefono: editCliente.telefono,
-                                                    fechaNacimiento: editCliente.fechaNacimiento,
-                                                });
-                                            }
+                                            await clienteService.updateCliente(editCliente.id, {
+                                                nombre: editCliente.nombre,
+                                                apellido: editCliente.apellido,
+                                                telefono: editCliente.telefono,
+                                                fechaNacimiento: editCliente.fechaNacimiento,
+                                            });
                                             await fetchData();
                                             setShowForm(false);
                                         } catch (e) {
