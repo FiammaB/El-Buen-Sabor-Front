@@ -1,19 +1,27 @@
+// src/pages/OrderConfirmation/OrderConfirmationPage.tsx
+
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { CheckCircle, ArrowLeft, MapPin, Clock, Receipt } from "lucide-react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-
+import { useCart } from '../../components/Cart/context/cart-context';
+import { useAuth } from '../../components/Auth/Context/AuthContext';
 
 export default function OrderConfirmationPage() {
   const navigate = useNavigate()
   const [estimatedTime, setEstimatedTime] = useState(30)
   const [remainingTime, setRemainingTime] = useState(30)
-
+  const [isCancelling, setIsCancelling] = useState(false);
   const [searchParams] = useSearchParams()
-  const pedido = searchParams.get("pedido")
+  const pedidoId = searchParams.get("pedido")
+  const { clearCart } = useCart(); // Obtén clearCart del contexto
+  const { id: userId } = useAuth();
 
-  console.log("PEDIDO ID: ", pedido)
+  // --- Estado para controlar si el carrito ya ha sido vaciado ---
+  const [cartCleared, setCartCleared] = useState(false); // ✨ NUEVO ESTADO
+
+  console.log("PEDIDO ID en confirmación: ", pedidoId)
 
   // Simulate countdown timer
   useEffect(() => {
@@ -25,36 +33,67 @@ export default function OrderConfirmationPage() {
         }
         return prev - 1
       })
-    }, 60000) // Update every minute
+    }, 60000)
 
     return () => clearInterval(timer)
   }, [])
 
-  const cancelOrder = async () => {
+
+  useEffect(() => {
+
+    if (!cartCleared) {
+      console.log("OrderConfirmationPage cargada. Vaciando el carrito...");
+      clearCart();
+      localStorage.removeItem("mercadoPagoInitiated");
+      setCartCleared(true);
+    }
+  }, [clearCart, cartCleared]);
+
+
+  const cancelOrder = useCallback(async () => {
+    if (!pedidoId) {
+      alert("No se encontró un ID de pedido para cancelar.");
+      return;
+    }
+    if (!userId) {
+      alert("No se pudo obtener la información del usuario para cancelar el pedido. Por favor, asegúrate de estar logueado.");
+      console.error("No userId available for cancellation.");
+      return;
+    }
+
+    setIsCancelling(true); // ✨ Inicia el estado de cancelación
+
     try {
-      const response = await fetch(`http://localhost:8080/api/pedidos/${pedido}/anular`, {
+      const response = await fetch(`http://localhost:8080/api/pedidos/${pedidoId}/anular`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           motivoAnulacion: "Cancelado por el cliente desde la pantalla de confirmación",
-          usuarioAnuladorId: 1, // Reemplazar con el ID real del usuario logueado o fijo para testing
+          usuarioAnuladorId: userId,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al cancelar el pedido.")
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al cancelar el pedido.");
       }
 
-      alert("Pedido cancelado exitosamente.")
-      navigate("/") // Redirige al inicio u otra ruta
+      alert("Pedido cancelado exitosamente.");
+      navigate("/");
     } catch (err) {
-      alert("Hubo un problema al cancelar el pedido.")
-      console.error(err)
+      alert(`Hubo un problema al cancelar el pedido: ${err instanceof Error ? err.message : String(err)}`);
+      console.error("Error al cancelar pedido:", err);
+    } finally {
+      setIsCancelling(false); // ✨ Finaliza el estado de cancelación (siempre, incluso si hay error)
     }
-  }
+  }, [pedidoId, userId, navigate]);
+
+
+  const handleGoHome = useCallback(() => {
+    navigate("/");
+  }, [navigate]);
 
 
   return (
@@ -65,7 +104,7 @@ export default function OrderConfirmationPage() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate("/")}
+                onClick={handleGoHome}
                 className="p-2 hover:bg-gray-100 rounded-full transition duration-200"
               >
                 <ArrowLeft className="w-6 h-6" />
@@ -91,7 +130,7 @@ export default function OrderConfirmationPage() {
           <div className="bg-gray-50 rounded-lg p-6 mb-8">
             <div className="flex justify-between items-center mb-4">
               <span className="text-gray-600">Número de pedido:</span>
-              <span className="font-bold text-gray-900">#{pedido}</span>
+              <span className="font-bold text-gray-900">#{pedidoId || 'Cargando...'}</span>
             </div>
 
             <div className="space-y-6">
@@ -131,29 +170,23 @@ export default function OrderConfirmationPage() {
           </div>
 
           <div className="space-y-4">
-            {/* <button
-              onClick={() => navigate("/order-tracking")}
-              className="w-full bg-orange-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-orange-600 transition duration-200"
-            >
-              Seguir mi pedido
-            </button> */}
-
             <button
-              onClick={() => navigate("/")}
+              onClick={handleGoHome}
               className="w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-semibold hover:bg-gray-50 transition duration-200"
             >
               Volver al inicio
             </button>
             <button
               onClick={cancelOrder}
-              className="w-full bg-red-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-red-600 transition duration-200"
-            >
-              Cancelar pedido
-            </button>
 
+              disabled={isCancelling}
+              className="w-full bg-red-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-red-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCancelling ? "Cancelando..." : "Cancelar pedido"} {/* ✨ Texto dinámico */}
+            </button>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

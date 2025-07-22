@@ -2,14 +2,14 @@
 
 
 import { useState, useEffect } from "react"
-// <-- CAMBIO CLAVE AQUÍ: Añade Shield a las importaciones
+
 import { ArrowLeft, CreditCard, MapPin, Truck, ShoppingBag, Check, Shield } from "lucide-react"
 import { useCart } from "../../components/Cart/context/cart-context"
 import { PedidoService } from "../../services/PedidoService"
 import { MercadoPagoService } from "../../services/MercadoPagoService"
 import { EstadoPedido, FormaPago, TipoEnvio } from "../../models/DTO/IPedidoDTO"
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import LoginForm from "../../components/Auth/components/LoginForm"
 import { useAuth } from "../Auth/Context/AuthContext";
 
@@ -55,7 +55,7 @@ export default function CheckoutPage() {
   const { items, totalItems, totalAmount, clearCart } = useCart()
   const pedidoService = new PedidoService()
   const mercadoPagoService = new MercadoPagoService()
-
+  const location = useLocation()
   const [currentStep, setCurrentStep] = useState<"information" | "delivery" | "payment" | "confirmation">("information")
   const [paymentMethod, setPaymentMethod] = useState<FormaPago>(FormaPago.MERCADO_PAGO)
   const [deliveryType, setDeliveryType] = useState<TipoEnvio>(TipoEnvio.DELIVERY)
@@ -156,6 +156,37 @@ export default function CheckoutPage() {
 
     initMercadoPago()
   }, [])
+  useEffect(() => {
+    const query = new URLSearchParams(location.search);
+    const collectionStatus = query.get("collection_status");
+    const paymentId = query.get("payment_id");
+    const externalReference = query.get("external_reference");
+
+    const mercadoPagoInitiated = localStorage.getItem("mercadoPagoInitiated");
+
+    if (mercadoPagoInitiated === "true" && collectionStatus === "approved") {
+      console.log("Pago con Mercado Pago APROBADO ✅");
+      console.log("Payment ID:", paymentId);
+      console.log("External Reference:", externalReference);
+
+      clearCart(); // Vaciar el carrito
+      localStorage.removeItem("pendingOrderData");
+      localStorage.removeItem("mercadoPagoInitiated");
+      setIsComplete(true);
+
+      // Opcional: Redirigir a una página de confirmación de pedido más genérica
+      // navigate(`/order-confirmation?status=success&paymentId=${paymentId}`);
+
+    } else if (mercadoPagoInitiated === "true" && (collectionStatus === "pending" || collectionStatus === "in_process")) {
+      console.log("Pago con Mercado Pago PENDIENTE / EN PROCESO ⏳");
+      localStorage.removeItem("mercadoPagoInitiated");
+      alert("Tu pago está pendiente o en proceso. Revisa el estado de tu pago en Mercado Pago.");
+    } else if (mercadoPagoInitiated === "true" && collectionStatus === "rejected") {
+      console.log("Pago con Mercado Pago RECHAZADO ❌");
+      localStorage.removeItem("mercadoPagoInitiated");
+      alert("Tu pago con Mercado Pago fue rechazado. Por favor, intenta con otro método de pago.");
+    }
+  }, [location.search, clearCart, navigate]); // Dependencias importantes
 
   const deliveryFee = deliveryType === TipoEnvio.DELIVERY ? (totalAmount >= 25 ? 0 : 3.99) : 0
   const finalTotal = totalAmount + deliveryFee
@@ -208,7 +239,7 @@ export default function CheckoutPage() {
           console.log("PREF ID ", preferenceId);
 
           localStorage.setItem("pendingOrderData", JSON.stringify(pedido))
-
+          localStorage.setItem("mercadoPagoInitiated", "true");
           window.location.href = JSON.parse(preferenceId).initPoint;
 
         } catch (error) {
@@ -231,8 +262,9 @@ export default function CheckoutPage() {
         }, 2000)
       }
     } catch (error) {
-      console.error("Error al crear esl pedido:", error)
-      alert("No se pudo crear el pedido. Intentalo de nuevo.")
+
+      console.error("Error al crear el pedido:", error)
+      alert("No se pudo crear el pedido por falta de stock . Intentalo de nuevo.")
     } finally {
       setIsProcessing(false)
     }
