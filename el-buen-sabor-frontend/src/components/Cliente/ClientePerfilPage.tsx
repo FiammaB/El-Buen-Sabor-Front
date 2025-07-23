@@ -32,7 +32,8 @@ type PerfilDTO = {
 };
 
 export default function ClientePerfilPage() {
-  const { email, login, id, role } = useAuth(); const [perfil, setPerfil] = useState<PerfilDTO | null>(null);
+  const { email, login, id, role } = useAuth();
+  const [perfil, setPerfil] = useState<PerfilDTO | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -105,21 +106,27 @@ export default function ClientePerfilPage() {
     }
 
     try {
-      await axios.put(`http://localhost:8080/api/usuarios/perfil/${email}`, {
-        nombre: form.nombre,
-        apellido: form.apellido,
-        telefono: form.telefono,
-        fechaNacimiento: form.fechaNacimiento,
-        email: email,
-        passwordActual: form.passwordActual || null,
-        nuevaPassword: form.nuevaPassword || null,
-        repetirPassword: form.repetirPassword || null,
-      });
+      const res = await axios.put<PerfilDTO>(
+        `http://localhost:8080/api/usuarios/perfil/${email}`,
+        {
+          nombre: form.nombre,
+          apellido: form.apellido,
+          telefono: form.telefono,
+          fechaNacimiento: form.fechaNacimiento,
+          email: email,
+          passwordActual: form.passwordActual || null,
+          nuevaPassword: form.nuevaPassword || null,
+          repetirPassword: form.repetirPassword || null,
+        }
+      );
 
-      // Volvemos a "loguear" al usuario con los datos actualizados del formulario
-      // para refrescar el AuthContext y el localStorage.
-      const nombreCompleto = `${form.nombre} ${form.apellido}`.trim();
-      login(id!, role!, nombreCompleto, email, form.telefono);
+      // ✅ Actualizamos el perfil en tiempo real con la respuesta del backend
+      setPerfil(res.data);
+
+      // ✅ También refrescamos AuthContext y localStorage
+      const nombreCompleto = `${res.data.nombre} ${res.data.apellido}`.trim();
+      login(id!, role!, nombreCompleto, res.data.usuario.email, res.data.telefono);
+
       setMsg("Perfil actualizado exitosamente.");
       setEditMode(false);
     } catch (error: any) {
@@ -185,8 +192,9 @@ export default function ClientePerfilPage() {
 
         {msg && (
           <div
-            className={`my-4 text-sm ${msg.includes("exitosamente") ? "text-green-600" : "text-red-600"
-              }`}
+            className={`my-4 text-sm ${
+              msg.includes("exitosamente") ? "text-green-600" : "text-red-600"
+            }`}
           >
             {msg}
           </div>
@@ -301,8 +309,9 @@ export default function ClientePerfilPage() {
       </form>
       {msg && (
         <div
-          className={`my-4 text-sm ${msg.includes("exitosamente") ? "text-green-600" : "text-red-600"
-            }`}
+          className={`my-4 text-sm ${
+            msg.includes("exitosamente") ? "text-green-600" : "text-red-600"
+          }`}
         >
           {msg}
         </div>
