@@ -1,21 +1,16 @@
-"use client"
+"use client";
 
-
-import { useState, useEffect } from "react"
-
-import { ArrowLeft, CreditCard, MapPin, Truck, ShoppingBag, Check, Shield } from "lucide-react"
-import { useCart } from "../../components/Cart/context/cart-context"
-import { PedidoService } from "../../services/PedidoService"
-import { MercadoPagoService } from "../../services/MercadoPagoService"
-import { EstadoPedido, FormaPago, TipoEnvio } from "../../models/DTO/IPedidoDTO"
-import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO"
-import { useNavigate, useLocation } from "react-router-dom"
-import LoginForm from "../../components/Auth/components/LoginForm"
+import { useState, useEffect, useCallback } from "react";
+import { ArrowLeft, CreditCard, MapPin, Truck, ShoppingBag, Check, Shield } from "lucide-react";
+import { useCart } from "../../components/Cart/context/cart-context";
+import { PedidoService } from "../../services/PedidoService";
+import { MercadoPagoService } from "../../services/MercadoPagoService";
+import { EstadoPedido, FormaPago, TipoEnvio } from "../../models/DTO/IPedidoDTO";
+import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO";
+import { useNavigate, useLocation } from "react-router-dom";
+import LoginForm from "../../components/Auth/components/LoginForm";
 import { useAuth } from "../Auth/Context/AuthContext";
-
-// Importaciones adicionales para tipado
 import type { Articulo } from "../../models/Articulos/Articulo";
-
 import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO";
 
 interface Localidad {
@@ -34,34 +29,35 @@ type Address = {
   };
 };
 
-
-// MercadoPago SDK script loader
 const loadMercadoPagoScript = () => {
   return new Promise<void>((resolve) => {
     if (window.MercadoPago) {
-      resolve()
-      return
+      resolve();
+      return;
     }
 
-    const script = document.createElement("script")
-    script.src = "https://sdk.mercadopago.com/js/v2"
-    script.onload = () => resolve()
-    document.body.appendChild(script)
-  })
-}
+    const script = document.createElement("script");
+    script.src = "https://sdk.mercadopago.com/js/v2";
+    script.onload = () => resolve();
+    document.body.appendChild(script);
+  });
+};
 
 export default function CheckoutPage() {
-  const navigate = useNavigate()
-  const { items, totalItems, totalAmount, clearCart } = useCart()
-  const pedidoService = new PedidoService()
-  const mercadoPagoService = new MercadoPagoService()
-  const location = useLocation()
-  const [currentStep, setCurrentStep] = useState<"information" | "delivery" | "payment" | "confirmation">("information")
-  const [paymentMethod, setPaymentMethod] = useState<FormaPago>(FormaPago.MERCADO_PAGO)
-  const [deliveryType, setDeliveryType] = useState<TipoEnvio>(TipoEnvio.DELIVERY)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [isComplete, setIsComplete] = useState(false)
-  const [isMercadoPagoReady, setIsMercadoPagoReady] = useState(false)
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { items, totalItems, totalAmount, clearCart } = useCart();
+  const pedidoService = new PedidoService();
+  const mercadoPagoService = new MercadoPagoService();
+
+  const [currentStep, setCurrentStep] = useState<"information" | "delivery" | "payment" | "confirmation">(
+    "information"
+  );
+  const [paymentMethod, setPaymentMethod] = useState<FormaPago>(FormaPago.MERCADO_PAGO);
+  const [deliveryType, setDeliveryType] = useState<TipoEnvio>(TipoEnvio.DELIVERY);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const [isMercadoPagoReady, setIsMercadoPagoReady] = useState(false);
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
@@ -72,7 +68,7 @@ export default function CheckoutPage() {
     calle: "",
     numero: "",
     cp: "",
-    localidadId: ""
+    localidadId: "",
   });
 
   const [customerInfo, setCustomerInfo] = useState({
@@ -82,38 +78,102 @@ export default function CheckoutPage() {
     address: "",
     city: "",
     zipCode: "",
-  })
+  });
+
+  const [stockValidationErrors, setStockValidationErrors] = useState<string[]>([]);
+  const [isStockValidating, setIsStockValidating] = useState(false);
 
   const auth = useAuth();
-  console.log("CONTEXT EN CHECKOUT", auth);
+
+  const validateCartStock = useCallback(async () => {
+    setIsStockValidating(true);
+    setStockValidationErrors([]);
+
+    if (items.length === 0) {
+      setIsStockValidating(false);
+      return;
+    }
+
+    const detallesPedidoParaValidar = items
+      .map((item) => {
+        if (item.purchasableItem.tipo === "promocion") {
+          const promocion = item.purchasableItem as IPromocionDTO;
+          return {
+            cantidad: item.quantity,
+            promocionId: promocion.id,
+          };
+        } else if (item.purchasableItem.tipo === "articulo") {
+          const articulo = item.purchasableItem as Articulo;
+          return {
+            cantidad: item.quantity,
+            articuloId: articulo.id,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+    let response;
+    try {
+      response = await fetch("http://localhost:8080/api/pedidos/validar-stock", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ detalles: detallesPedidoParaValidar }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (errorData.message && Array.isArray(errorData.message)) {
+          setStockValidationErrors(errorData.message);
+        } else if (errorData.message) {
+          setStockValidationErrors([errorData.message]);
+        } else {
+          setStockValidationErrors(["Hubo un problema desconocido al validar el stock."]);
+        }
+      } else {
+        setStockValidationErrors([]);
+      }
+    } catch (error) {
+      console.error("Error al comunicarse con el backend para validar stock:", error);
+      if (response && !response.ok) {
+        try {
+          const textError = await response.text();
+          setStockValidationErrors([`Error del servidor: ${textError.substring(0, 100)}...`]);
+        } catch (subError) {
+          setStockValidationErrors(["Error de red o el servidor no respondió con un JSON válido."]);
+        }
+      } else {
+        setStockValidationErrors(["No se pudo validar el stock con el servidor. Revisa tu conexión."]);
+      }
+    } finally {
+      setIsStockValidating(false);
+    }
+  }, [items]);
 
   useEffect(() => {
-    try {
-      console.log("Id al traer el dom ", auth.id);
-      const fetchAddresses = async () => {
-        try {
-          const res = await fetch(`http://localhost:8080/api/domicilios/persona/${auth.id}`);
-          const data = await res.json();
-          console.log("Domicilios recibidos:", data);
-
-          if (Array.isArray(data)) {
-            setAddresses(data);
-          } else {
-            setAddresses([]);
-          }
-        } catch (error) {
-          console.error("Error al obtener domicilios:", error);
+    const fetchAddresses = async () => {
+      if (!auth?.id) {
+        setAddresses([]);
+        return;
+      }
+      try {
+        const res = await fetch(`http://localhost:8080/api/domicilios/persona/${auth.id}`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setAddresses(data);
+        } else {
           setAddresses([]);
         }
-      };
+      } catch (error) {
+        console.error("Error al obtener domicilios:", error);
+        setAddresses([]);
+      }
+    };
 
-      fetchAddresses();
-    } catch (e) {
-      console.log(e);
-    }
+    fetchAddresses();
   }, [auth?.id]);
-
-
 
   useEffect(() => {
     const fetchLocalidades = async () => {
@@ -121,7 +181,6 @@ export default function CheckoutPage() {
         const res = await fetch("http://localhost:8080/api/localidades");
         const data = await res.json();
         setLocalidades(data);
-        console.log("Localidades", data)
       } catch (err) {
         console.error("Error al traer localidades:", err);
       }
@@ -129,7 +188,7 @@ export default function CheckoutPage() {
     fetchLocalidades();
   }, []);
 
-  const autopopulate = (domicilio: any) => {
+  const autopopulate = (domicilio: Address) => {
     setCustomerInfo({
       ...customerInfo,
       address: `${domicilio.calle} ${domicilio.numero}`,
@@ -138,24 +197,21 @@ export default function CheckoutPage() {
     });
   };
 
-
-  console.log(useAuth())
-  const { username, email, telefono } = useAuth();
-
-  console.log(email, telefono)
+  const { username } = useAuth();
 
   useEffect(() => {
     const initMercadoPago = async () => {
       try {
-        await loadMercadoPagoScript()
-        setIsMercadoPagoReady(true)
+        await loadMercadoPagoScript();
+        setIsMercadoPagoReady(true);
       } catch (error) {
-        console.error("Failed to load MercadoPago SDK:", error)
+        console.error("Failed to load MercadoPago SDK:", error);
       }
-    }
+    };
 
-    initMercadoPago()
-  }, [])
+    initMercadoPago();
+  }, []);
+
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const collectionStatus = query.get("collection_status");
@@ -165,110 +221,92 @@ export default function CheckoutPage() {
     const mercadoPagoInitiated = localStorage.getItem("mercadoPagoInitiated");
 
     if (mercadoPagoInitiated === "true" && collectionStatus === "approved") {
-      console.log("Pago con Mercado Pago APROBADO ✅");
-      console.log("Payment ID:", paymentId);
-      console.log("External Reference:", externalReference);
-
-      clearCart(); // Vaciar el carrito
-      localStorage.removeItem("pendingOrderData");
-      localStorage.removeItem("mercadoPagoInitiated");
-      setIsComplete(true);
-
-      // Opcional: Redirigir a una página de confirmación de pedido más genérica
-      // navigate(`/order-confirmation?status=success&paymentId=${paymentId}`);
-
+      navigate(`/order-confirmation?pedido=${externalReference || "unknown"}&status=approved`);
     } else if (mercadoPagoInitiated === "true" && (collectionStatus === "pending" || collectionStatus === "in_process")) {
-      console.log("Pago con Mercado Pago PENDIENTE / EN PROCESO ⏳");
       localStorage.removeItem("mercadoPagoInitiated");
       alert("Tu pago está pendiente o en proceso. Revisa el estado de tu pago en Mercado Pago.");
     } else if (mercadoPagoInitiated === "true" && collectionStatus === "rejected") {
-      console.log("Pago con Mercado Pago RECHAZADO ❌");
       localStorage.removeItem("mercadoPagoInitiated");
       alert("Tu pago con Mercado Pago fue rechazado. Por favor, intenta con otro método de pago.");
     }
-  }, [location.search, clearCart, navigate]); // Dependencias importantes
+  }, [location.search, navigate]);
 
-  const deliveryFee = deliveryType === TipoEnvio.DELIVERY ? (totalAmount >= 25 ? 0 : 3.99) : 0
-  const finalTotal = totalAmount + deliveryFee
+  useEffect(() => {
+    validateCartStock();
+  }, [items, validateCartStock]);
 
-
+  const deliveryFee = deliveryType === TipoEnvio.DELIVERY ? (totalAmount >= 25 ? 0 : 3.99) : 0;
+  const finalTotal = totalAmount + deliveryFee;
 
   const handleSubmitOrder = async () => {
-    setIsProcessing(true)
+    setIsProcessing(true);
+    await validateCartStock();
+
+    if (stockValidationErrors.length > 0) {
+      setIsProcessing(false);
+      alert("No puedes completar el pedido con los problemas de stock actuales.");
+      return;
+    }
 
     try {
-      const detallesPedido = items.map((item) => {
-        if (item.purchasableItem.tipo === 'promocion') {
-          const promocion = item.purchasableItem as IPromocionDTO;
-          return {
-            cantidad: item.quantity,
-            promocionId: promocion.id, // <-- OJO, no articuloId
-            // El subtotal lo calcula el backend, pero lo podés mandar igual para tener consistencia en el resumen
-            subTotal: Number((promocion.precioPromocional * item.quantity).toFixed(2)),
-          };
-        } else if (item.purchasableItem.tipo === 'articulo') {
-          const articulo = item.purchasableItem as Articulo;
-          return {
-            cantidad: item.quantity,
-            articuloId: articulo.id, // <-- Solo artículo
-            subTotal: Number((articulo.precioVenta * item.quantity).toFixed(2)),
-          };
-        }
-        // No envíes nada para otros tipos
-        return null;
-      }).filter(Boolean);
-
+      const detallesPedido = items
+        .map((item) => {
+          if (item.purchasableItem.tipo === "promocion") {
+            const promocion = item.purchasableItem as IPromocionDTO;
+            return {
+              cantidad: item.quantity,
+              promocionId: promocion.id,
+              subTotal: Number((promocion.precioPromocional * item.quantity).toFixed(2)),
+            };
+          } else if (item.purchasableItem.tipo === "articulo") {
+            const articulo = item.purchasableItem as Articulo;
+            return {
+              cantidad: item.quantity,
+              articuloId: articulo.id,
+              subTotal: Number((articulo.precioVenta * item.quantity).toFixed(2)),
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
 
       const pedido: IPedidoDTO = {
-        fechaPedido: new Date().toISOString().split('T')[0],
+        fechaPedido: new Date().toISOString().split("T")[0],
         estado: EstadoPedido.A_CONFIRMAR,
         tipoEnvio: deliveryType,
         formaPago: paymentMethod,
         total: finalTotal,
         personaId: auth.id ?? undefined,
         domicilioId: deliveryType === TipoEnvio.DELIVERY ? selectedAddressId ?? undefined : undefined,
-
         detalles: detallesPedido,
       };
 
-      console.log("PEDIDO A ENVIAR:", pedido)
-
       if (paymentMethod === FormaPago.MERCADO_PAGO) {
         try {
-          const preferenceId = await mercadoPagoService.createPreference(pedido)
-          console.log("PREF ID ", preferenceId);
-
-          localStorage.setItem("pendingOrderData", JSON.stringify(pedido))
+          const preferenceId = await mercadoPagoService.createPreference(pedido);
+          localStorage.setItem("pendingOrderData", JSON.stringify(pedido));
           localStorage.setItem("mercadoPagoInitiated", "true");
           window.location.href = JSON.parse(preferenceId).initPoint;
-
         } catch (error) {
-          console.error("Error al procesar pago con MercadoPago:", error)
-          alert("Error al procesar el pago con MercadoPago. Por favor intenta nuevamente.")
-          setIsProcessing(false)
-          return
+          console.error("Error al procesar pago con MercadoPago:", error);
+          alert("Error al procesar el pago con MercadoPago. Por favor intenta nuevamente.");
+          setIsProcessing(false);
+          return;
         }
       } else {
-        const response = await pedidoService.sendPedido(pedido)
-        console.log("Pedido creado con éxito:", response)
-        setIsComplete(true)
-
-        console.log("PEDIDO: ", response)
-
-
+        const response = await pedidoService.sendPedido(pedido);
+        setIsComplete(true);
         setTimeout(() => {
-          clearCart()
-          navigate(`/order-confirmation?pedido=${response.id}`)
-        }, 2000)
+          navigate(`/order-confirmation?pedido=${response.id}`);
+        }, 2000);
       }
     } catch (error) {
-
-      console.error("Error al crear el pedido:", error)
-      alert("No se pudo crear el pedido por falta de stock . Intentalo de nuevo.")
+      console.error("Error al crear el pedido:", error);
+      alert("No se pudo crear el pedido. Inténtalo de nuevo. " + (error instanceof Error ? error.message : ""));
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (username && currentStep === "information") {
@@ -276,20 +314,24 @@ export default function CheckoutPage() {
     }
   }, [username, currentStep]);
 
-
   const goToNextStep = () => {
-    if (currentStep === "information") setCurrentStep("delivery")
-    else if (currentStep === "delivery") setCurrentStep("payment")
-    else if (currentStep === "payment") setCurrentStep("confirmation")
-  }
+    if (stockValidationErrors.length > 0) {
+      alert("No puedes avanzar hasta resolver los problemas de stock. Por favor ajusta las cantidades en tu carrito.");
+      return;
+    }
+
+    if (currentStep === "information") setCurrentStep("delivery");
+    else if (currentStep === "delivery") setCurrentStep("payment");
+    else if (currentStep === "payment") setCurrentStep("confirmation");
+  };
 
   const goToPreviousStep = () => {
-    if (currentStep === "confirmation") setCurrentStep("payment")
-    else if (currentStep === "payment") setCurrentStep("delivery")
-    else if (currentStep === "delivery" && !username) setCurrentStep("information")
-    else if (currentStep === "delivery" && username) navigate("/cart")
-    else navigate("/")
-  }
+    if (currentStep === "confirmation") setCurrentStep("payment");
+    else if (currentStep === "payment") setCurrentStep("delivery");
+    else if (currentStep === "delivery" && !username) setCurrentStep("information");
+    else if (currentStep === "delivery" && username) navigate("/cart");
+    else navigate("/");
+  };
 
   if (items.length === 0 && !isComplete) {
     return (
@@ -306,13 +348,12 @@ export default function CheckoutPage() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
@@ -324,23 +365,68 @@ export default function CheckoutPage() {
               <p className="text-sm text-gray-500">{totalItems} productos</p>
             </div>
           </div>
-
         </div>
       </div>
 
+      {/* Sección de errores de stock - Ahora visible en cualquier paso */}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {stockValidationErrors.length > 0 && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Problemas con el stock</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <ul className="list-disc pl-5 space-y-2">
+                    {stockValidationErrors.map((error, index) => {
+                      // Extraer las partes del mensaje
+                      const parts = error.split("porque el insumo");
+                      const productosPart = parts[0];
+                      const insumoPart = parts.length > 1 ? "porque el insumo" + parts[1] : "";
+
+                      return (
+                        <li key={index} className="flex flex-col">
+                          <span className="font-semibold">{productosPart}</span>
+                          <span>{insumoPart}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/cart")}
+                    className="text-sm font-medium text-red-800 hover:text-red-700 focus:outline-none focus:underline transition duration-150 ease-in-out"
+                  >
+                    Ir al carrito para ajustar las cantidades
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Checkout Steps */}
+          {/* Columna principal de los pasos del Checkout */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Progress Steps */}
+            {/* Componente de progreso de los pasos */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <div className="flex justify-between mb-8">
                 <div
-                  className={`flex flex-col items-center ${currentStep === "information" ? "text-orange-500" : "text-gray-500"}`}
+                  className={`flex flex-col items-center ${currentStep === "information" ? "text-orange-500" : "text-gray-500"
+                    }`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === "information" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === "information" ? "bg-orange-500 text-white" : "bg-gray-200"
+                      }`}
                   >
                     1
                   </div>
@@ -352,10 +438,12 @@ export default function CheckoutPage() {
                   ></div>
                 </div>
                 <div
-                  className={`flex flex-col items-center ${currentStep === "delivery" ? "text-orange-500" : "text-gray-500"}`}
+                  className={`flex flex-col items-center ${currentStep === "delivery" ? "text-orange-500" : "text-gray-500"
+                    }`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === "delivery" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === "delivery" ? "bg-orange-500 text-white" : "bg-gray-200"
+                      }`}
                   >
                     2
                   </div>
@@ -363,14 +451,17 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex-1 flex items-center">
                   <div
-                    className={`h-1 w-full ${currentStep === "payment" || currentStep === "confirmation" ? "bg-orange-500" : "bg-gray-200"}`}
+                    className={`h-1 w-full ${currentStep === "payment" || currentStep === "confirmation" ? "bg-orange-500" : "bg-gray-200"
+                      }`}
                   ></div>
                 </div>
                 <div
-                  className={`flex flex-col items-center ${currentStep === "payment" ? "text-orange-500" : "text-gray-500"}`}
+                  className={`flex flex-col items-center ${currentStep === "payment" ? "text-orange-500" : "text-gray-500"
+                    }`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === "payment" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === "payment" ? "bg-orange-500 text-white" : "bg-gray-200"
+                      }`}
                   >
                     3
                   </div>
@@ -382,10 +473,12 @@ export default function CheckoutPage() {
                   ></div>
                 </div>
                 <div
-                  className={`flex flex-col items-center ${currentStep === "confirmation" ? "text-orange-500" : "text-gray-500"}`}
+                  className={`flex flex-col items-center ${currentStep === "confirmation" ? "text-orange-500" : "text-gray-500"
+                    }`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === "confirmation" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === "confirmation" ? "bg-orange-500 text-white" : "bg-gray-200"
+                      }`}
                   >
                     4
                   </div>
@@ -393,8 +486,8 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Step Content */}
-              {(currentStep === "information" && !username) && (
+              {/* Contenido de cada paso */}
+              {currentStep === "information" && !username && (
                 <div>
                   <LoginForm onSuccess={() => setCurrentStep("delivery")} />
                 </div>
@@ -406,6 +499,7 @@ export default function CheckoutPage() {
                     <h2 className="text-xl font-bold text-gray-900">Método de Entrega</h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Opción de Delivery a domicilio */}
                       <div
                         className={`relative border-2 rounded-md p-4 cursor-pointer hover:bg-gray-50 transition-all ${deliveryType === TipoEnvio.DELIVERY ? "border-orange-500" : "border-gray-200"
                           }`}
@@ -429,6 +523,7 @@ export default function CheckoutPage() {
                         </div>
                       </div>
 
+                      {/* Opción de Retiro en sucursal */}
                       <div
                         className={`relative border-2 rounded-md p-4 cursor-pointer hover:bg-gray-50 transition-all ${deliveryType === TipoEnvio.RETIRO_EN_LOCAL ? "border-orange-500" : "border-gray-200"
                           }`}
@@ -452,6 +547,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
+                  {/* Sección de elección de domicilio para Delivery */}
                   {deliveryType === TipoEnvio.DELIVERY && (
                     <>
                       {!showNewAddressForm && (
@@ -475,7 +571,8 @@ export default function CheckoutPage() {
                                   }}
                                 />
                                 <span className="block font-medium">{`${d.calle} ${d.numero}`}</span>
-                                <span className="text-sm text-gray-500">{`${d.localidad?.nombre ?? ""} (${d.cp})`}</span>
+                                <span className="text-sm text-gray-500">{`${d.localidad?.nombre ?? ""
+                                  } (${d.cp})`}</span>
                               </label>
                             ))}
 
@@ -490,15 +587,17 @@ export default function CheckoutPage() {
                         </>
                       )}
 
+                      {/* Formulario para agregar un nuevo domicilio */}
                       {showNewAddressForm && (
                         <div className="space-y-4 pt-6 border-t mt-6">
                           <h3 className="font-semibold text-lg">Nuevo domicilio</h3>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <label className="text-sm block text-gray-700 mb-1">Calle</label>
+                              <label htmlFor="newAddressCalle" className="text-sm block text-gray-700 mb-1">Calle</label>
                               <input
                                 type="text"
+                                id="newAddressCalle"
                                 className="w-full px-3 py-2 border rounded-md"
                                 value={newAddress.calle}
                                 onChange={(e) => setNewAddress({ ...newAddress, calle: e.target.value })}
@@ -506,9 +605,10 @@ export default function CheckoutPage() {
                               />
                             </div>
                             <div>
-                              <label className="text-sm block text-gray-700 mb-1">Número</label>
+                              <label htmlFor="newAddressNumero" className="text-sm block text-gray-700 mb-1">Número</label>
                               <input
                                 type="number"
+                                id="newAddressNumero"
                                 className="w-full px-3 py-2 border rounded-md"
                                 value={newAddress.numero}
                                 onChange={(e) => setNewAddress({ ...newAddress, numero: e.target.value })}
@@ -516,9 +616,10 @@ export default function CheckoutPage() {
                               />
                             </div>
                             <div>
-                              <label className="text-sm block text-gray-700 mb-1">Código Postal</label>
+                              <label htmlFor="newAddressCp" className="text-sm block text-gray-700 mb-1">Código Postal</label>
                               <input
                                 type="text"
+                                id="newAddressCp"
                                 className="w-full px-3 py-2 border rounded-md"
                                 value={newAddress.cp}
                                 onChange={(e) => setNewAddress({ ...newAddress, cp: e.target.value })}
@@ -526,8 +627,9 @@ export default function CheckoutPage() {
                               />
                             </div>
                             <div>
-                              <label className="text-sm block text-gray-700 mb-1">Localidad</label>
+                              <label htmlFor="newAddressLocalidad" className="text-sm block text-gray-700 mb-1">Localidad</label>
                               <select
+                                id="newAddressLocalidad"
                                 className="w-full px-3 py-2 border rounded-md"
                                 value={newAddress.localidadId}
                                 onChange={(e) => setNewAddress({ ...newAddress, localidadId: e.target.value })}
@@ -554,13 +656,10 @@ export default function CheckoutPage() {
                                       numero: parseInt(newAddress.numero),
                                       cp: newAddress.cp,
                                       localidad: {
-                                        id: parseInt(newAddress.localidadId)
-                                      }
+                                        id: parseInt(newAddress.localidadId),
+                                      },
                                     }),
                                   });
-
-                                  console.log("Intento de guardar el domicilio: ", res)
-
 
                                   if (!res.ok) throw new Error("Error al guardar domicilio");
                                   const saved = await res.json();
@@ -594,12 +693,11 @@ export default function CheckoutPage() {
                     </>
                   )}
 
+                  {/* Botón para continuar al paso de Pago */}
                   <button
                     onClick={goToNextStep}
                     className="disabled:bg-gray-400 mt-8 w-full bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
-                    disabled={
-                      (deliveryType === TipoEnvio.DELIVERY && !selectedAddressId) || showNewAddressForm
-                    }
+                    disabled={(deliveryType === TipoEnvio.DELIVERY && !selectedAddressId) || showNewAddressForm}
                   >
                     Continuar a Pago
                   </button>
@@ -611,6 +709,7 @@ export default function CheckoutPage() {
                   <h2 className="text-xl font-bold text-gray-900">Método de Pago</h2>
 
                   <div className="space-y-4">
+                    {/* Opción de pago con Mercado Pago */}
                     <div
                       className={`relative border-2 rounded-md p-4 cursor-pointer hover:bg-gray-50 transition-all ${paymentMethod === FormaPago.MERCADO_PAGO ? "border-orange-500" : "border-gray-200"
                         }`}
@@ -635,6 +734,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
+                    {/* Opción de pago en Efectivo (solo si es Retiro en Local) */}
                     {deliveryType === TipoEnvio.RETIRO_EN_LOCAL && (
                       <div
                         className={`relative border-2 rounded-md p-4 cursor-pointer hover:bg-gray-50 transition-all ${paymentMethod === FormaPago.EFECTIVO ? "border-orange-500" : "border-gray-200"
@@ -662,6 +762,7 @@ export default function CheckoutPage() {
                     )}
                   </div>
 
+                  {/* Información adicional para Mercado Pago */}
                   {paymentMethod === FormaPago.MERCADO_PAGO && (
                     <div className="space-y-4 pt-4 border p-4 rounded-md border-gray-200">
                       <h3 className="font-semibold">Información importante</h3>
@@ -682,13 +783,22 @@ export default function CheckoutPage() {
                     </div>
                   )}
 
+                  {/* Botón para avanzar al paso de Confirmación */}
                   <div className="pt-4">
                     <button
                       onClick={goToNextStep}
-                      className="w-full bg-orange-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-orange-600 transition duration-200"
-                      disabled={paymentMethod === FormaPago.MERCADO_PAGO && !isMercadoPagoReady}
+                      className="w-full bg-orange-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-orange-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={
+                        isStockValidating ||
+                        stockValidationErrors.length > 0 ||
+                        (paymentMethod === FormaPago.MERCADO_PAGO && !isMercadoPagoReady)
+                      }
                     >
-                      Revisar Pedido
+                      {isStockValidating
+                        ? "Validando Stock..."
+                        : stockValidationErrors.length > 0
+                          ? "Revisar Stock"
+                          : "Revisar Pedido"}
                     </button>
                   </div>
                 </div>
@@ -699,15 +809,23 @@ export default function CheckoutPage() {
                   <h2 className="text-xl font-bold text-gray-900">Confirmar Pedido</h2>
 
                   <div className="space-y-6">
+                    {/* Resumen de Información Personal */}
                     <div className="space-y-2">
                       <h3 className="font-semibold">Información Personal</h3>
                       <div className="bg-gray-50 p-4 rounded-md">
-                        <p><span className="font-medium">Nombre:</span> {auth.username || "No especificado"}</p>
-                        <p><span className="font-medium">Email:</span> {auth.email || "No especificado"}</p>
-                        <p><span className="font-medium">Teléfono:</span> {auth.telefono || "No especificado"}</p>
+                        <p>
+                          <span className="font-medium">Nombre:</span> {auth.username || "No especificado"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Email:</span> {auth.email || "No especificado"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Teléfono:</span> {auth.telefono || "No especificado"}
+                        </p>
                       </div>
                     </div>
 
+                    {/* Resumen de Método de Entrega */}
                     <div className="space-y-2">
                       <h3 className="font-semibold">Método de Entrega</h3>
                       <div className="bg-gray-50 p-4 rounded-md">
@@ -716,12 +834,13 @@ export default function CheckoutPage() {
                         </p>
                         {deliveryType === TipoEnvio.DELIVERY && selectedAddressId && (
                           <>
-                            {/* Obtener los datos del domicilio seleccionado */}
                             {(() => {
-                              const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
+                              const selectedAddress = addresses.find((addr) => addr.id === selectedAddressId);
                               return selectedAddress ? (
                                 <>
-                                  <p>{selectedAddress.calle} {selectedAddress.numero}</p>
+                                  <p>
+                                    {selectedAddress.calle} {selectedAddress.numero}
+                                  </p>
                                   <p>
                                     {selectedAddress.localidad?.nombre ?? ""}, {selectedAddress.cp}
                                   </p>
@@ -738,6 +857,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
+                    {/* Resumen de Método de Pago */}
                     <div className="space-y-2">
                       <h3 className="font-semibold">Método de Pago</h3>
                       <div className="bg-gray-50 p-4 rounded-md">
@@ -750,6 +870,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
+                    {/* Resumen de Productos */}
                     <div className="space-y-2">
                       <h3 className="font-semibold">Resumen de Productos</h3>
                       <div className="bg-gray-50 p-4 rounded-md space-y-3">
@@ -757,11 +878,10 @@ export default function CheckoutPage() {
                           let itemDisplayName: string = item.purchasableItem.denominacion;
                           let itemDisplayPrice: number;
 
-                          if (item.purchasableItem.tipo === 'articulo') {
+                          if (item.purchasableItem.tipo === "articulo") {
                             const articulo = item.purchasableItem as Articulo;
                             itemDisplayPrice = articulo.precioVenta || 0;
-                            // No se necesita `itemDisplayName = articulo.denominacion;` porque ya está en `item.purchasableItem.denominacion`
-                          } else if (item.purchasableItem.tipo === 'promocion') {
+                          } else if (item.purchasableItem.tipo === "promocion") {
                             const promocion = item.purchasableItem as IPromocionDTO;
                             itemDisplayPrice = promocion.precioPromocional || 0;
                             itemDisplayName = `${item.purchasableItem.denominacion} (Promo)`;
@@ -774,7 +894,9 @@ export default function CheckoutPage() {
                               <span>
                                 {item.quantity}x {itemDisplayName}
                               </span>
-                              <span className="font-medium">${item.subtotal.toFixed(2)}</span>
+                              <span className="font-medium">
+                                ${typeof item.subtotal === "number" ? item.subtotal.toFixed(2) : "0.00"}
+                              </span>
                             </div>
                           );
                         })}
@@ -797,10 +919,16 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
+                  {/* Botón final para Confirmar y Pagar */}
                   <div className="pt-4">
                     <button
                       onClick={handleSubmitOrder}
-                      disabled={isProcessing || (paymentMethod === FormaPago.MERCADO_PAGO && !isMercadoPagoReady)}
+                      disabled={
+                        isProcessing ||
+                        isStockValidating ||
+                        stockValidationErrors.length > 0 ||
+                        (paymentMethod === FormaPago.MERCADO_PAGO && !isMercadoPagoReady)
+                      }
                       className="w-full bg-orange-500 text-white py-4 rounded-xl font-semibold hover:bg-orange-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isProcessing
@@ -815,29 +943,24 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Order Summary (panel de la derecha) */}
+          {/* Panel de Resumen del Pedido (columna derecha) */}
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
               <h3 className="text-lg font-bold text-gray-900 mb-6">Resumen del pedido</h3>
 
               <div className="space-y-4 mb-6">
+                {/* Lista de productos en el resumen */}
                 <div className="max-h-60 overflow-y-auto space-y-3">
                   {items.map((item) => {
-                    // <-- CAMBIO CLAVE AQUÍ: Lógica para la URL de la imagen (sin prefijo local)
                     let imageUrl: string = "/placeholder.svg?height=48&width=48"; // Default
                     const itemDisplayName: string = item.purchasableItem.denominacion;
 
-                    if (item.purchasableItem.tipo === 'articulo') {
+                    if (item.purchasableItem.tipo === "articulo") {
                       const articulo = item.purchasableItem as Articulo;
-                      // La denominación de la imagen del artículo puede ser una URL completa o relativa
-                      // Asumo que para artículos puede ser una ruta local o una URL de Cloudinary
-                      // Si es de Cloudinary, NO le pongas el prefijo localhost. Si es local, sí.
-                      // Aquí lo dejo sin prefijo, asumiendo que ya es una URL completa o relativa pública
                       imageUrl = articulo.imagen?.denominacion || imageUrl;
-                    } else if (item.purchasableItem.tipo === 'promocion') {
+                    } else if (item.purchasableItem.tipo === "promocion") {
                       const promocion = item.purchasableItem as IPromocionDTO;
-                      // Las URLs de Cloudinary son siempre completas. NO se les añade prefijo local.
-                      imageUrl = promocion.imagen?.denominacion || imageUrl; // <-- CAMBIO CLAVE: Elimina `http://localhost:8080/`
+                      imageUrl = promocion.imagen?.denominacion || imageUrl;
                     }
 
                     return (
@@ -861,6 +984,7 @@ export default function CheckoutPage() {
 
                 <div className="border-t border-gray-200 my-2"></div>
 
+                {/* Subtotal y Costo de Envío */}
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Subtotal ({totalItems} productos)</span>
                   <span className="font-semibold">${totalAmount.toFixed(2)}</span>
@@ -873,6 +997,7 @@ export default function CheckoutPage() {
                   </span>
                 </div>
 
+                {/* Mensaje de envío gratis */}
                 {totalAmount < 25 && deliveryType === TipoEnvio.DELIVERY && (
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                     <p className="text-sm text-orange-700">
@@ -881,6 +1006,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
+                {/* Total Final */}
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-gray-900">Total</span>
@@ -889,6 +1015,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              {/* Mensaje de Pedido Completado o Info de Seguridad */}
               {isComplete ? (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
                   <Check className="w-8 h-8 text-green-500 mx-auto mb-2" />
@@ -912,5 +1039,5 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
