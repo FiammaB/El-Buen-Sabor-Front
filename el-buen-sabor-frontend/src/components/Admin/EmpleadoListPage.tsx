@@ -1,3 +1,4 @@
+// src/pages/EmpleadoListPage.tsx
 import { useEffect, useState } from "react";
 import type { UsuarioDTO } from "../../models/DTO/UsuarioDTO";
 import { UsuarioService } from "../../services/UsuarioService";
@@ -66,14 +67,35 @@ export default function EmpleadoListPage() {
         setShowForm(true);
     };
 
-    const handleToggleBaja = async (usuarioId: number, baja: boolean) => {
+    const handleToggleBaja = async (usuarioId: number, personaId: number, baja: boolean) => {
         try {
+            // Optimistic UI Update: Update state immediately
+            setUsuarios(prevUsuarios =>
+                prevUsuarios.map(u => (u.id === usuarioId ? { ...u, baja: baja } : u))
+            );
+            setClientes(prevClientes =>
+                prevClientes.map(c => (c.id === personaId ? { ...c, baja: baja } : c))
+            );
+
+            // 1. Primero baja usuario
             await usuarioService.toggleBaja(usuarioId, baja);
+            // 2. Luego baja persona
+            await clienteService.toggleBaja(personaId, baja);
+
+            // No need to call fetchData() immediately here,
+            // as the optimistic update already reflects the change.
+            // fetchData() can be kept for more robust sync in case of complex operations,
+            // but for a simple toggle, optimistic update is better.
+
+        } catch (error) {
+            // Revert optimistic update if there's an error
+            alert("Error al cambiar el estado del empleado");
+            console.error("Error toggling baja:", error);
+            // Revert to previous state by refetching data in case of error
             await fetchData();
-        } catch {
-            alert("No se pudo cambiar el estado");
         }
     };
+
 
     return (
         <div className="max-w-6xl mx-auto py-8">
@@ -101,47 +123,58 @@ export default function EmpleadoListPage() {
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                        {empleadosFull.map(emp => (
-                            <tr key={emp.id} className={`hover:bg-gray-50 ${emp.baja ? "opacity-50" : ""}`}>
-                                <td className="px-4 py-3">{emp.id}</td>
-                                <td className="px-4 py-3">{emp.persona?.nombre || "-"}</td>
-                                <td className="px-4 py-3">{emp.persona?.apellido || "-"}</td>
-                                <td className="px-4 py-3">{emp.email}</td>
-                                <td className="px-4 py-3">{emp.username}</td>
-                                <td className="px-4 py-3">{emp.rol}</td>
-                                <td className="px-4 py-3">{emp.persona?.telefono || "-"}</td>
-                                <td className="px-4 py-3">{emp.persona?.fechaNacimiento?.substring(0, 10) || "-"}</td>
-                                <td className="px-4 py-3">{emp.baja ? "Inactivo" : "Activo"}</td>
-                                <td className="p-4 text-center">
-                                    <div className="flex items-center justify-center space-x-2">
-                                        <button
-                                            onClick={() => handleEditClick(emp)}
-                                            className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600"
-                                            title="Editar"
-                                        >
-                                            <Pencil className="w-4 h-4" />
-                                        </button>
-                                        {!emp.baja ? (
-                                            <button
-                                                onClick={() => handleToggleBaja(emp.id!, true)}
-                                                className="p-2 rounded-full bg-red-50 hover:bg-red-100 text-red-600"
-                                                title="Eliminar"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                        {empleadosFull.map(emp => {
+                            // Estado combinado: inactivo solo si usuario Y persona están dados de baja
+                            const inactivo = !!emp.baja && !!emp.persona?.baja;
+
+                            return (
+                                <tr key={emp.id} className={`hover:bg-gray-50 ${inactivo ? "opacity-60" : ""}`}>
+                                    <td className="px-4 py-3">{emp.id}</td>
+                                    <td className="px-4 py-3">{emp.persona?.nombre || "-"}</td>
+                                    <td className="px-4 py-3">{emp.persona?.apellido || "-"}</td>
+                                    <td className="px-4 py-3">{emp.email}</td>
+                                    <td className="px-4 py-3">{emp.username}</td>
+                                    <td className="px-4 py-3">{emp.rol}</td>
+                                    <td className="px-4 py-3">{emp.persona?.telefono || "-"}</td>
+                                    <td className="px-4 py-3">{emp.persona?.fechaNacimiento?.substring(0, 10) || "-"}</td>
+                                    <td className="px-4 py-3">
+                                        {inactivo ? (
+                                            <span className="text-red-600 font-semibold">Inactivo</span>
                                         ) : (
-                                            <button
-                                                onClick={() => handleToggleBaja(emp.id!, false)}
-                                                className="p-2 rounded-full bg-green-50 hover:bg-green-100 text-green-600"
-                                                title="Reactivar"
-                                            >
-                                                <Check className="w-4 h-4" />
-                                            </button>
+                                            <span className="text-green-700 font-semibold">Activo</span>
                                         )}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                                    </td>
+                                    <td className="p-4 text-center">
+                                        <div className="flex items-center justify-center space-x-2">
+                                            <button
+                                                onClick={() => handleEditClick(emp)}
+                                                className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600"
+                                                title="Editar"
+                                            >
+                                                <Pencil className="w-4 h-4" />
+                                            </button>
+                                            {!inactivo ? ( // Show "Delete" button if not inactive
+                                                <button
+                                                    onClick={() => handleToggleBaja(emp.id!, emp.persona?.id!, true)}
+                                                    className="p-2 rounded-full bg-red-50 hover:bg-red-100 text-red-600"
+                                                    title="Eliminar"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            ) : ( // Show "Reactivate" button if inactive
+                                                <button
+                                                    onClick={() => handleToggleBaja(emp.id!, emp.persona?.id!, false)}
+                                                    className="p-2 rounded-full bg-green-50 hover:bg-green-100 text-green-600"
+                                                    title="Reactivar"
+                                                >
+                                                    <Check className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                         </tbody>
                     </table>
                 </section>
@@ -269,21 +302,24 @@ export default function EmpleadoListPage() {
                                             alert("El username solo debe contener letras y espacios.");
                                             return;
                                         }
-                                        if (!validarEmail(editUser?.email || "")) {
-                                            alert("El email no es válido.");
-                                            return;
-                                        }
+                                        // The email input is disabled, so its value shouldn't be changed by the user.
+                                        // No need to validate it here unless it's editable.
+                                        // if (!validarEmail(editUser?.email || "")) {
+                                        //     alert("El email no es válido.");
+                                        //     return;
+                                        // }
                                         try {
                                             // Solo actualiza datos de usuario
                                             await usuarioService.updateUsuario(editUser!.id!, {
                                                 username: editUser!.username,
-                                                email: editUser!.email,
+                                                email: editUser!.email, // Keep email as is if not editable
                                                 rol: editUser!.rol,
                                             });
                                             await fetchData();
                                             setShowForm(false);
                                         } catch (e) {
                                             alert("Error al actualizar usuario");
+                                            console.error("Error updating user:", e); // Log the actual error
                                         }
                                     }}
                                     className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
@@ -316,7 +352,7 @@ export default function EmpleadoListPage() {
                                         }
                                         // Si pasa validaciones, actualizá
                                         try {
-                                            await clienteService.updateCliente(editCliente.id, {
+                                            await clienteService.updateCliente(editCliente.id!, { // Ensure editCliente.id is not null
                                                 nombre: editCliente.nombre,
                                                 apellido: editCliente.apellido,
                                                 telefono: editCliente.telefono,
@@ -326,6 +362,7 @@ export default function EmpleadoListPage() {
                                             setShowForm(false);
                                         } catch (e) {
                                             alert("Error al actualizar persona");
+                                            console.error("Error updating person:", e); // Log the actual error
                                         }
                                     }}
                                     className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
