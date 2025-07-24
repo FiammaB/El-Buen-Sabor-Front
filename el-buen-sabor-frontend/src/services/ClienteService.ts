@@ -28,7 +28,10 @@ export class ClienteService {
     }
 
     async toggleBaja(id: number, baja: boolean): Promise<void> {
-        await axios.patch(`${API_URL}/${id}/baja?baja=${baja}`);
+        const response = await fetch(`${API_URL}/${id}/baja?baja=${baja}`, {
+            method: "PATCH",
+        });
+        if (!response.ok) throw new Error("No se pudo actualizar el estado de baja.");
     }
 
     async createEmpleadoPersona(data: PersonaEmpleadoCreateDTO): Promise<IClienteDTO> {

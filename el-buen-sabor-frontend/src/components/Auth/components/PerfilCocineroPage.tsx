@@ -24,7 +24,7 @@ type PerfilDTO = {
 };
 
 export default function PerfilCocineroPage() {
-  const { email } = useAuth();
+  const { email, login, id, role } = useAuth();
   const [perfil, setPerfil] = useState<PerfilDTO | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -98,16 +98,26 @@ export default function PerfilCocineroPage() {
     }
 
     try {
-      await axios.put(`http://localhost:8080/api/usuarios/perfil/${email}`, {
-        nombre: form.nombre,
-        apellido: form.apellido,
-        telefono: form.telefono,
-        fechaNacimiento: form.fechaNacimiento,
-        email: email,
-        passwordActual: form.passwordActual || null,
-        nuevaPassword: form.nuevaPassword || null,
-        repetirPassword: form.repetirPassword || null,
-      });
+      const res = await axios.put<PerfilDTO>(
+        `http://localhost:8080/api/usuarios/perfil/${email}`,
+        {
+          nombre: form.nombre,
+          apellido: form.apellido,
+          telefono: form.telefono,
+          fechaNacimiento: form.fechaNacimiento,
+          email: email,
+          passwordActual: form.passwordActual || null,
+          nuevaPassword: form.nuevaPassword || null,
+          repetirPassword: form.repetirPassword || null,
+        }
+      );
+
+      // ✅ Actualizar en tiempo real
+      setPerfil(res.data);
+
+      // ✅ Refrescar AuthContext
+      const nombreCompleto = `${res.data.nombre} ${res.data.apellido}`.trim();
+      login(id!, role!, nombreCompleto, res.data.usuario.email, res.data.telefono);
 
       setMsg("Perfil actualizado exitosamente.");
       setEditMode(false);

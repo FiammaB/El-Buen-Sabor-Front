@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../Context/AuthContext";
 import axios from "axios";
-import { Pencil } from "lucide-react"; // ✏️ Ícono
+import { Pencil } from "lucide-react";
 
 type PerfilDTO = {
   id: number;
@@ -25,7 +25,7 @@ type PerfilDTO = {
 };
 
 export default function PerfilDeliveryPage() {
-  const { email } = useAuth();
+  const { email, login, id, role } = useAuth();
   const [perfil, setPerfil] = useState<PerfilDTO | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -99,23 +99,31 @@ export default function PerfilDeliveryPage() {
     }
 
     try {
-      await axios.put(`http://localhost:8080/api/usuarios/perfil/${email}`, {
-        nombre: form.nombre,
-        apellido: form.apellido,
-        telefono: form.telefono,
-        fechaNacimiento: form.fechaNacimiento,
-        email: email,
-        passwordActual: form.passwordActual || null,
-        nuevaPassword: form.nuevaPassword || null,
-        repetirPassword: form.repetirPassword || null,
-      });
+      const res = await axios.put<PerfilDTO>(
+        `http://localhost:8080/api/usuarios/perfil/${email}`,
+        {
+          nombre: form.nombre,
+          apellido: form.apellido,
+          telefono: form.telefono,
+          fechaNacimiento: form.fechaNacimiento,
+          email: email,
+          passwordActual: form.passwordActual || null,
+          nuevaPassword: form.nuevaPassword || null,
+          repetirPassword: form.repetirPassword || null,
+        }
+      );
+
+      // ✅ Actualiza el perfil en tiempo real
+      setPerfil(res.data);
+
+      // ✅ Refresca AuthContext
+      const nombreCompleto = `${res.data.nombre} ${res.data.apellido}`.trim();
+      login(id!, role!, nombreCompleto, res.data.usuario.email, res.data.telefono);
 
       setMsg("Perfil actualizado exitosamente.");
       setEditMode(false);
     } catch (error: any) {
-      setMsg(
-        error.response?.data?.error || "Error al actualizar el perfil."
-      );
+      setMsg(error.response?.data?.error || "Error al actualizar el perfil.");
     } finally {
       setLoading(false);
     }
@@ -227,9 +235,7 @@ export default function PerfilDeliveryPage() {
 
         {/* Contraseña opcional */}
         <div className="border-t pt-4 mt-4">
-          <h3 className="font-semibold mb-2">
-            Cambiar Contraseña (opcional)
-          </h3>
+          <h3 className="font-semibold mb-2">Cambiar Contraseña (opcional)</h3>
           <div>
             <label className="font-medium">Contraseña actual</label>
             <input

@@ -39,12 +39,20 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
           <h3 className="text-lg font-bold mb-2">📊 Ver Estadísticas</h3>
           <p className="text-sm text-gray-600 mb-4">Revisar pedidos, ventas y más.</p>
-          <button
-            onClick={() => navigate("/admin/estadisticas")}
-            className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
-          >
-            Ver Estadísticas
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={() => navigate("/admin/ranking-productos")}
+              className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600  w-full"
+            >
+              Ranking de Productos
+            </button>
+            <button
+              onClick={() => navigate("/admin/ranking-clientes")}
+              className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600  w-full"
+            >
+              Ranking de Clientes
+            </button>
+          </div>
         </div>
 
         {/* 🎉 Promociones */}
@@ -52,7 +60,7 @@ export default function AdminDashboard() {
           <h3 className="text-lg font-bold mb-2">🎉 Crear Promociones</h3>
           <p className="text-sm text-gray-600 mb-4">Agregá nuevas promociones para mostrar a los clientes.</p>
           <button
-            onClick={() => navigate("/promociones")}
+            onClick={() => navigate("/admin/promociones")}
             className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
           >
             Promociónes ABM
@@ -71,29 +79,11 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {/* 📈 Rankings */}
-        <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
-          <h3 className="text-lg font-bold mb-2">Rankings </h3>
-          <p className="text-sm text-gray-600 mb-4">Ver Rankings.</p>
-          <div className="space-y-2">
-            <button
-              onClick={() => navigate("/admin/ranking-productos")}
-              className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600  w-full"
-            >
-              Ranking de Productos
-            </button>
-            <button
-              onClick={() => navigate("/admin/ranking-clientes")}
-              className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600  w-full"
-            >
-              Ranking de Clientes
-            </button>
-          </div>
-        </div>
+
 
         {/*
         {/* 👥 Registro de empleados */}
-        {/*
+
         <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">
           <h3 className="text-lg font-bold mb-2">👥 Registrar Empleado</h3>
           <p className="text-sm text-gray-600 mb-4">Crear cuentas para cocineros o cajeros.</p>
@@ -112,7 +102,7 @@ export default function AdminDashboard() {
             </button>
           </div>
         </div>
-        */}
+
 
         {/* 🚪 Cerrar sesión */}
         <div className="bg-white rounded-xl shadow-md p-6 border hover:border-orange-300">

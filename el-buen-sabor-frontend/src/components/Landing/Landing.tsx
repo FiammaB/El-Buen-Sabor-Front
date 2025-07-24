@@ -260,11 +260,7 @@ export default function Landing() {
 								))}
 							</div>
 						)}
-						<div className="text-center mt-12">
-							<Link to="/promociones" className="bg-orange-500 text-white px-8 py-3 rounded-full hover:bg-orange-600 transition duration-200 font-medium">
-								Ver todas las promociones
-							</Link>
-						</div>
+
 					</section>
 					{/* Promociones destacadas - FIN DE LA SECCIÓN MODIFICADA */}
 

@@ -37,8 +37,8 @@ export default function VerPedidoPage() {
                     {pedido.persona
                         ? (
                             pedido.persona.nombre
-                                ? `${pedido.persona.usuario.nombre} ${pedido.persona.apellido ?? ""}`
-                                : `${pedido.persona.nombre ?? ""} ${pedido.persona.apellido ?? ""}`
+                                ? `${pedido.persona.nombre} ${pedido.persona.apellido ?? ""}`
+                                : `${pedido.persona.usuario.nombre ?? ""} ${pedido.persona.apellido ?? ""}`
                         ).trim()
                         : pedido.personaId ?? "-"
                     }
