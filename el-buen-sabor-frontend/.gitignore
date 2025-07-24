@@ -23,3 +23,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+node_modules/
+.pnpm-store/
+
+# Archivos de lock de paquetes
+package-lock.json
+yarn.lock
+
+# Otros
+.env
+build/
+dist/
+.DS_Store
