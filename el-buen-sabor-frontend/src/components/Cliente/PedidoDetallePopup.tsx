@@ -41,11 +41,18 @@ export default function PedidoDetallePopup({ pedido, onClose }: PedidoDetallePop
         }
     };
 
+    const detallesOrdenados = [...(pedido.detalles || [])].sort((a, b) => {
+        const getTipoOrden = (d: any) =>
+            d.promocion ? 0 : d.articuloManufacturado ? 1 : 2;
+        return getTipoOrden(a) - getTipoOrden(b);
+    });
+
     if (!pedido) return null;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-lg relative">
+            <div className="bg-white rounded-xl shadow-lg w-full max-w-lg relative">
+                <div className="max-h-[70vh] overflow-y-auto p-8">
                 <button onClick={onClose} className="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
                     <X className="w-6 h-6" />
                 </button>
@@ -72,7 +79,7 @@ export default function PedidoDetallePopup({ pedido, onClose }: PedidoDetallePop
                     <div>
                         <b>Artículos:</b>
                         <ul className="ml-4 list-disc">
-                            {pedido.detalles?.map(det => (
+                            {detallesOrdenados.map(det => (
                                 <li key={det.id} className="mb-2">
                                     {det.promocion ? (
                                         <div>
@@ -151,6 +158,7 @@ export default function PedidoDetallePopup({ pedido, onClose }: PedidoDetallePop
                             </button>
                         </div>
                     )}
+                </div>
                 </div>
             </div>
         </div>
