@@ -13,6 +13,7 @@ export default function PedidosPage() {
   const [pedidos, setPedidos] = useState<IPedidoDTO[]>([]);
   const [openSlideIds, setOpenSlideIds] = useState<Set<number>>(new Set());
   const [delayMinutes, setDelayMinutes] = useState<{[key: number]: number}>({});
+  const { id: userId } = useAuth();
 
   useEffect(() => {
     if (role === "COCINERO") {
@@ -32,7 +33,10 @@ export default function PedidosPage() {
 
   const cambiarEstado = async (id: number, nuevoEstado: string) => {
     try {
-      await pedidoService.actualizarEstadoPedido(id, nuevoEstado);
+      await pedidoService.actualizarEstadoPedido(id, {
+        estado: nuevoEstado,
+        empleadoId: userId, // <--- pasa el id del usuario logueado si es necesario
+      });
       fetchPedidos();
     } catch (error) {
       console.error("Error al actualizar estado:", error);

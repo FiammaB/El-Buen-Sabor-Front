@@ -15,7 +15,8 @@ type PerfilDTO = {
     username: string;
     rol: string;
   };
-  domicilio?: {
+  domicilios?: {
+    id: number;
     calle: string;
     numero: number;
     cp: string;
@@ -28,8 +29,9 @@ type PerfilDTO = {
         };
       };
     };
-  };
+  }[];
 };
+
 
 export default function ClientePerfilPage() {
   const { email, login, id, role } = useAuth();
@@ -147,7 +149,7 @@ export default function ClientePerfilPage() {
   }
 
   if (!editMode) {
-    const dom = perfil.domicilio;
+    const dom = perfil.domicilios;
     return (
       <div className="max-w-2xl mx-auto bg-white rounded-xl shadow p-8 mt-8 relative">
         {/* Botón de lápiz */}
@@ -176,17 +178,16 @@ export default function ClientePerfilPage() {
           <div><b>Fecha de nacimiento:</b> {perfil.fechaNacimiento}</div>
           <div><b>Email:</b> {perfil.usuario.email}</div>
           <div><b>Usuario:</b> {perfil.usuario.username}</div>
-          {dom && (
-            <div className="mt-4 border-t pt-4">
-              <h3 className="text-lg font-semibold">Dirección registrada</h3>
-              <div>
-                {dom.calle} {dom.numero} ({dom.cp})
+          {perfil.domicilios && perfil.domicilios.length > 0 && (
+              <div className="mt-4 border-t pt-4">
+                <h3 className="text-lg font-semibold">Domicilios registrados</h3>
+                {perfil.domicilios.map((dom, idx) => (
+                    <div key={dom.id ?? idx} className="mb-2">
+                      <div>{dom.calle} {dom.numero} ({dom.cp})</div>
+                      <div>{dom.localidad?.nombre}, {dom.localidad?.provincia?.nombre}, {dom.localidad?.provincia?.pais?.nombre}</div>
+                    </div>
+                ))}
               </div>
-              <div>
-                {dom.localidad?.nombre}, {dom.localidad?.provincia?.nombre},{" "}
-                {dom.localidad?.provincia?.pais?.nombre}
-              </div>
-            </div>
           )}
         </div>
 

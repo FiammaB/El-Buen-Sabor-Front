@@ -3,6 +3,7 @@ import { PedidoService } from "../../services/PedidoService";
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO";
 import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {useAuth} from "../Auth/Context/AuthContext.tsx";
 
 export default function DeliveryPedidosPage() {
     const [pedidos, setPedidos] = useState<IPedidoDTO[]>([]);
@@ -10,6 +11,7 @@ export default function DeliveryPedidosPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const { id: userId } = useAuth();
     // Solo trae pedidos en estado "EN_DELIVERY"
     const fetchPedidos = async () => {
         setLoading(true);
@@ -31,8 +33,15 @@ export default function DeliveryPedidosPage() {
     // Cambia el estado a ENTREGADO y recarga la grilla
     const handleEntregado = async (pedido: IPedidoDTO) => {
         if (!window.confirm("¿Marcar este pedido como ENTREGADO?")) return;
-        await new PedidoService().actualizarEstadoPedido(pedido.id!, "ENTREGADO");
-        fetchPedidos();
+        try {
+            await new PedidoService().actualizarEstadoPedido(pedido.id!, {
+                estado: "ENTREGADO",
+                empleadoId: userId // <- IMPORTANTE: este es el ID del delivery logueado
+            });
+            fetchPedidos();
+        } catch (e) {
+            alert("No se pudo actualizar el pedido.");
+        }
     };
 
     const calcularTotal = (pedido: IPedidoDTO) => {
