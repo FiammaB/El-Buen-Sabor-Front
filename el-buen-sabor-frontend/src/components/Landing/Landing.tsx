@@ -57,7 +57,7 @@ export default function Landing() {
 	};
 
 	const categoriasVisibles = [
-		"Pizza", "Empanada", "Hamburguesa", "Sanguche", "Lomito", "Bebida", "Postre", "Pasta", "Ensalada", "Picada", "Sushi", "Taco", "Burrito", "Wrap", "Tortilla", "Galleta", "Helado", "Tarta", "Sopa", "Pescado", "Mariscos", "Asado", "Pollo", "Vegetariano", "Vegano", "Desayuno", "Brunch", "Comida Rápida", "Comida Saludable"
+		"Pizza", "Empanada", "Hamburguesa", "Sanguche", "Lomito", "Bebida", "Postre", "Pasta", "Ensalada", "Picada", "Sushi", "Taco", "Burrito", "Wrap", "Tortilla", "Galleta", "Helado", "Tarta", "Sopa", "Pescado", "Mariscos", "Asado", "Pollo", "Vegetariano", "Vegano", "Desayuno", "Brunch", "Comida Rápida", "Comida Saludable", "Papas", "Nachos", "Alitas", "Costillas", "Ceviche", "Curry", "Falafel", "Kebab", "Sushi Rolls", "Dim Sum", "Pho", "Ramen", "Banh Mi", "Bao Bun", "Poke Bowl", "Smoothie Bowl", "Papas Fritas", "Comida"
 	];
 
 	useEffect(() => {

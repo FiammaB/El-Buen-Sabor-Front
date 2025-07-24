@@ -46,7 +46,7 @@ const loadMercadoPagoScript = () => {
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items, totalItems, totalAmount, clearCart } = useCart();
+  const { items, totalItems, totalAmount } = useCart();
   const pedidoService = new PedidoService();
   const mercadoPagoService = new MercadoPagoService();
 
@@ -142,7 +142,7 @@ export default function CheckoutPage() {
           const textError = await response.text();
           setStockValidationErrors([`Error del servidor: ${textError.substring(0, 100)}...`]);
         } catch (subError) {
-          setStockValidationErrors(["Error de red o el servidor no respondió con un JSON válido."]);
+          setStockValidationErrors(["Error de red o el servidor no respondió con un JSON válido." + subError]);
         }
       } else {
         setStockValidationErrors(["No se pudo validar el stock con el servidor. Revisa tu conexión."]);
@@ -215,7 +215,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const collectionStatus = query.get("collection_status");
-    const paymentId = query.get("payment_id");
+    // const paymentId = query.get("payment_id");
     const externalReference = query.get("external_reference");
 
     const mercadoPagoInitiated = localStorage.getItem("mercadoPagoInitiated");
@@ -278,6 +278,7 @@ export default function CheckoutPage() {
         total: finalTotal,
         personaId: auth.id ?? undefined,
         domicilioId: deliveryType === TipoEnvio.DELIVERY ? selectedAddressId ?? undefined : undefined,
+        sucursalId: 1,
         detalles: detallesPedido,
       };
 
