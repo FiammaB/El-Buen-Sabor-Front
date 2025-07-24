@@ -151,7 +151,7 @@ const PromocionList: React.FC = () => {
                                     <p className="text-orange-500 font-bold text-xl mt-2">${promo.precioPromocional.toFixed(2)}</p>
 
                                     {/* --- BLOQUE CORREGIDO PARA MOSTRAR AMBOS TIPOS DE ARTÍCULOS --- */}
-                                    {(promo.promocionDetalles?.length > 0 || promo.articulosInsumos?.length > 0) && (
+                                    {(promo.promocionDetalles?.length > 0 || promo.promocionInsumoDetalles?.length > 0) && (
                                         <div className="mt-2 text-sm text-gray-700">
                                             <span className="font-semibold">Incluye:</span>
                                             <ul className="list-disc list-inside text-xs text-gray-600 mt-1">
@@ -163,9 +163,11 @@ const PromocionList: React.FC = () => {
                                                     </li>
                                                 ))}
 
-                                                {/* Mapea y muestra los artículos insumos */}
-                                                {promo.articulosInsumos?.map((insumo) => (
-                                                    <li key={`insumo-${insumo.id}`}>{insumo.denominacion}</li>
+                                                {/* Mapea y muestra los artículos insumos (CORREGIDO) */}
+                                                {promo.promocionInsumoDetalles?.map((detalleInsumo) => (
+                                                    <li key={`insumo-${detalleInsumo.id}`}>
+                                                        {detalleInsumo.cantidad}x {detalleInsumo.articuloInsumo.denominacion}
+                                                    </li>
                                                 ))}
 
                                             </ul>
