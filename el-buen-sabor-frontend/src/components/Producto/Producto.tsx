@@ -7,8 +7,8 @@ import {
   Plus,
   Minus,
   ArrowLeft,
-
-
+  Ban,
+  X,
 } from "lucide-react";
 import { useCart } from "../../components/Cart/context/cart-context";
 import { ArticuloManufacturado } from "../../models/Articulos/ArticuloManufacturado";
@@ -17,19 +17,21 @@ import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO";
 import { getPromocionById, getPromociones } from "../../services/PromocionService";
 import { ArticuloInsumo } from "../../models/Articulos/ArticuloInsumo.ts";
 
-// Se mantiene tu tipo unificado
 type ProductDetailType = Articulo | IPromocionDTO;
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addToCart, getItemQuantity, updateQuantity } = useCart();
+  // Obtenemos las funciones del carrito. `getItemQuantity` será la "fuente de verdad" para la cantidad.
+  const { addToCart, getItemQuantity, updateQuantity, removeFromCart } = useCart();
 
   const [producto, setProducto] = useState<ProductDetailType | null>(null);
   const [related, setRelated] = useState<ArticuloManufacturado[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  // Eliminamos el estado `quantity` local para el producto principal.
+  // La cantidad mostrada y manipulada se derivará directamente de `getItemQuantity`.
+
   const [relatedPromos, setRelatedPromos] = useState<IPromocionDTO[]>([]);
 
   useEffect(() => {
@@ -39,7 +41,6 @@ export default function ProductDetailPage() {
       let fetchedProduct: ProductDetailType | null = null;
 
       try {
-        // Tu lógica para cargar el producto principal (Manufacturado, Promo o Insumo)
         const res = await fetch(`http://localhost:8080/api/articuloManufacturado/${id}`);
         if (res.ok) {
           fetchedProduct = Object.setPrototypeOf(await res.json(), ArticuloManufacturado.prototype) as ArticuloManufacturado;
@@ -61,22 +62,7 @@ export default function ProductDetailPage() {
 
         if (fetchedProduct) {
           setProducto(fetchedProduct);
-          setQuantity(getItemQuantity(fetchedProduct.id || 0) || 1);
-
-          // =======================================================
-          // ✅ AQUÍ ESTÁ LA LÓGICA CORREGIDA PARA BUSCAR PROMOCIONES
-          // =======================================================
-          try {
-            const allPromos = await getPromociones();
-            const relatedP = allPromos
-              .filter(p => !p.baja && p.id !== fetchedProduct?.id)
-              .slice(0, 2);
-            setRelatedPromos(relatedP);
-          } catch (promoError) {
-            console.error("Error al cargar promociones relacionadas:", promoError);
-          }
-          // =======================================================
-
+          // Ya no es necesario `setQuantity` aquí; la cantidad se obtendrá del contexto del carrito.
         } else {
           setError("Producto no encontrado.");
         }
@@ -89,17 +75,15 @@ export default function ProductDetailPage() {
     };
 
     if (id) fetchProductDetails();
-  }, [id]);
+  }, [id]); // Dependencias: solo `id` porque `getItemQuantity` es una función del contexto que no cambia.
 
-  // Tu segundo useEffect para buscar productos relacionados se mantiene igual
+  // Efecto para cargar productos relacionados
   useEffect(() => {
     const fetchRelated = async () => {
-      if (
-        producto instanceof ArticuloManufacturado &&
-        producto.categoria?.id
-      ) {
+      if (producto instanceof ArticuloManufacturado && producto.categoria?.id) {
         try {
           const res = await fetch(
+            // ✅ FILTRADO POR `baja=false` PARA PRODUCTOS RELACIONADOS
             `http://localhost:8080/api/articuloManufacturado/filtrar?categoriaId=${producto.categoria.id}&baja=false`
           );
           const data: ArticuloManufacturado[] = await res.json();
@@ -117,41 +101,64 @@ export default function ProductDetailPage() {
     };
 
     fetchRelated();
-  }, [producto]);
+  }, [producto]); // `producto` como dependencia está bien.
 
-  const increaseQty = () => {
-
-    const newQuantity = Math.min(quantity + 1, 10);
-
-    setQuantity(newQuantity);
-
-    if (producto && getItemQuantity(producto.id ?? 0) > 0) {
-      updateQuantity(producto.id ?? 0, newQuantity);
+  // Efecto para cargar promociones relacionadas
+  useEffect(() => {
+    const fetchPromos = async () => {
+      try {
+        const allPromos = await getPromociones();
+        // Filtra por promociones activas (no de baja) y que no sean el producto actual
+        const relatedP = allPromos
+          .filter(p => !p.baja && p.id !== producto?.id) // ✅ Asegura que no se muestren promos de baja aquí
+          .slice(0, 2);
+        setRelatedPromos(relatedP);
+      } catch (promoError) {
+        console.error("Error al cargar promociones relacionadas:", promoError);
+      }
+    };
+    // Carga las promociones relacionadas solo si el producto principal ya está cargado
+    if (producto) {
+      fetchPromos();
     }
-  };
+  }, [producto]); // Dependencia `producto` para que se re-ejecute cuando el producto principal esté listo.
 
-  const decreaseQty = () => {
+  // ---
+  // LÓGICA DE CANTIDAD Y CARRITO PARA EL PRODUCTO PRINCIPAL
+  // ---
 
-    const newQuantity = Math.max(quantity - 1, 1);
+  // La cantidad actual del producto principal en el carrito. Esta es la fuente de verdad.
+  const currentProductQuantity = getItemQuantity(producto?.id || 0);
 
-    setQuantity(newQuantity);
-
-
-    if (producto && getItemQuantity(producto.id ?? 0) > 0) {
-      updateQuantity(producto.id ?? 0, newQuantity);
-    }
-  };
-
-  const handleAddToCart = () => {
+  const handleIncreaseQty = () => {
     if (!producto) return;
-
-    // Diferenciar el tipo para addToCart
-    if (producto instanceof ArticuloManufacturado) {
-      addToCart(producto as Articulo, quantity); // Castear a Articulo para el contexto
-    } else { // Es una Promocion
-      addToCart(producto as IPromocionDTO, quantity); // Pasar la promoción directamente
+    // Si el producto no está en el carrito (o su cantidad es 0), lo agregamos con cantidad 1.
+    // Si ya está, actualizamos su cantidad (incrementamos en 1).
+    if (currentProductQuantity === 0) {
+      addToCart(producto, 1);
+    } else {
+      updateQuantity(producto.id || 0, currentProductQuantity + 1);
     }
   };
+
+  const handleDecreaseQty = () => {
+    if (!producto) return;
+    const newQuantityInCart = currentProductQuantity - 1;
+
+    if (newQuantityInCart <= 0) {
+      removeFromCart(producto.id || 0); // Si la cantidad llega a 0, lo eliminamos
+    } else {
+      updateQuantity(producto.id || 0, newQuantityInCart); // Actualiza la cantidad
+    }
+  };
+
+  // El botón principal de "Agregar al Carrito" también llama a `handleIncreaseQty`
+  // para simplificar la lógica y evitar el pestañeo.
+  // Si deseas un "picker" de cantidad inicial diferente, sería una refactorización más compleja.
+  const handleMainAddToCartButton = () => {
+    handleIncreaseQty(); // Al hacer clic en el botón principal, se comporta como el '+'
+  };
+
 
   if (loading) return <div className="p-6">Cargando producto...</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
@@ -159,6 +166,8 @@ export default function ProductDetailPage() {
 
   const isArticuloManufacturado = producto instanceof ArticuloManufacturado;
   const isPromocion = 'precioPromocional' in producto;
+  // Determina si el producto principal está "de baja" para deshabilitar los controles
+  const isProductBaja = producto.baja;
 
 
   return (
@@ -173,7 +182,6 @@ export default function ProductDetailPage() {
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* ... Tu JSX para la imagen principal ... */}
           <div className="relative w-full h-80 bg-gray-100 rounded-2xl overflow-hidden">
             <img
               src={producto.imagen?.denominacion || "/placeholder.svg"}
@@ -183,7 +191,6 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="space-y-6">
-            {/* ... Tu JSX para los detalles del producto, precio y botones ... */}
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 {producto.denominacion}
@@ -196,26 +203,54 @@ export default function ProductDetailPage() {
               {isPromocion ? `$${producto.precioPromocional?.toFixed(2)}` : `$${(producto as Articulo).precioVenta?.toFixed(2)}`}
             </div>
             <div className="flex items-center gap-4">
-              <button
-                onClick={decreaseQty}
-                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <span className="text-xl font-semibold">{quantity}</span>
-              <button
-                onClick={increaseQty}
-                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+              {/* Botón de decrementar para el producto principal */}
+              {isProductBaja ? (
+                <button className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 cursor-not-allowed" disabled>
+                  <Ban className="w-4 h-4 text-red-600" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleDecreaseQty}
+                  // Deshabilita el botón si la cantidad en el carrito es 0
+                  disabled={currentProductQuantity === 0}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition ${currentProductQuantity === 0 ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-red-500 text-white hover:bg-red-600"
+                    }`}
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* Muestra la cantidad actual del carrito para el producto principal */}
+              <span className="text-xl font-semibold">{currentProductQuantity}</span>
+
+              {/* Botón de incrementar para el producto principal */}
+              {isProductBaja ? (
+                <button className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 cursor-not-allowed" disabled>
+                  <Ban className="w-4 h-4 text-red-600" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleIncreaseQty}
+                  className="w-10 h-10 rounded-full bg-green-500 text-white hover:bg-green-600 flex items-center justify-center"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              )}
             </div>
-            <button onClick={handleAddToCart} className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-semibold flex justify-center items-center gap-2 text-lg">
+            {/* El botón principal de "Agregar al Carrito" */}
+            <button
+              onClick={handleMainAddToCartButton}
+              disabled={isProductBaja}
+              className={`w-full mt-6 py-4 rounded-xl font-semibold flex justify-center items-center gap-2 text-lg transition duration-200
+                ${isProductBaja ? "bg-gray-300 text-gray-500 cursor-not-allowed" : (currentProductQuantity > 0 ? "bg-green-500 hover:bg-green-600" : "bg-orange-500 hover:bg-orange-600")} text-white`}
+            >
               <ShoppingCart className="w-5 h-5" />
-              {getItemQuantity(producto.id || 0) > 0 ? `Agregado al carrito` : "Agregar al carrito"}
+              {isProductBaja ? "Producto no disponible" : (currentProductQuantity > 0 ? `Agregado al carrito (${currentProductQuantity})` : "Agregar al carrito")}
             </button>
           </div>
         </div>
+
+        ---
 
         {/* --- SECCIÓN DE PROMOCIONES RELACIONADAS (CON BOTONES INTERACTIVOS) --- */}
         {relatedPromos.length > 0 && (
@@ -230,32 +265,56 @@ export default function ProductDetailPage() {
                     <p className="text-orange-500 font-bold text-sm">${promo.precioPromocional.toFixed(2)}</p>
                   </div>
 
-                  {/* --- Lógica de botones interactivos --- */}
+                  {/* --- Lógica de botones interactivos para promos relacionadas --- */}
                   <div className="flex items-center gap-2">
-                    {getItemQuantity(promo.id) > 0 ? (
+                    {promo.baja ? (
+                      <button className="p-2 rounded-full bg-gray-200 text-gray-500 cursor-not-allowed" disabled>
+                        <Ban className="w-4 h-4 text-red-600" />
+                      </button>
+                    ) : (
                       <>
-                        <button onClick={() => updateQuantity(promo.id, getItemQuantity(promo.id) - 1)} className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition">
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="font-bold">{getItemQuantity(promo.id)}</span>
-                        <button onClick={() => updateQuantity(promo.id, getItemQuantity(promo.id) + 1)} className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition">
+                        {getItemQuantity(promo.id) > 0 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); updateQuantity(promo.id, getItemQuantity(promo.id) - 1); }}
+                            className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition duration-200"
+                            title="Disminuir cantidad"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                        )}
+                        {getItemQuantity(promo.id) > 0 && (
+                          <span className="font-bold text-lg">{getItemQuantity(promo.id)}</span>
+                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); addToCart(promo); }}
+                          className={`p-2 rounded-full transition duration-200 ${getItemQuantity(promo.id) > 0
+                            ? "bg-green-500 text-white hover:bg-green-600"
+                            : "bg-orange-500 text-white hover:bg-orange-600"
+                            }`}
+                          title="Aumentar cantidad"
+                        >
                           <Plus className="w-4 h-4" />
                         </button>
+                        {getItemQuantity(promo.id) > 0 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removeFromCart(promo.id); }}
+                            className="p-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition duration-200 ml-2"
+                            title="Eliminar todas las unidades del carrito"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
                       </>
-                    ) : (
-                      <button onClick={() => addToCart(promo)} className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition">
-                        <Plus className="w-4 h-4" />
-                      </button>
                     )}
                   </div>
-
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* --- SECCIÓN DE PRODUCTOS RELACIONADOS (TU ESTILO) --- */}
+        ---
+
         {/* --- SECCIÓN DE PRODUCTOS RELACIONADOS (CON ESTILO DE LISTA Y BOTONES INTERACTIVOS) --- */}
         {related.length > 0 && (
           <div className="bg-white rounded-2xl shadow-sm p-6 mt-6">
@@ -269,25 +328,42 @@ export default function ProductDetailPage() {
                     <p className="text-orange-500 font-bold text-sm">${relatedProd.precioVenta.toFixed(2)}</p>
                   </div>
 
-                  {/* --- Lógica de botones interactivos --- */}
+                  {/* --- Lógica de botones interactivos para productos relacionados --- */}
                   <div className="flex items-center gap-2">
-                    {getItemQuantity(relatedProd.id ?? 0) > 0 ? (//Argument of type 'number | undefined' is not assignable to parameter of type 'number'. Type 'undefined' is not assignable to type 'number'.
+                    {relatedProd.baja ? ( // Verifica si el producto relacionado está de baja
+                      <button className="p-2 rounded-full bg-gray-200 text-gray-500 cursor-not-allowed" disabled>
+                        <Ban className="w-4 h-4 text-red-600" />
+                      </button>
+                    ) : (
                       <>
-                        <button onClick={() => updateQuantity(relatedProd.id ?? 0, getItemQuantity(relatedProd.id ?? 0) - 1)} className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition">
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="font-bold">{getItemQuantity(relatedProd.id ?? 0)}</span>
-                        <button onClick={() => updateQuantity(relatedProd.id ?? 0, getItemQuantity(relatedProd.id ?? 0) + 1)} className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition">
+                        {getItemQuantity(relatedProd.id || 0) > 0 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); updateQuantity(relatedProd.id || 0, getItemQuantity(relatedProd.id || 0) - 1); }}
+                            className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                        )}
+                        {getItemQuantity(relatedProd.id || 0) > 0 && (
+                          <span className="font-bold">{getItemQuantity(relatedProd.id || 0)}</span>
+                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); addToCart(relatedProd); }}
+                          className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition"
+                        >
                           <Plus className="w-4 h-4" />
                         </button>
+                        {getItemQuantity(relatedProd.id || 0) > 0 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removeFromCart(relatedProd.id || 0); }}
+                            className="p-2 bg-gray-400 text-white rounded-full hover:bg-gray-500 transition duration-200 ml-2"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
                       </>
-                    ) : (
-                      <button onClick={() => addToCart(relatedProd)} className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition">
-                        <Plus className="w-4 h-4" />
-                      </button>
                     )}
                   </div>
-
                 </div>
               ))}
             </div>
