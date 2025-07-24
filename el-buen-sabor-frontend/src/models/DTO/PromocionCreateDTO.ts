@@ -1,28 +1,26 @@
-// src/models/DTO/PromocionCreateDTO.ts
-// Asegúrate de que TipoPromocion también esté definido en algún lugar (ej. en IPromocionDTO.ts)
-// export type TipoPromocion = "HAPPY_HOUR" | "PROMOCION_GENERAL"; // Si es un string literal
-
-export interface PromocionDetalleArticuloDTO {
-    id: number;
-}
-export interface PromocionDetalleDTO {
+export interface PromocionDetalleCreateDTO {
+    // Corregido para que el backend lo entienda
+    articuloManufacturado: { id: number };
     cantidad: number;
-    // La propiedad es un objeto, no un ID
-    articuloManufacturado: PromocionDetalleArticuloDTO; 
 }
+
+export interface PromocionInsumoDetalleCreateDTO {
+    // Este ya estaba bien
+    articuloInsumoId: number;
+    cantidad: number;
+}
+
 export interface PromocionCreateDTO {
     denominacion: string;
-    descripcionDescuento?: string; // Corresponde a descripcionDescuento en tu backend
-    fechaDesde: string; // ISO date string (YYYY-MM-DD)
-    fechaHasta: string; // ISO date string (YYYY-MM-DD)
-    horaDesde: string; // HH:MM:SS
-    horaHasta: string; // HH:MM:SS
+    descripcionDescuento: string;
+    fechaDesde: string;
+    fechaHasta: string;
+    horaDesde: string;
+    horaHasta: string;
     precioPromocional: number;
-    tipoPromocion: string; // String que representa el enum de Java (ej. "HAPPY_HOUR")
-    imagenId?: number | null; // ID de la imagen en Cloudinary, opcional
-    //articuloManufacturadoIds: number[]; // IDs de los ArticulosManufacturados
-    promocionDetalles: PromocionDetalleDTO[];
-    articuloInsumoIds: number[];
-    sucursalIds?: number[]; // Opcional, si las promociones son por sucursal
-
+    tipoPromocion: string;
+    imagenId: number | null;
+    promocionDetalles: PromocionDetalleCreateDTO[];
+    promocionInsumoDetalles: PromocionInsumoDetalleCreateDTO[];
+    sucursalIds: number[];
 }

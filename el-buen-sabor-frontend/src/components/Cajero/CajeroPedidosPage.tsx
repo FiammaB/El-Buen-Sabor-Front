@@ -69,6 +69,8 @@ export default function CajeroPedidosPage() {
     const [selectedEstados, setSelectedEstados] = useState<string[]>([]);
     const [idBusqueda, setIdBusqueda] = useState<string>("");
     const [fechaFiltro, setFechaFiltro] = useState<string>("");
+    const { id: userId, role } = useAuth();
+
 
     const fetchPedidos = async () => {
         setLoading(true);
@@ -137,9 +139,18 @@ export default function CajeroPedidosPage() {
     const handleAvanzarEstado = async (pedido: IPedidoDTO) => {
         const prox = getProximoEstado(pedido);
         if (!prox) return;
-        await new PedidoService().actualizarEstadoPedido(pedido.id!, prox.estado);
 
-        // Recargá toda la lista (esto actualiza tanto allPedidos como filteredPedidos)
+        // Armá el payload con el estado y, si existe, el id del usuario logueado
+        let payload: { estado: string, empleadoId?: number } = { estado: prox.estado };
+
+        // Solo mandá empleadoId si hay usuario logueado y si es un rol correspondiente
+        if (userId && ["CAJERO", "COCINERO", "DELIVERY"].includes(role ?? "")) {
+            payload.empleadoId = userId;
+        }
+
+        await new PedidoService().actualizarEstadoPedido(pedido.id!, payload);
+
+        // Recargá toda la lista
         const nuevosPedidos = await new PedidoService().getAllPedidos();
         setAllPedidos(nuevosPedidos);
     };

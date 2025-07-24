@@ -1,20 +1,25 @@
-import type { IImagenResponseDTO } from './IImagenResponseDTO';
-import type { IArticuloInsumoResponseDTO } from './IAArticuloInsumoResponseDTO';
-
-// Esta interfaz es para el artículo manufacturado dentro del detalle
-export interface IArticuloManufacturadoDTO {
+export interface IImagenDTO {
     id: number;
     denominacion: string;
 }
 
-// Esta interfaz representa una línea de detalle en la promoción (con cantidad)
+export interface IArticuloSimpleDTO {
+    id: number;
+    denominacion: string;
+}
+
 export interface IPromocionDetalleDTO {
     id: number;
     cantidad: number;
-    articuloManufacturado: IArticuloManufacturadoDTO;
+    articuloManufacturado: IArticuloSimpleDTO;
 }
 
-// Esta es la interfaz principal y corregida de la Promoción
+export interface IPromocionInsumoDetalleDTO {
+    id: number;
+    cantidad: number;
+    articuloInsumo: IArticuloSimpleDTO;
+}
+
 export interface IPromocionDTO {
     id: number;
     denominacion: string;
@@ -25,16 +30,8 @@ export interface IPromocionDTO {
     horaHasta: string;
     precioPromocional: number;
     tipoPromocion: string;
-    baja: boolean; // Propiedad 'baja' correctamente definida
-
-    imagen?: IImagenResponseDTO;
-    
-    // SE ELIMINA LA PROPIEDAD ANTIGUA
-    // articulosManufacturados: IArticuloManufacturadoResponseDTO[]; 
-    
-    // SE AÑADE LA NUEVA PROPIEDAD EN SU LUGAR
+    baja: boolean;
+    imagen?: IImagenDTO;
     promocionDetalles: IPromocionDetalleDTO[];
-
-    articulosInsumos?: IArticuloInsumoResponseDTO[];
-    sucursales?: { id: number; denominacion: string }[];
+    promocionInsumoDetalles: IPromocionInsumoDetalleDTO[];
 }

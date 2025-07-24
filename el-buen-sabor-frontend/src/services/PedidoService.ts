@@ -56,10 +56,8 @@ export class PedidoService {
   }
 
   // Cocinero/Cajero: Cambiar estado del pedido
-  async actualizarEstadoPedido(id: number, nuevoEstado: string): Promise<void> {
-    await axios.patch(`${API_BASE_URL}/${id}/estado`, {
-      estado: nuevoEstado
-    });
+  async actualizarEstadoPedido(id: number, payload: { estado: string, empleadoId?: number }): Promise<void> {
+    await axios.patch(`${API_BASE_URL}/${id}/estado`, payload);
   }
 
   // Cajero: Obtener pedidos listos para cobrar
