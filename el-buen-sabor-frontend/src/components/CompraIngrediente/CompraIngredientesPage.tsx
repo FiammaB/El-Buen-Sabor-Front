@@ -26,6 +26,7 @@ const CompraIngredientesPage: React.FC = () => {
     // Recarga la lista de insumos
     const fetchInsumos = async () => {
         try {
+            // Fetch all insumos, regardless of their 'baja' status
             const data = await articuloService.getAllArticulosInsumo();
             setInsumos(data);
         } catch {
@@ -45,41 +46,54 @@ const CompraIngredientesPage: React.FC = () => {
     }, [selectedInsumoId, insumos]);
 
     const handleSumarStock = async () => {
-        if (!selectedInsumoId || cantidad <= 0) return;
+        if (!selectedInsumoId || cantidad <= 0) {
+            setError('Debe seleccionar un ingrediente y la cantidad debe ser mayor a 0 para sumar stock.');
+            return;
+        }
+        setError(null); // Clear previous errors
         try {
             await articuloService.sumarStock(selectedInsumoId, cantidad);
             setCantidad(0);
             fetchInsumos();
-        } catch {
-            setError('Error al sumar stock.');
+        } catch (err) {
+            setError('Error al sumar stock. Asegúrese de que el ingrediente exista y la cantidad sea válida.');
+            console.error("Error sumar stock:", err);
         }
     };
 
     const handleRestarStock = async () => {
-        if (!selectedInsumoId || cantidad <= 0) return;
+        if (!selectedInsumoId || cantidad <= 0) {
+            setError('Debe seleccionar un ingrediente y la cantidad debe ser mayor a 0 para restar stock.');
+            return;
+        }
+        setError(null); // Clear previous errors
         try {
             await articuloService.restarStock(selectedInsumoId, cantidad);
             setCantidad(0);
             fetchInsumos();
-        } catch {
-            setError('Error al restar stock.');
+        } catch (err) {
+            setError('Error al restar stock. Asegúrese de que el ingrediente exista y tenga suficiente stock.');
+            console.error("Error restar stock:", err);
         }
     };
 
     const handleActualizarPrecio = async () => {
-        if (!selectedInsumoId || nuevoPrecio === undefined) return;
+        if (!selectedInsumoId || nuevoPrecio === undefined || nuevoPrecio < 0) {
+            setError('Debe seleccionar un ingrediente y un precio válido (mayor o igual a 0) para actualizar.');
+            return;
+        }
+        setError(null); // Clear previous errors
         try {
             await articuloService.actualizarPrecioCompra(selectedInsumoId, nuevoPrecio);
             fetchInsumos();
-        } catch {
-            setError('Error al actualizar el precio.');
+        } catch (err) {
+            setError('Error al actualizar el precio. Asegúrese de que el ingrediente exista y el precio sea válido.');
+            console.error("Error actualizar precio:", err);
         }
     };
 
+    const insumosDisponiblesEnDropdown = insumos.slice().sort((a, b) => a.denominacion.localeCompare(b.denominacion)); // All insumos, sorted
 
-
-    // Solo ingredientes activos en el combo
-    const insumosActivos = insumos.filter(i => !i.baja);
     const selectedInsumo = insumos.find(i => i.id === selectedInsumoId);
 
     // Modal de alta rápida
@@ -104,15 +118,11 @@ const CompraIngredientesPage: React.FC = () => {
                                 onChange={e => setSelectedInsumoId(Number(e.target.value))}
                             >
                                 <option value="">Seleccione un ingrediente</option>
-                                {insumosActivos
-                                    .slice()
-                                    .sort((a, b) => a.denominacion.localeCompare(b.denominacion))
-                                    .map(ins => (
-                                        <option key={ins.id} value={ins.id}>
-                                            {ins.denominacion}
-                                        </option>
-                                    ))
-                                }
+                                {insumosDisponiblesEnDropdown.map(ins => (
+                                    <option key={ins.id} value={ins.id}>
+                                        {ins.denominacion} {ins.baja ? "(Inactivo)" : ""}
+                                    </option>
+                                ))}
                             </select>
                             <button
                                 type="button"
@@ -144,10 +154,12 @@ const CompraIngredientesPage: React.FC = () => {
                                 className="border rounded p-2 w-24"
                                 value={cantidad}
                                 onChange={e => setCantidad(Number(e.target.value))}
+                                // Removed disabling based on selectedInsumo.baja
                                 disabled={!selectedInsumoId}
                             />
                             <button
                                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                // Removed disabling based on selectedInsumo.baja
                                 disabled={!selectedInsumoId || cantidad <= 0}
                                 onClick={handleSumarStock}
                                 style={{ minWidth: 100 }}
@@ -156,6 +168,7 @@ const CompraIngredientesPage: React.FC = () => {
                             </button>
                             <button
                                 className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                // Removed disabling based on selectedInsumo.baja
                                 disabled={!selectedInsumoId || cantidad <= 0}
                                 onClick={handleRestarStock}
                                 style={{ minWidth: 100 }}
@@ -176,11 +189,13 @@ const CompraIngredientesPage: React.FC = () => {
                                 className="border rounded p-2 w-28"
                                 value={nuevoPrecio ?? ""}
                                 onChange={e => setNuevoPrecio(Number(e.target.value))}
+                                // Removed disabling based on selectedInsumo.baja
                                 disabled={!selectedInsumoId}
                             />
                             <button
                                 className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                                disabled={!selectedInsumoId || nuevoPrecio === undefined}
+                                // Removed disabling based on selectedInsumo.baja
+                                disabled={!selectedInsumoId || nuevoPrecio === undefined || nuevoPrecio < 0}
                                 onClick={handleActualizarPrecio}
                                 style={{ minWidth: 120 }}
                             >
@@ -208,7 +223,7 @@ const CompraIngredientesPage: React.FC = () => {
             <h2 className="text-xl font-semibold mb-2">Lista de ingredientes</h2>
             <div className="mb-6">
                 <div
-                    className={`min-h-[64px] rounded-xl border-2 transition-all duration-200 shadow-sm bg-white 
+                    className={`min-h-[64px] rounded-xl border-2 transition-all duration-200 shadow-sm bg-white
     ${selectedInsumo ? "border-green-400 shadow-md" : "border-dashed border-gray-300"}
     flex items-center gap-8 px-8 py-4`}
                     style={{ opacity: selectedInsumo ? 1 : 0.8 }}

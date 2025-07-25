@@ -122,6 +122,7 @@
       <workItem from="1753313724505" duration="4904000" />
       <workItem from="1753383691258" duration="870000" />
       <workItem from="1753384920271" duration="3323000" />
+      <workItem from="1753399118555" duration="406000" />
     </task>
     <servers />
   </component>
@@ -144,7 +145,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/el-buen-sabor-frontend/src/components/checkout/Checkout.tsx</url>
-          <line>281</line>
+          <line>282</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">

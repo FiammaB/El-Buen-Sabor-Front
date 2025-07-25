@@ -45,7 +45,7 @@ export default function Landing() {
 			setLoading(true);
 			// Filtrar por artículos activos tanto manufacturados como de insumo
 			const manufacturedData: ArticuloManufacturado[] = await articuloService.findAllArticulosManufacturadosActivos();
-			const insumoData: ArticuloInsumo[] = await articuloService.findAllArticulosInsumoActivos();
+			const insumoData: ArticuloInsumo[] = await articuloService.findAllArticulosInsumo();
 			const allArticulos: Articulo[] = [...manufacturedData, ...insumoData];
 			setArticulos(allArticulos);
 		} catch (err) {

@@ -102,6 +102,23 @@ export class ArticuloService {
 
     // --- Métodos para ArticuloInsumo (ABM de Insumos) ---
 
+    async findAllArticulosInsumo(): Promise<ArticuloInsumo[]> {
+        try {
+            const response = await axios.get<IArticuloInsumoResponseDTO[]>(`${API_INSUMO_BASE_URL}/insumos`);
+            const allInsumos: IArticuloInsumoResponseDTO[] = response.data;
+
+            // Filtra en el frontend: solo activos (baja = false), con stockActual > 0 y NO esParaElaborar
+            const filteredInsumos = allInsumos.filter(insumo =>
+                insumo.esParaElaborar === false // <--- NUEVA CONDICIÓN
+            );
+
+            return filteredInsumos.map(data => this.mapToArticuloInsumo(data));
+        } catch (error) {
+            console.error('Error al cargar y filtrar artículos insumo activos:', error);
+            throw error;
+        }
+    }
+
     async getAllArticulosInsumo(): Promise<ArticuloInsumo[]> {
         const response = await axios.get<IArticuloInsumoResponseDTO[]>(`${API_INSUMO_BASE_URL}/insumos`);
         console.log("ARTICULOS TRAIDOS DEL BACK ", response)

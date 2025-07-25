@@ -22,12 +22,11 @@ export default function ControlStockPage() {
 
     // Filtro de stock bajo/cercano
     const insumosBajoStock = insumos.filter(
-        i => !i.baja && i.stockActual < i.stockMinimo
+        i => i.stockActual < i.stockMinimo
     );
 
     const insumosCercaDelMinimo = insumos.filter(
         i =>
-            !i.baja &&
             i.stockActual >= i.stockMinimo &&
             i.stockActual <= i.stockMinimo * (1 + alertaDecimal)
     );
