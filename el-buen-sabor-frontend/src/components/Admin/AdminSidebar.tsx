@@ -14,22 +14,17 @@ const navItems = [
     { href: "/admin/ranking-productos", label: "Ranking Productos", icon: <BarChart2 className="w-5 h-5" /> },
     { href: "/admin/ranking-clientes", label: "Ranking Clientes", icon: <BarChart2 className="w-5 h-5" /> },
     { href: "/admin/clientes", label: "Panel de Clientes", icon: <User className="w-5 h-5" /> },
-
     { href: "/admin/promociones", label: "Promociones ABM", icon: <Tag className="w-5 h-5" /> },
     { href: "/admin/movimientos-monetarios", label: "Movimientos Monetarios", icon: <FileText className="w-5 h-5" /> },
-
     { href: "/admin/empleados", label: "Panel de Empleados", icon: <Users className="w-5 h-5" /> },
-    // No implementadas
-    { href: "/admin/registrar-empleado", label: "Registrar Empleado", icon: <Users className="w-5 h-5" /> },
-
-
+    { href: "/admin/registrar-empleado", label: "Registrar Empleado", icon: <Users className="w-5 h-5" /> }
 ];
 
 export default function AdminSidebar() {
     const { pathname } = useLocation();
 
     return (
-        <aside className="bg-gray-100 rounded-2xl p-6 min-w-[250px] max-h-[calc(100vh-100px)] shadow-md">
+        <aside className="bg-gray-100 rounded-2xl p-6 min-w-[250px] max-h-[calc(1500vh-150px)] shadow-md">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">Panel Admin</h2>
             <nav className="flex flex-col gap-2">
                 {navItems.map((item, i) =>

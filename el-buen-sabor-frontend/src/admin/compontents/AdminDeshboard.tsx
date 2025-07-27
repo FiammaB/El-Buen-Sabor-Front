@@ -89,17 +89,12 @@ export default function AdminDashboard() {
           <p className="text-sm text-gray-600 mb-4">Crear cuentas para cocineros o cajeros.</p>
           <div className="space-y-2">
             <button
-              onClick={() => navigate("/admin/registrar-empleado?rol=COCINERO")}
+              onClick={() => navigate("/admin/registrar-empleado")}
               className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 w-full"
             >
-              Registrar Cocinero 👨‍🍳
+              Registrar Empleado 👨‍🍳
             </button>
-            <button
-              onClick={() => navigate("/admin/registrar-empleado?rol=CAJERO")}
-              className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 w-full"
-            >
-              Registrar Cajero 💵
-            </button>
+
           </div>
         </div>
 
