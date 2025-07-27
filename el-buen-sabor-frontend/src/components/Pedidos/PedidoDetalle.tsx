@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PedidoService } from '../../services/PedidoService';
-import type { IPedidoDTO, TipoEnvio, FormaPago, EstadoPedido } from '../../models/DTO/IPedidoDTO'; // Importa la interfaz IPedidoDTO
+import type { IPedidoDTO } from '../../models/DTO/IPedidoDTO';
 
 export default function PedidoDetalle() {
     const { id } = useParams<{ id: string }>();
@@ -41,19 +41,17 @@ export default function PedidoDetalle() {
         fetchPedidoDetalle();
     }, [id]);
 
-    // FUNCIÓN MODIFICADA: Ahora visualizará el PDF en una nueva pestaña (usando Blob)
     const handleVisualizarFactura = async (pedidoId: number) => {
         try {
-            const blob = await pedidoService.downloadFacturaPdf(pedidoId); // Llama al método que descarga el binario
-            const url = window.URL.createObjectURL(blob); // Crea una URL temporal para el Blob
-            window.open(url, '_blank'); // Abre la URL en una nueva pestaña
+            const blob = await pedidoService.downloadFacturaPdf(pedidoId);
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, '_blank');
         } catch (err) {
             console.error("Error al visualizar la factura:", err);
             alert("No se pudo visualizar la factura. Verifica que exista y que el servidor esté funcionando.");
         }
     };
 
-    // Función para descargar la factura (forzar descarga)
     const handleDescargarFactura = async (pedidoId: number) => {
         try {
             const blob = await pedidoService.downloadFacturaPdf(pedidoId);
@@ -99,7 +97,9 @@ export default function PedidoDetalle() {
 
     return (
         <div className="p-8 max-w-4xl mx-auto bg-white rounded-lg shadow-md">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Detalle del Pedido #{pedido.id}</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+                Detalle del Pedido #{pedido.id}
+            </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
@@ -130,26 +130,20 @@ export default function PedidoDetalle() {
                 <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Artículo
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Cantidad
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Subtotal
-                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artículo</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {pedido.detalles.map((detalle, index) => (
                             <tr key={detalle.id || index} className="hover:bg-gray-100">
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {detalle.articuloManufacturado?.denominacion || detalle.articuloInsumo?.denominacion || 'Artículo Desconocido'}
+                                    {detalle.articuloManufacturado?.denominacion ||
+                                        detalle.articuloInsumo?.denominacion ||
+                                        'Artículo Desconocido'}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {detalle.cantidad}
-                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{detalle.cantidad}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     ${detalle.subTotal?.toFixed(2)}
                                 </td>
@@ -164,15 +158,25 @@ export default function PedidoDetalle() {
             </div>
 
             <div className="flex justify-between items-center mt-6">
+                {/* ✅ BOTÓN VOLVER ACTUALIZADO */}
                 <button
-                    onClick={() => navigate(`/admin/clientes/${pedido.persona.id}/pedidos`)}
+                    onClick={() => {
+                        if (window.location.pathname.startsWith("/admin/pedidos")) {
+                            navigate("/admin/pedidos-entregados", { replace: true });
+                        } else if (pedido.persona?.id) {
+                            navigate(`/admin/clientes/${pedido.persona.id}/pedidos`);
+                        } else {
+                            navigate(-1);
+                        }
+                    }}
                     className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
                 >
                     Volver al Historial
                 </button>
+
                 {pedido.factura?.urlPdf && (
                     <div className="inline-flex space-x-2">
-                        <button // CAMBIO AQUÍ: Ahora llama a handleVisualizarFactura
+                        <button
                             onClick={() => handleVisualizarFactura(pedido.id)}
                             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
                         >

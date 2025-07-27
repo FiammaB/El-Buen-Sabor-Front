@@ -19,6 +19,10 @@ export default function PedidosEntregadosAdmin() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // ✅ Limpiamos antes de cargar para evitar que quede un estado viejo
+    setPedidos([]);
+    setCargando(true);
+
     axios
       .get("/api/pedidos/cajero")
       .then((res) => {
@@ -67,7 +71,9 @@ export default function PedidosEntregadosAdmin() {
                   </td>
                   <td className="border border-gray-300 p-2 text-center">
                     <button
-                      onClick={() => navigate(`/admin/pedidos/${pedido.id}`)}
+                      onClick={() =>
+                        navigate(`/admin/pedidos/${pedido.id}`, { replace: true })
+                      }
                       className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
                     >
                       Ver Detalle
