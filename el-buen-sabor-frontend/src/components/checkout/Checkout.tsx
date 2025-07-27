@@ -84,6 +84,16 @@ export default function CheckoutPage() {
   const [isStockValidating, setIsStockValidating] = useState(false);
 
   const auth = useAuth();
+  useEffect(() => {
+    if (auth?.isAuthenticated) {
+      setCustomerInfo(prevInfo => ({
+        ...prevInfo,
+        name: auth.username || prevInfo.name,
+        email: auth.email || prevInfo.email,
+        phone: auth.telefono || prevInfo.phone, // ✨ Autopopular el teléfono
+      }));
+    }
+  }, [auth?.isAuthenticated, auth?.username, auth?.email, auth?.telefono]); // Dependencias: actualizar si cambian los datos de auth
 
   const validateCartStock = useCallback(async () => {
     setIsStockValidating(true);
@@ -276,10 +286,12 @@ export default function CheckoutPage() {
         tipoEnvio: deliveryType,
         formaPago: paymentMethod,
         total: finalTotal,
+
         personaId: auth.id ?? undefined,
         domicilioId: deliveryType === TipoEnvio.DELIVERY ? selectedAddressId ?? undefined : undefined,
         sucursalId: 1,
         detalles: detallesPedido,
+        telefono: customerInfo.phone
       };
 
       if (paymentMethod === FormaPago.MERCADO_PAGO) {
@@ -491,6 +503,22 @@ export default function CheckoutPage() {
               {currentStep === "information" && !username && (
                 <div>
                   <LoginForm onSuccess={() => setCurrentStep("delivery")} />
+                  {/* ✨ AGREGAR CAMPO DE TELÉFONO AQUÍ si no hay login form que lo maneje */}
+                  {/* Si tu LoginForm ya maneja esto, puedes omitir este campo aquí */}
+                  {/* Si el número de teléfono es un campo editable para todos los usuarios */}
+                  <div className="mt-6 space-y-4">
+                    <label htmlFor="customerPhone" className="text-sm block font-medium text-gray-700">Número de Teléfono</label>
+                    <input
+                      type="tel" // Tipo 'tel' para móviles
+                      id="customerPhone"
+                      name="customerPhone"
+                      value={customerInfo.phone}
+                      onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
+                      placeholder="Ej: 3511234567"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                      required
+                    />
+                  </div>
                 </div>
               )}
 
@@ -694,11 +722,27 @@ export default function CheckoutPage() {
                     </>
                   )}
 
-                  {/* Botón para continuar al paso de Pago */}
+                  <div className="mt-6 space-y-4">
+                    <h3 className="font-semibold text-lg">Contacto para el Pedido</h3>
+                    <label htmlFor="deliveryPhone" className="text-sm block font-medium text-gray-700">Número de Teléfono</label>
+                    <input
+                      type="tel"
+                      id="deliveryPhone"
+                      name="deliveryPhone"
+                      value={customerInfo.phone}
+                      onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
+                      placeholder="Ej: 3511234567"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                      required
+                    />
+                  </div>
+
                   <button
                     onClick={goToNextStep}
                     className="disabled:bg-gray-400 mt-8 w-full bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
-                    disabled={(deliveryType === TipoEnvio.DELIVERY && !selectedAddressId) || showNewAddressForm}
+                    disabled={
+                      (deliveryType === TipoEnvio.DELIVERY && !selectedAddressId) || showNewAddressForm || !customerInfo.phone // ✨ Validar que el teléfono no esté vacío
+                    }
                   >
                     Continuar a Pago
                   </button>
@@ -821,7 +865,7 @@ export default function CheckoutPage() {
                           <span className="font-medium">Email:</span> {auth.email || "No especificado"}
                         </p>
                         <p>
-                          <span className="font-medium">Teléfono:</span> {auth.telefono || "No especificado"}
+                          <span className="font-medium">Teléfono:</span> {customerInfo.phone || "No especificado"}
                         </p>
                       </div>
                     </div>
