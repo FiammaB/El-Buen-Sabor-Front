@@ -25,10 +25,10 @@ export default function RegisterPage(props: RegisterProps) {
     (rolDestino === "COCINERO"
       ? "/api/usuarios/registrar-cocinero"
       : rolDestino === "CAJERO"
-      ? "/api/usuarios/registrar-cajero"
-      : rolDestino === "DELIVERY"
-      ? "/api/usuarios/registrar-delivery"
-      : "/api/auth/register");
+        ? "/api/usuarios/registrar-cajero"
+        : rolDestino === "DELIVERY"
+          ? "/api/usuarios/registrar-delivery"
+          : "/api/auth/register");
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -181,14 +181,14 @@ export default function RegisterPage(props: RegisterProps) {
           usuario.telefono
         );
         alert("¡Registro exitoso!");
-        navigate("/cliente");
+        navigate("/");
       } else {
         alert(
           rolDestino === "COCINERO"
             ? "Cocinero registrado correctamente"
             : rolDestino === "CAJERO"
-            ? "Cajero registrado correctamente"
-            : "Delivery registrado correctamente"
+              ? "Cajero registrado correctamente"
+              : "Delivery registrado correctamente"
         );
         setFormData({
           firstName: "",

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { PedidoService } from "../../services/PedidoService";
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO";
 import { Eye } from "lucide-react";
-import {useAuth} from "../Auth/Context/AuthContext";
+import { useAuth } from "../Auth/Context/AuthContext";
 
 // Helpers UI
 
@@ -70,7 +70,7 @@ export default function CajeroPedidosPage() {
     const [idBusqueda, setIdBusqueda] = useState<string>("");
     const [fechaFiltro, setFechaFiltro] = useState<string>("");
     const { id: userId, role } = useAuth();
-
+    const [loadingPedidoId, setLoadingPedidoId] = useState<number | null>(null);
 
     const fetchPedidos = async () => {
         setLoading(true);
@@ -139,20 +139,28 @@ export default function CajeroPedidosPage() {
     const handleAvanzarEstado = async (pedido: IPedidoDTO) => {
         const prox = getProximoEstado(pedido);
         if (!prox) return;
-
+        setLoadingPedidoId(pedido.id!);
         // Armá el payload con el estado y, si existe, el id del usuario logueado
-        let payload: { estado: string, empleadoId?: number } = { estado: prox.estado };
+        try {
+            // Armá el payload con el estado y, si existe, el id del usuario logueado
+            let payload: { estado: string, empleadoId?: number } = { estado: prox.estado };
 
-        // Solo mandá empleadoId si hay usuario logueado y si es un rol correspondiente
-        if (userId && ["CAJERO", "COCINERO", "DELIVERY"].includes(role ?? "")) {
-            payload.empleadoId = userId;
+            // Solo manda empleadoId si hay usuario logueado y si es un rol correspondiente
+            if (userId && ["CAJERO", "COCINERO", "DELIVERY"].includes(role ?? "")) {
+                payload.empleadoId = userId;
+            }
+
+            await new PedidoService().actualizarEstadoPedido(pedido.id!, payload);
+
+            // Recarga toda la lista para que los cambios se reflejen
+            const nuevosPedidos = await new PedidoService().getAllPedidos();
+            setAllPedidos(nuevosPedidos);
+        } catch (e: any) {
+            alert("Error al avanzar el estado del pedido: " + (e?.response?.data?.error || e.message));
+        } finally {
+            // Siempre quita el ID de carga, ya sea éxito o error
+            setLoadingPedidoId(null);
         }
-
-        await new PedidoService().actualizarEstadoPedido(pedido.id!, payload);
-
-        // Recargá toda la lista
-        const nuevosPedidos = await new PedidoService().getAllPedidos();
-        setAllPedidos(nuevosPedidos);
     };
 
 
@@ -279,177 +287,177 @@ export default function CajeroPedidosPage() {
             <div className="overflow-x-auto">
                 <table className="min-w-full border text-sm rounded shadow">
                     <thead>
-                    <tr className="bg-gray-100">
-                        <th className="p-2">ID</th>
-                        <th className="p-2">Detalle</th>
-                        <th className="p-2">Cliente</th>
-                        <th className="p-2">Fecha</th>
-                        <th className="p-2">Total</th>
-                        <th className="p-2">Estado</th>
-                        <th className="p-2">Acción</th>
-                    </tr>
+                        <tr className="bg-gray-100">
+                            <th className="p-2">ID</th>
+                            <th className="p-2">Detalle</th>
+                            <th className="p-2">Cliente</th>
+                            <th className="p-2">Fecha</th>
+                            <th className="p-2">Total</th>
+                            <th className="p-2">Estado</th>
+                            <th className="p-2">Acción</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    {filteredPedidos.length === 0 ? (
-                        <tr>
-                            <td colSpan={7} className="text-center p-4 text-gray-500">
-                                No hay pedidos para mostrar.
-                            </td>
-                        </tr>
-                    ) : (
-                        filteredPedidos.map((pedido) => (
-                            <React.Fragment key={pedido.id}>
-                                <tr className="border-t">
-                                    <td className="p-2 text-center font-bold">{pedido.id}</td>
-                                    <td className="p-2">
-                                        <div className="flex justify-center">
-                                            <button
-                                                className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-3 py-1 shadow hover:bg-blue-700 hover:scale-105 transition font-medium"
-                                                onClick={() => setOpenSlide(openSlide === pedido.id ? null : pedido.id)}
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                                Ver Detalle
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <td className="p-2 text-center">
-                                        {pedido.persona
-                                            ? (
-                                                <>
-                                                    <div>{pedido.persona.nombre}, {pedido.persona.apellido}</div>
-                                                </>
-                                            )
-                                            : pedido.personaId ?? "-"
-                                        }
-                                    </td>
-                                    <td className="p-2 text-center">
-                                        {pedido.fechaPedido?.slice(0, 10)}
-                                    </td>
-                                    <td className="p-2 text-center font-semibold text-green-700">
-                                        ${pedido.total?.toFixed(2) ?? "-"}
-                                    </td>
-                                    <td className="p-2 text-center">
-                                        {getProximoEstado(pedido) ? (
-                                            <button
-                                                className="bg-green-600 hover:bg-green-700 text-white rounded px-2 py-1 text-xs font-medium transition"
-                                                onClick={() => handleAvanzarEstado(pedido)}
-                                            >
-                                                {pedido.estado}: {getProximoEstado(pedido)?.label}
-                                            </button>
-                                        ) : (
-                                            <span className="inline-block bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
-                                                {pedido.estado}
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="p-2 text-center">
-                                        <div className="flex flex-col gap-1 items-center">
-                                            {puedeCancelar(pedido) && (
+                        {filteredPedidos.length === 0 ? (
+                            <tr>
+                                <td colSpan={7} className="text-center p-4 text-gray-500">
+                                    No hay pedidos para mostrar.
+                                </td>
+                            </tr>
+                        ) : (
+                            filteredPedidos.map((pedido) => (
+                                <React.Fragment key={pedido.id}>
+                                    <tr className="border-t">
+                                        <td className="p-2 text-center font-bold">{pedido.id}</td>
+                                        <td className="p-2">
+                                            <div className="flex justify-center">
                                                 <button
-                                                    className="bg-red-600 hover:bg-red-700 text-white rounded px-2 py-1 text-xs font-medium transition"
-                                                    onClick={() => handleCancelar(pedido)}
+                                                    className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-3 py-1 shadow hover:bg-blue-700 hover:scale-105 transition font-medium"
+                                                    onClick={() => setOpenSlide(openSlide === pedido.id ? null : pedido.id)}
                                                 >
-                                                    Cancelar
+                                                    <Eye className="w-4 h-4" />
+                                                    Ver Detalle
                                                 </button>
-                                            )}
-                                            {puedeDevolver(pedido) && (
+                                            </div>
+                                        </td>
+                                        <td className="p-2 text-center">
+                                            {pedido.persona
+                                                ? (
+                                                    <>
+                                                        <div>{pedido.persona.nombre}, {pedido.persona.apellido}</div>
+                                                    </>
+                                                )
+                                                : pedido.personaId ?? "-"
+                                            }
+                                        </td>
+                                        <td className="p-2 text-center">
+                                            {pedido.fechaPedido?.slice(0, 10)}
+                                        </td>
+                                        <td className="p-2 text-center font-semibold text-green-700">
+                                            ${pedido.total?.toFixed(2) ?? "-"}
+                                        </td>
+                                        <td className="p-2 text-center">
+                                            {getProximoEstado(pedido) ? (
                                                 <button
-                                                    className="bg-orange-600 hover:bg-orange-700 text-white rounded px-2 py-1 text-xs font-medium transition"
-                                                    onClick={() => handleDevolver(pedido)}
+                                                    className="bg-green-600 hover:bg-green-700 text-white rounded px-2 py-1 text-xs font-medium transition"
+                                                    onClick={() => handleAvanzarEstado(pedido)}
                                                 >
-                                                    Devolución
+                                                    {pedido.estado}: {getProximoEstado(pedido)?.label}
                                                 </button>
+                                            ) : (
+                                                <span className="inline-block bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
+                                                    {pedido.estado}
+                                                </span>
                                             )}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {openSlide === pedido.id && (
-                                    <tr>
-                                        <td colSpan={7} className="bg-gray-50 pl-8 py-2">
-                                            <div>
-                                                <h4 className="font-semibold mb-2">Detalles:</h4>
-                                                <ul>
-                                                    {/* PROMOCIONES */}
-                                                    {pedido.detalles?.filter(det => det.promocion).map((det, idx) => (
-                                                        <li key={"promo" + idx} className="mb-3">
-                                                            <div className="font-bold text-purple-700">
-                                                                {det.promocion.denominacion} (x{det.cantidad}) <span className="text-gray-500">(Total: ${det.subTotal?.toFixed(2)})</span>
-                                                            </div>
-                                                            {/* Artículo Insumo */}
-                                                            {det.promocion.articulosInsumos && det.promocion.articulosInsumos.length > 0 && (
-                                                                <div className="ml-3 text-sm">
-                                                                    <span className="font-semibold text-blue-800">Artículos Insumo:</span>
-                                                                    <ul className="ml-4 list-disc">
-                                                                        {det.promocion.articulosInsumos.map((ins, i) => (
-                                                                            <li key={i}>
-                                                                                ({det.cantidad}x) {ins.denominacion}
-                                                                            </li>
-                                                                        ))}
-                                                                    </ul>
+                                        </td>
+                                        <td className="p-2 text-center">
+                                            <div className="flex flex-col gap-1 items-center">
+                                                {puedeCancelar(pedido) && (
+                                                    <button
+                                                        className="bg-red-600 hover:bg-red-700 text-white rounded px-2 py-1 text-xs font-medium transition"
+                                                        onClick={() => handleCancelar(pedido)}
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                )}
+                                                {puedeDevolver(pedido) && (
+                                                    <button
+                                                        className="bg-orange-600 hover:bg-orange-700 text-white rounded px-2 py-1 text-xs font-medium transition"
+                                                        onClick={() => handleDevolver(pedido)}
+                                                    >
+                                                        Devolución
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {openSlide === pedido.id && (
+                                        <tr>
+                                            <td colSpan={7} className="bg-gray-50 pl-8 py-2">
+                                                <div>
+                                                    <h4 className="font-semibold mb-2">Detalles:</h4>
+                                                    <ul>
+                                                        {/* PROMOCIONES */}
+                                                        {pedido.detalles?.filter(det => det.promocion).map((det, idx) => (
+                                                            <li key={"promo" + idx} className="mb-3">
+                                                                <div className="font-bold text-purple-700">
+                                                                    {det.promocion.denominacion} (x{det.cantidad}) <span className="text-gray-500">(Total: ${det.subTotal?.toFixed(2)})</span>
                                                                 </div>
-                                                            )}
-                                                            {/* Artículos Manufacturados (nuevo modelo) */}
-                                                            {det.promocion.promocionDetalles && det.promocion.promocionDetalles.length > 0 && (() => {
-                                                                // Agrupar manufacturados por id, sumando cantidad*det.cantidad
-                                                                const agrupados: Record<number, { denominacion: string, cantidad: number }> = {};
-                                                                det.promocion.promocionDetalles.forEach((detalle: any) => {
-                                                                    const art = detalle.articuloManufacturado;
-                                                                    if (!art) return;
-                                                                    const totalCantidad = (detalle.cantidad ?? 1) * (det.cantidad ?? 1);
-                                                                    if (!agrupados[art.id]) {
-                                                                        agrupados[art.id] = { denominacion: art.denominacion, cantidad: totalCantidad };
-                                                                    } else {
-                                                                        agrupados[art.id].cantidad += totalCantidad;
-                                                                    }
-                                                                });
-                                                                return (
+                                                                {/* Artículo Insumo */}
+                                                                {det.promocion.articulosInsumos && det.promocion.articulosInsumos.length > 0 && (
                                                                     <div className="ml-3 text-sm">
-                                                                        <span className="font-semibold text-green-800">Artículos Manufacturados:</span>
+                                                                        <span className="font-semibold text-blue-800">Artículos Insumo:</span>
                                                                         <ul className="ml-4 list-disc">
-                                                                            {Object.values(agrupados).map((am, idx) => (
-                                                                                <li key={idx}>
-                                                                                    ({am.cantidad}x) {am.denominacion}
+                                                                            {det.promocion.articulosInsumos.map((ins, i) => (
+                                                                                <li key={i}>
+                                                                                    ({det.cantidad}x) {ins.denominacion}
                                                                                 </li>
                                                                             ))}
                                                                         </ul>
                                                                     </div>
-                                                                );
-                                                            })()}
-                                                        </li>
-                                                    ))}
+                                                                )}
+                                                                {/* Artículos Manufacturados (nuevo modelo) */}
+                                                                {det.promocion.promocionDetalles && det.promocion.promocionDetalles.length > 0 && (() => {
+                                                                    // Agrupar manufacturados por id, sumando cantidad*det.cantidad
+                                                                    const agrupados: Record<number, { denominacion: string, cantidad: number }> = {};
+                                                                    det.promocion.promocionDetalles.forEach((detalle: any) => {
+                                                                        const art = detalle.articuloManufacturado;
+                                                                        if (!art) return;
+                                                                        const totalCantidad = (detalle.cantidad ?? 1) * (det.cantidad ?? 1);
+                                                                        if (!agrupados[art.id]) {
+                                                                            agrupados[art.id] = { denominacion: art.denominacion, cantidad: totalCantidad };
+                                                                        } else {
+                                                                            agrupados[art.id].cantidad += totalCantidad;
+                                                                        }
+                                                                    });
+                                                                    return (
+                                                                        <div className="ml-3 text-sm">
+                                                                            <span className="font-semibold text-green-800">Artículos Manufacturados:</span>
+                                                                            <ul className="ml-4 list-disc">
+                                                                                {Object.values(agrupados).map((am, idx) => (
+                                                                                    <li key={idx}>
+                                                                                        ({am.cantidad}x) {am.denominacion}
+                                                                                    </li>
+                                                                                ))}
+                                                                            </ul>
+                                                                        </div>
+                                                                    );
+                                                                })()}
+                                                            </li>
+                                                        ))}
 
-                                                    {/* MANUFACTURADOS SUELTOS */}
-                                                    {pedido.detalles?.filter(det => !det.promocion && det.articuloManufacturado).map((det, idx) => (
-                                                        <li key={"manu" + idx} className="mb-3">
-                                                            <span className="font-bold text-green-800">{det.articuloManufacturado.denominacion}</span> (x{det.cantidad})
-                                                            <span className="text-gray-500"> (${det.articuloManufacturado.precioVenta?.toFixed(2)})</span>
-                                                            <span className="ml-2 text-green-700 font-bold">
-                                                                (Total: ${(det.articuloManufacturado.precioVenta * det.cantidad).toFixed(2)})
-                                                            </span>
+                                                        {/* MANUFACTURADOS SUELTOS */}
+                                                        {pedido.detalles?.filter(det => !det.promocion && det.articuloManufacturado).map((det, idx) => (
+                                                            <li key={"manu" + idx} className="mb-3">
+                                                                <span className="font-bold text-green-800">{det.articuloManufacturado.denominacion}</span> (x{det.cantidad})
+                                                                <span className="text-gray-500"> (${det.articuloManufacturado.precioVenta?.toFixed(2)})</span>
+                                                                <span className="ml-2 text-green-700 font-bold">
+                                                                    (Total: ${(det.articuloManufacturado.precioVenta * det.cantidad).toFixed(2)})
+                                                                </span>
 
-                                                        </li>
-                                                    ))}
+                                                            </li>
+                                                        ))}
 
-                                                    {/* INSUMOS SUELTOS */}
-                                                    {pedido.detalles?.filter(det => !det.promocion && det.articuloInsumo).map((det, idx) => (
-                                                        <li key={"insu" + idx} className="mb-3">
+                                                        {/* INSUMOS SUELTOS */}
+                                                        {pedido.detalles?.filter(det => !det.promocion && det.articuloInsumo).map((det, idx) => (
+                                                            <li key={"insu" + idx} className="mb-3">
 
-                                                              <span className="font-bold text-blue-800">
-                                                                {det.articuloInsumo.denominacion}
-                                                                <span className="text-gray-500"> (x{det.cantidad}) (${det.articuloInsumo.precioVenta?.toFixed(2)})</span>
-                                                                <span className="ml-2 text-green-700 font-bold"> (Total: ${det.subTotal?.toFixed(2)})</span>
-                                                              </span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
+                                                                <span className="font-bold text-blue-800">
+                                                                    {det.articuloInsumo.denominacion}
+                                                                    <span className="text-gray-500"> (x{det.cantidad}) (${det.articuloInsumo.precioVenta?.toFixed(2)})</span>
+                                                                    <span className="ml-2 text-green-700 font-bold"> (Total: ${det.subTotal?.toFixed(2)})</span>
+                                                                </span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
 
-                            </React.Fragment>
-                        ))
-                    )}
+                                </React.Fragment>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
