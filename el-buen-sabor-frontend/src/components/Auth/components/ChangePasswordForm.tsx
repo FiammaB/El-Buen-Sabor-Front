@@ -1,21 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function ChangePasswordForm() {
   const navigate = useNavigate();
   const email = localStorage.getItem("email-recuperacion") || "";
   const codigo = localStorage.getItem("codigo-recuperacion") || "";
 
-    const [password, setPassword] = useState("");
-    const [confirmar, setConfirmar] = useState("");
-    const [mensaje, setMensaje] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmar, setConfirmar] = useState("");
+  const [mensaje, setMensaje] = useState("");
+
+  // 👁️ Estados para mostrar/ocultar contraseñas
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmar, setShowConfirmar] = useState(false);
 
   // 🔐 Validación básica de contraseña segura
   const esPasswordSegura = (password: string) => {
     return (
       password.length >= 8 &&
-      /[A-Z]/.test(password) &&      // al menos una mayúscula
-      /[a-z]/.test(password) &&      // al menos una minúscula
+      /[A-Z]/.test(password) && // al menos una mayúscula
+      /[a-z]/.test(password) && // al menos una minúscula
       /[!@#$%^&*(),.?":{}|<>_\-+=]/.test(password) // al menos un símbolo
     );
   };
@@ -29,13 +34,17 @@ export default function ChangePasswordForm() {
     }
 
     if (!esPasswordSegura(password)) {
-      setMensaje("❌ La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un símbolo");
+      setMensaje(
+        "❌ La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un símbolo"
+      );
       return;
     }
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/auth/cambiar-password?email=${email}&codigo=${codigo}&nuevaPassword=${encodeURIComponent(password)}`,
+        `http://localhost:8080/api/auth/cambiar-password?email=${email}&codigo=${codigo}&nuevaPassword=${encodeURIComponent(
+          password
+        )}`,
         { method: "POST" }
       );
 
@@ -64,34 +73,56 @@ export default function ChangePasswordForm() {
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            {/* Nueva Contraseña */}
+            <div className="space-y-2 relative">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Nueva contraseña
               </label>
               <input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 className="w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 border-gray-300"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-9"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="confirmar" className="block text-sm font-medium text-gray-700">
+            {/* Confirmar Contraseña */}
+            <div className="space-y-2 relative">
+              <label
+                htmlFor="confirmar"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Escribí de nuevo tu contraseña
               </label>
               <input
                 id="confirmar"
                 name="confirmar"
-                type="password"
+                type={showConfirmar ? "text" : "password"}
                 required
                 className="w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 border-gray-300"
                 value={confirmar}
                 onChange={(e) => setConfirmar(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmar(!showConfirmar)}
+                className="absolute right-3 top-9"
+              >
+                {showConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
 
             <button
@@ -101,7 +132,9 @@ export default function ChangePasswordForm() {
               Cambiar
             </button>
 
-            {mensaje && <p className="text-center text-sm text-gray-700">{mensaje}</p>}
+            {mensaje && (
+              <p className="text-center text-sm text-gray-700">{mensaje}</p>
+            )}
           </form>
         </div>
       </div>
