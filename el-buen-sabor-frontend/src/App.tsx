@@ -45,6 +45,7 @@ import CategoriaManufacturadoPage from './components/Categoria/CategoriaManufact
 import CompraIngredientesPage from "./components/CompraIngrediente/CompraIngredientesPage.tsx";
 import ControlStockPage from "./components/ControlStock/ControlStockPage.tsx";
 import ReporteMonetarioPage from "./components/Reportes/ReporteMonetarioPage.tsx";
+import PedidosEntregadosAdmin from "./components/Admin/PedidosEntregadosAdmin";
 
 // 👨‍🍳 Panel Cocinero
 import CocineroAdminLayout from "./components/Cocinero/CocineroAdminLayout.tsx";
@@ -158,6 +159,8 @@ function App() {
             <Route path="clientes" element={<ClienteListPage />} />
             <Route path="movimientos-monetarios" element={<ReporteMonetarioPage />} />
             <Route path="empleados" element={<EmpleadoListPage />} />
+            <Route path="pedidos-entregados" element={<PedidosEntregadosAdmin />} />
+
 
             {/* <-- CAMBIO CLAVE AQUÍ: RUTA PARA VER TODOS LOS PEDIDOS DE UN CLIENTE (ADMIN) */}
             <Route path="clientes/:clienteId/pedidos" element={<AdminClientePedidosPage />} />
