@@ -86,6 +86,7 @@ export default function CheckoutPage() {
   const [isClientBaja, setIsClientBaja] = useState(false);
 
   const auth = useAuth();
+
   useEffect(() => {
 
     if (auth?.isAuthenticated && auth?.baja) { // Asegúrate de que auth.baja existe y es un boolean
@@ -244,6 +245,7 @@ export default function CheckoutPage() {
     const mercadoPagoInitiated = localStorage.getItem("mercadoPagoInitiated");
 
     if (mercadoPagoInitiated === "true" && collectionStatus === "approved") {
+
       navigate(`/order-confirmation?pedido=${externalReference || "unknown"}&status=approved`);
     } else if (mercadoPagoInitiated === "true" && (collectionStatus === "pending" || collectionStatus === "in_process")) {
       localStorage.removeItem("mercadoPagoInitiated");
@@ -304,7 +306,7 @@ export default function CheckoutPage() {
         domicilioId: deliveryType === TipoEnvio.DELIVERY ? selectedAddressId ?? undefined : undefined,
         sucursalId: 1,
         detalles: detallesPedido,
-        telefono: customerInfo.phone
+        telefono: customerInfo.phone || "",
       };
 
       if (paymentMethod === FormaPago.MERCADO_PAGO) {
@@ -322,6 +324,7 @@ export default function CheckoutPage() {
       } else {
         const response = await pedidoService.sendPedido(pedido);
         setIsComplete(true);
+
         setTimeout(() => {
           navigate(`/order-confirmation?pedido=${response.id}`);
         }, 2000);
@@ -753,7 +756,7 @@ export default function CheckoutPage() {
                       type="tel"
                       id="deliveryPhone"
                       name="deliveryPhone"
-                      value={customerInfo.phone}
+                      value={customerInfo.phone && customerInfo.phone !== "null" ? customerInfo.phone : ""}
                       onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
                       placeholder="Ej: 3511234567"
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"

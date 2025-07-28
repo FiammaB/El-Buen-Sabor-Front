@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 export type UserRole = "ADMINISTRADOR" | "CLIENTE" | "COCINERO" | "CAJERO" | "DELIVERY" | null;
 
@@ -12,6 +12,8 @@ interface AuthContextType {
     baja: boolean;
     login: (id: number, role: UserRole, username: string, email: string, telefono: string, baja: boolean) => void;
     logout: () => void;
+    refreshUserData: () => Promise<void>; // ✨ Nueva función
+    updateTelefono: (newTelefono: string) => void; // ✨ Nueva función para actualizar solo el teléfono
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +26,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     const [email, setEmail] = useState<string | null>(null);
     const [telefono, setTelefono] = useState<string | null>(null);
     const [baja, setBaja] = useState<boolean>(false);
+
     // 🔹 Carga inicial desde localStorage
     useEffect(() => {
         const storedId = localStorage.getItem("id");
@@ -50,6 +53,54 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log("No hay sesión válida, limpiando datos");
             logout();
         }
+    }, []);
+
+    // ✨ Nueva función para refrescar datos del usuario desde la API
+    const refreshUserData = useCallback(async () => {
+        if (!id || !isAuthenticated) {
+            console.log("No se puede refrescar: usuario no autenticado");
+            return;
+        }
+
+        try {
+            console.log("Refrescando datos del usuario con ID:", id);
+            const response = await fetch(`http://localhost:8080/api/usuarios/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                console.log("Datos actualizados recibidos:", userData);
+
+                // Actualizar estado
+                setTelefono(userData.telefono);
+                setEmail(userData.email);
+                setUsername(userData.username);
+                setBaja(userData.baja);
+
+                // Actualizar localStorage
+                localStorage.setItem("telefono", userData.telefono || "");
+                localStorage.setItem("email", userData.email || "");
+                localStorage.setItem("username", userData.username || "");
+                localStorage.setItem("baja", userData.baja?.toString() || "false");
+
+                console.log("Datos del usuario refrescados exitosamente");
+            } else {
+                console.error("Error al refrescar datos del usuario:", response.status);
+            }
+        } catch (error) {
+            console.error("Error al refrescar datos del usuario:", error);
+        }
+    }, [id, isAuthenticated]);
+
+    // ✨ Nueva función para actualizar solo el teléfono (útil para updates inmediatos)
+    const updateTelefono = useCallback((newTelefono: string) => {
+        setTelefono(newTelefono);
+        localStorage.setItem("telefono", newTelefono);
+        console.log("Teléfono actualizado en contexto:", newTelefono);
     }, []);
 
     const login = (userId: number, userRole: UserRole, userName: string, userEmail: string, userTelefono: string, userBaja: boolean) => {
@@ -89,7 +140,19 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ id, isAuthenticated, role, username, email, telefono, baja, login, logout }}>
+        <AuthContext.Provider value={{
+            id,
+            isAuthenticated,
+            role,
+            username,
+            email,
+            telefono,
+            baja,
+            login,
+            logout,
+            refreshUserData, // ✨ Nueva función
+            updateTelefono   // ✨ Nueva función
+        }}>
             {children}
         </AuthContext.Provider>
     );

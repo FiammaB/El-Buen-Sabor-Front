@@ -16,8 +16,8 @@ export default function OrderConfirmationPage() {
   const [searchParams] = useSearchParams()
   const pedidoId = searchParams.get("pedido")
   const { clearCart } = useCart(); // Obtén clearCart del contexto
-  const { id: userId } = useAuth();
 
+  const { id: userId, refreshUserData: refreshAuth } = useAuth()
   // --- Estado para controlar si el carrito ya ha sido vaciado ---
   const [cartCleared, setCartCleared] = useState(false); // ✨ NUEVO ESTADO
 
@@ -40,14 +40,19 @@ export default function OrderConfirmationPage() {
 
 
   useEffect(() => {
-
     if (!cartCleared) {
       console.log("OrderConfirmationPage cargada. Vaciando el carrito...");
       clearCart();
       localStorage.removeItem("mercadoPagoInitiated");
       setCartCleared(true);
+
+
+      if (refreshAuth) {
+        console.log("Refrescando datos del usuario después de posible redirección de Mercado Pago...");
+        refreshAuth();
+      }
     }
-  }, [clearCart, cartCleared]);
+  }, [clearCart, cartCleared, refreshAuth]);
 
 
   const cancelOrder = useCallback(async () => {
@@ -61,6 +66,29 @@ export default function OrderConfirmationPage() {
       return;
     }
 
+    // Confirmar que el usuario realmente quiere cancelar
+    const confirmarCancelacion = window.confirm("¿Estás seguro de que deseas cancelar este pedido?");
+
+    if (!confirmarCancelacion) {
+      return; // El usuario decidió no cancelar
+    }
+
+    // Mostrar un prompt para que el usuario ingrese el motivo
+    let motivoAnulacion = null;
+    do {
+      motivoAnulacion = prompt("Por favor, ingresa el motivo de cancelación del pedido:");
+
+      // Si el usuario cancela el prompt, abortar
+      if (motivoAnulacion === null) {
+        return;
+      }
+
+      // Si está vacío o solo espacios, mostrar error y volver a preguntar
+      if (motivoAnulacion.trim() === "") {
+        alert("El motivo de cancelación no puede estar vacío. Por favor, ingresa un motivo válido.");
+      }
+    } while (motivoAnulacion.trim() === "");
+
     setIsCancelling(true); // ✨ Inicia el estado de cancelación
 
     try {
@@ -70,7 +98,7 @@ export default function OrderConfirmationPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          motivoAnulacion: "Cancelado por el cliente desde la pantalla de confirmación",
+          motivoAnulacion: motivoAnulacion.trim(), // Usar el motivo ingresado por el usuario
           usuarioAnuladorId: userId,
         }),
       });
