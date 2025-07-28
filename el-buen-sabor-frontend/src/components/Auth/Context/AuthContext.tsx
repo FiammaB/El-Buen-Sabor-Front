@@ -9,7 +9,8 @@ interface AuthContextType {
     username: string | null;
     email: string | null;
     telefono: string | null;
-    login: (id: number, role: UserRole, username: string, email: string, telefono: string) => void;
+    baja: boolean;
+    login: (id: number, role: UserRole, username: string, email: string, telefono: string, baja: boolean) => void;
     logout: () => void;
 }
 
@@ -22,7 +23,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     const [username, setUsername] = useState<string | null>(null);
     const [email, setEmail] = useState<string | null>(null);
     const [telefono, setTelefono] = useState<string | null>(null);
-
+    const [baja, setBaja] = useState<boolean>(false);
     // 🔹 Carga inicial desde localStorage
     useEffect(() => {
         const storedId = localStorage.getItem("id");
@@ -30,8 +31,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedUsername = localStorage.getItem("username");
         const storedEmail = localStorage.getItem("email");
         const storedTelefono = localStorage.getItem("telefono");
-
-        console.log("Recuperando sesión:", { storedId, storedRole, storedUsername });
+        const storedBaja = localStorage.getItem("baja");
+        console.log("Recuperando sesión:", { storedId, storedRole, storedUsername, storedEmail, storedTelefono, storedBaja });
 
         if (
             storedRole &&
@@ -43,6 +44,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             setUsername(storedUsername);
             setEmail(storedEmail);
             setTelefono(storedTelefono);
+            setBaja(storedBaja === "true");
             setIsAuthenticated(true);
         } else {
             console.log("No hay sesión válida, limpiando datos");
@@ -50,9 +52,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
-    const login = (userId: number, userRole: UserRole, userName: string, userEmail: string, userTelefono: string) => {
+    const login = (userId: number, userRole: UserRole, userName: string, userEmail: string, userTelefono: string, userBaja: boolean) => {
         if (!userRole || !userName) return;
-        console.log("LOGIN()", { userId, userRole, userName, userEmail, userTelefono });
+        console.log("LOGIN()", { userId, userRole, userName, userEmail, userTelefono, userBaja });
 
         setId(userId);
         setIsAuthenticated(true);
@@ -60,12 +62,13 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setUsername(userName);
         setEmail(userEmail);
         setTelefono(userTelefono);
-
+        setBaja(userBaja)
         localStorage.setItem("id", userId.toString());
         localStorage.setItem("role", userRole);
         localStorage.setItem("username", userName);
         localStorage.setItem("email", userEmail);
         localStorage.setItem("telefono", userTelefono);
+        localStorage.setItem("baja", userBaja.toString());
     };
 
     const logout = () => {
@@ -76,16 +79,17 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setUsername(null);
         setEmail(null);
         setTelefono(null);
-
+        setBaja(false);
         localStorage.removeItem("id");
         localStorage.removeItem("role");
         localStorage.removeItem("username");
         localStorage.removeItem("email");
         localStorage.removeItem("telefono");
+        localStorage.removeItem("baja");
     };
 
     return (
-        <AuthContext.Provider value={{ id, isAuthenticated, role, username, email, telefono, login, logout }}>
+        <AuthContext.Provider value={{ id, isAuthenticated, role, username, email, telefono, baja, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

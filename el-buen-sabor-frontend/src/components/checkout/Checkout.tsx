@@ -83,7 +83,20 @@ export default function CheckoutPage() {
   const [stockValidationErrors, setStockValidationErrors] = useState<string[]>([]);
   const [isStockValidating, setIsStockValidating] = useState(false);
 
+  const [isClientBaja, setIsClientBaja] = useState(false);
+
   const auth = useAuth();
+  useEffect(() => {
+
+    if (auth?.isAuthenticated && auth?.baja) { // Asegúrate de que auth.baja existe y es un boolean
+      setIsClientBaja(true);
+      // Opcional: podrías redirigir si no quieres que vean esta página
+      // navigate('/forbidden-page');
+    } else {
+      setIsClientBaja(false);
+    }
+  }, [auth?.isAuthenticated, auth?.baja]); // Dependencias: actualizar si cambia el estado de autenticación o la propiedad 'baja'
+
   useEffect(() => {
     if (auth?.isAuthenticated) {
       setCustomerInfo(prevInfo => ({
@@ -367,6 +380,15 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
+      {isClientBaja && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded" role="alert">
+            <p className="font-bold">¡Atención!</p>
+            <p>Tu cuenta se encuentra dada de baja y no puedes realizar nuevos pedidos.</p>
+            <p className="mt-2">Por favor, contacta con soporte si crees que esto es un error.</p>
+          </div>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
@@ -426,7 +448,7 @@ export default function CheckoutPage() {
         )}
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${isClientBaja ? 'opacity-50 pointer-events-none' : ''}`}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Columna principal de los pasos del Checkout */}
           <div className="lg:col-span-2 space-y-6">
@@ -517,6 +539,8 @@ export default function CheckoutPage() {
                       placeholder="Ej: 3511234567"
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                       required
+                      maxLength={12}
+                      pattern="[0-9]*"
                     />
                   </div>
                 </div>

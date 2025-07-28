@@ -20,8 +20,8 @@ type AnyArticuloDisplay = Articulo;
 
 export default function Landing() {
 
-	const { id, role, } = useAuth();
-
+	const { id, role } = useAuth();
+	const auth = useAuth();
 
 	console.log("ROL DETECTADO:", role);
 	console.log("ID DETECTADO:", id)
@@ -34,7 +34,7 @@ export default function Landing() {
 
 	const [categorias, setCategorias] = useState<Categoria[]>([]);
 	const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(null);
-
+	const [isClientBaja, setIsClientBaja] = useState(false);
 	// Importamos las funciones del carrito
 	const { addToCart, getItemQuantity, totalItems, removeFromCart, updateQuantity } = useCart() // Asegúrate de importar updateQuantity
 
@@ -59,6 +59,15 @@ export default function Landing() {
 	const categoriasVisibles = [
 		"Pizza", "Empanada", "Hamburguesa", "Sanguche", "Lomito", "Bebida", "Postre", "Pasta", "Ensalada", "Picada", "Sushi", "Taco", "Burrito", "Wrap", "Tortilla", "Galleta", "Helado", "Tarta", "Sopa", "Pescado", "Mariscos", "Asado", "Pollo", "Vegetariano", "Vegano", "Desayuno", "Brunch", "Comida Rápida", "Comida Saludable", "Papas", "Nachos", "Alitas", "Costillas", "Ceviche", "Curry", "Falafel", "Kebab", "Sushi Rolls", "Dim Sum", "Pho", "Ramen", "Banh Mi", "Bao Bun", "Poke Bowl", "Smoothie Bowl", "Papas Fritas", "Comida"
 	];
+	// Verifica si el cliente está de baja
+	useEffect(() => {
+		if (auth.isAuthenticated && typeof auth.baja === 'boolean') {
+			setIsClientBaja(auth.baja);
+			console.log("DEBUG LandingPage: Estado de baja del cliente:", auth.baja);
+		} else {
+			setIsClientBaja(false);
+		}
+	}, [auth.isAuthenticated, auth.baja]);
 
 	useEffect(() => {
 		articuloService.getAllCategorias()
@@ -112,6 +121,12 @@ export default function Landing() {
 
 	return (
 		<div className="min-h-screen bg-white ebs-landing">
+			{isClientBaja && (
+				<div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded mb-6" role="alert">
+					<p className="font-bold">¡Atención!</p>
+					<p>Tu cuenta se encuentra dada de baja y no puedes realizar pedidos. Contacta con soporte.</p>
+				</div>
+			)}
 			{/* Hero Section */}
 			<section className="relative bg-gradient-to-br from-orange-50 to-orange-100 py-16 lg:py-24
                                 items-center justify-center">

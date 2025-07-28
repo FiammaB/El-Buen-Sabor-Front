@@ -83,7 +83,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         usuario.rol,
         fullName || "Sin Nombre",
         usuario.email,
-        usuario.telefono
+        usuario.telefono,
+        usuario.baja
       );
 
       if (onSuccess) {
@@ -136,7 +137,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                   usuario.rol,
                   `${usuario.nombre} ${usuario.apellido}`,
                   usuario.email,
-                  usuario.telefono
+                  usuario.telefono,
+                  usuario.baja
                 );
                 alert("¡Login con Google exitoso!");
                 switch (usuario.rol) {
