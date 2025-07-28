@@ -83,6 +83,27 @@ export default function PerfilCocineroPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
+    if (name === "nombre" || name === "apellido") {
+      // Permitir solo letras y espacios en nombre y apellido
+      if (!/^[a-zA-Z\s]*$/.test(value)) {
+        setMsg(`El campo ${name === "nombre" ? "Nombre" : "Apellido"} solo puede contener letras y espacios.`);
+        return; // No actualizar el estado si la validación falla
+      } else {
+        setMsg(null); // Limpiar mensaje si la validación pasa
+      }
+    }
+
+    if (name === "telefono") {
+      // Permitir solo números en el teléfono
+      if (!/^\d*$/.test(value)) {
+        setMsg("El campo Teléfono solo puede contener números.");
+        return; // No actualizar el estado si la validación falla
+      } else {
+        setMsg(null); // Limpiar mensaje si la validación pasa
+      }
+    }
+
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
