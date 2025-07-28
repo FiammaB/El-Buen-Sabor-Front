@@ -97,9 +97,10 @@ export default function CajeroPedidosPage() {
     const handleCancelar = async (pedido: IPedidoDTO) => {
         if (!window.confirm("¿Seguro que deseas cancelar este pedido?")) return;
         try {
-            await new PedidoService().actualizarEstadoPedido(pedido.id!, "CANCELADO");
+            const payload = { estado: "CANCELADO", empleadoId: userId || null };
+            await new PedidoService().actualizarEstadoPedido(pedido.id!, payload);
             alert("Pedido cancelado exitosamente.");
-            // Refrescá toda la lista
+
             const nuevosPedidos = await new PedidoService().getAllPedidos();
             setAllPedidos(nuevosPedidos);
         } catch (e: any) {
@@ -111,20 +112,24 @@ export default function CajeroPedidosPage() {
         const motivoAnulacion = prompt("Motivo de la devolución/anulación:");
         if (!motivoAnulacion) return;
         try {
-            const usuarioAnuladorId = 1; // HARDCODE para test
+            const usuarioAnuladorId = 1;
             await new PedidoService().anularPedidoConNotaCredito(pedido.id!, {
                 usuarioAnuladorId,
                 motivoAnulacion,
             });
-            await new PedidoService().actualizarEstadoPedido(pedido.id!, "DEVOLUCION");
+
+            const payload = { estado: "DEVOLUCION", empleadoId: userId || null };
+            await new PedidoService().actualizarEstadoPedido(pedido.id!, payload);
+
             alert("Pedido anulado y Nota de Crédito enviada al cliente.");
-            // Refrescá toda la lista
+
             const nuevosPedidos = await new PedidoService().getAllPedidos();
             setAllPedidos(nuevosPedidos);
         } catch (e: any) {
             alert("Error al generar la Nota de Crédito: " + (e?.response?.data?.error || e.message));
         }
     };
+
 
 
     useEffect(() => {
@@ -143,7 +148,7 @@ export default function CajeroPedidosPage() {
         // Armá el payload con el estado y, si existe, el id del usuario logueado
         try {
             // Armá el payload con el estado y, si existe, el id del usuario logueado
-            let payload: { estado: string, empleadoId?: number } = { estado: prox.estado };
+            const payload: { estado: string, empleadoId?: number } = { estado: prox.estado };
 
             // Solo manda empleadoId si hay usuario logueado y si es un rol correspondiente
             if (userId && ["CAJERO", "COCINERO", "DELIVERY"].includes(role ?? "")) {
