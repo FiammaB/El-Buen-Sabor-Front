@@ -126,6 +126,7 @@
       <workItem from="1753653511950" duration="118000" />
       <workItem from="1753653640577" duration="5026000" />
       <workItem from="1753661610916" duration="600000" />
+      <workItem from="1753735246169" duration="6267000" />
     </task>
     <servers />
   </component>
@@ -146,11 +147,6 @@
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/el-buen-sabor-frontend/src/components/checkout/Checkout.tsx</url>
-          <line>294</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/el-buen-sabor-frontend/src/App.tsx</url>
           <line>75</line>

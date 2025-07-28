@@ -178,8 +178,10 @@ export default function RegisterPage(props: RegisterProps) {
           usuario.rol,
           `${usuario.nombre} ${usuario.apellido}`,
           usuario.email,
-          usuario.telefono
+          usuario.telefono,
+          usuario.baja ?? false // por si no viene
         );
+
         alert("¡Registro exitoso!");
         navigate("/");
       } else {
@@ -422,7 +424,6 @@ export default function RegisterPage(props: RegisterProps) {
                 )}
               </div>
 
-              {/* Checkbox términos solo para clientes */}
               {rolDestino === "CLIENTE" && (
                 <div className="flex items-center">
                   <input
@@ -434,25 +435,15 @@ export default function RegisterPage(props: RegisterProps) {
                   />
                   <label className="ml-2 text-sm text-gray-600">
                     Acepto los{" "}
-                    <button
-                      onClick={() => navigate("/terms")}
-                      className="text-orange-600 font-medium"
-                    >
-                      términos
-                    </button>{" "}
-                    y la{" "}
-                    <button
-                      onClick={() => navigate("/privacy")}
-                      className="text-orange-600 font-medium"
-                    >
-                      privacidad
-                    </button>
+                    <span className="text-orange-600 font-medium">términos</span> y la{" "}
+                    <span className="text-orange-600 font-medium">privacidad</span>
                   </label>
                 </div>
               )}
               {errors.acceptTerms && (
                 <p className="text-sm text-red-600">{errors.acceptTerms}</p>
               )}
+
 
               {/* Botón enviar */}
               <button
@@ -496,8 +487,10 @@ export default function RegisterPage(props: RegisterProps) {
                             usuario.rol,
                             `${usuario.nombre} ${usuario.apellido}`,
                             usuario.email,
-                            usuario.telefono
+                            usuario.telefono,
+                            usuario.baja ?? false // por si no viene
                           );
+
                           alert("¡Login con Google exitoso!");
                           navigate("/cliente");
                         })
