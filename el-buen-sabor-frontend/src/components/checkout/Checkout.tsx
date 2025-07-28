@@ -259,7 +259,10 @@ export default function CheckoutPage() {
   }, [items, validateCartStock]);
 
   const deliveryFee = deliveryType === TipoEnvio.DELIVERY ? (totalAmount >= 25 ? 0 : 3.99) : 0;
-  const finalTotal = totalAmount + deliveryFee;
+  const finalTotal =
+      deliveryType === TipoEnvio.RETIRO_EN_LOCAL
+          ? totalAmount * 0.90
+          : totalAmount + deliveryFee;
 
   const handleSubmitOrder = async () => {
     setIsProcessing(true);
