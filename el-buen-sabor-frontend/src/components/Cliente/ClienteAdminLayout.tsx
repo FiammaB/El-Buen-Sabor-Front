@@ -2,8 +2,12 @@
 import { Outlet } from "react-router-dom";
 import ClienteSidebar from "./ClienteSidebar";
 import ClientePanelHeader from "./ClientePanelHeader";
+import {useAuth} from "../Auth/Context/AuthContext.tsx";
+import {useAutoLogout} from "../Hooks/useAutoLogout.ts";
 
 export default function ClienteAdminLayout() {
+    const { logout } = useAuth();
+    useAutoLogout(logout, "cliente");
     return (
         <div className="min-h-screen bg-gray-50">
             <ClientePanelHeader />
