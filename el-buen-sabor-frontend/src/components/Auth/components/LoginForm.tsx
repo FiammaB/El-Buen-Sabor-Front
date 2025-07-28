@@ -112,9 +112,22 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       }
     } catch (error) {
       console.error("Error en login:", error);
+      let errorMessage = "Error al iniciar sesión. Verifica tus credenciales.";
+      if (axios.isAxiosError(error) && error.response) {
+        if (error.response.data && typeof error.response.data.message === 'string') {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data && Array.isArray(error.response.data.message)) {
+
+          errorMessage = error.response.data.message.join('; ');
+        } else if (error.response.data && typeof error.response.data === 'string') {
+
+          errorMessage = error.response.data;
+        }
+      }
+
       setErrors((prev) => ({
         ...prev,
-        general: "Error al iniciar sesión. Verifica tus credenciales.",
+        general: errorMessage,
       }));
     } finally {
       setIsLoading(false);
@@ -163,7 +176,20 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               })
               .catch((err) => {
                 console.error("❌ Error al loguear con Google", err);
-                alert("Falló el login con Google.");
+                let errorMessage = "Falló el login con Google.";
+                if (axios.isAxiosError(err) && err.response) {
+                  if (err.response.data && typeof err.response.data.message === 'string') {
+                    errorMessage = err.response.data.message;
+                  } else if (err.response.data && Array.isArray(err.response.data.message)) {
+                    errorMessage = err.response.data.message.join('; ');
+                  } else if (err.response.data && typeof err.response.data === 'string') {
+                    errorMessage = err.response.data;
+                  }
+                }
+                setErrors(prev => ({
+                  ...prev,
+                  general: errorMessage
+                }));
               });
           }}
           onError={() => {
