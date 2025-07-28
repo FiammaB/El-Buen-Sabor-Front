@@ -34,7 +34,7 @@
     &quot;Node.js.ArticuloService.ts.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/USER-WINDOWS/Documents/GitHub/El-Buen-Sabor-Front&quot;,
@@ -123,6 +123,8 @@
       <workItem from="1753383691258" duration="870000" />
       <workItem from="1753384920271" duration="3323000" />
       <workItem from="1753399118555" duration="406000" />
+      <workItem from="1753653511950" duration="118000" />
+      <workItem from="1753653640577" duration="3945000" />
     </task>
     <servers />
   </component>
@@ -145,7 +147,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/el-buen-sabor-frontend/src/components/checkout/Checkout.tsx</url>
-          <line>282</line>
+          <line>294</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">

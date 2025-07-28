@@ -1,16 +1,16 @@
 // src/models/DTO/IDomicilioDTO.ts
 export interface IDomicilioDTO {
-    id: number;
+    id?: number;
     calle: string;
     numero: number;
     cp: number;
-    localidad: {
+    localidad?: {
         id: number;
         nombre: string;
-        provincia: {
+        provincia?: {
             id: number;
             nombre: string;
-            pais: {
+            pais?: {
                 id: number;
                 nombre: string;
             }
