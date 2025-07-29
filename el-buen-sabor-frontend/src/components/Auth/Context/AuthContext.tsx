@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 export type UserRole = "ADMINISTRADOR" | "CLIENTE" | "COCINERO" | "CAJERO" | "DELIVERY" | null;
 
@@ -10,10 +10,9 @@ interface AuthContextType {
     email: string | null;
     telefono: string | null;
     baja: boolean;
-    login: (id: number, role: UserRole, username: string, email: string, telefono: string, baja: boolean) => void;
+    login: (id: number, role: UserRole, username: string, email: string, telefono: string | null, baja: boolean) => void;
     logout: () => void;
-    refreshUserData: () => Promise<void>; // ✨ Nueva función
-    updateTelefono: (newTelefono: string) => void; // ✨ Nueva función para actualizar solo el teléfono
+    updateAuthData: (data: { telefono?: string; username?: string; email?: string }) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,7 +26,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     const [telefono, setTelefono] = useState<string | null>(null);
     const [baja, setBaja] = useState<boolean>(false);
 
-    // 🔹 Carga inicial desde localStorage
     useEffect(() => {
         const storedId = localStorage.getItem("id");
         const storedRole = localStorage.getItem("role");
@@ -35,13 +33,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedEmail = localStorage.getItem("email");
         const storedTelefono = localStorage.getItem("telefono");
         const storedBaja = localStorage.getItem("baja");
-        console.log("Recuperando sesión:", { storedId, storedRole, storedUsername, storedEmail, storedTelefono, storedBaja });
 
-        if (
-            storedRole &&
-            ["ADMINISTRADOR", "CLIENTE", "COCINERO", "CAJERO", "DELIVERY"].includes(storedRole) &&
-            storedUsername
-        ) {
+        if (storedRole && ["ADMINISTRADOR", "CLIENTE", "COCINERO", "CAJERO", "DELIVERY"].includes(storedRole) && storedUsername) {
             setId(storedId ? Number(storedId) : null);
             setRole(storedRole as UserRole);
             setUsername(storedUsername);
@@ -49,81 +42,26 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             setTelefono(storedTelefono);
             setBaja(storedBaja === "true");
             setIsAuthenticated(true);
-        } else {
-            console.log("No hay sesión válida, limpiando datos");
-            logout();
         }
     }, []);
 
-    // ✨ Nueva función para refrescar datos del usuario desde la API
-    const refreshUserData = useCallback(async () => {
-        if (!id || !isAuthenticated) {
-            console.log("No se puede refrescar: usuario no autenticado");
-            return;
-        }
-
-        try {
-            console.log("Refrescando datos del usuario con ID:", id);
-            const response = await fetch(`http://localhost:8080/api/usuarios/${id}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            if (response.ok) {
-                const userData = await response.json();
-                console.log("Datos actualizados recibidos:", userData);
-
-                // Actualizar estado
-                setTelefono(userData.telefono);
-                setEmail(userData.email);
-                setUsername(userData.username);
-                setBaja(userData.baja);
-
-                // Actualizar localStorage
-                localStorage.setItem("telefono", userData.telefono || "");
-                localStorage.setItem("email", userData.email || "");
-                localStorage.setItem("username", userData.username || "");
-                localStorage.setItem("baja", userData.baja?.toString() || "false");
-
-                console.log("Datos del usuario refrescados exitosamente");
-            } else {
-                console.error("Error al refrescar datos del usuario:", response.status);
-            }
-        } catch (error) {
-            console.error("Error al refrescar datos del usuario:", error);
-        }
-    }, [id, isAuthenticated]);
-
-    // ✨ Nueva función para actualizar solo el teléfono (útil para updates inmediatos)
-    const updateTelefono = useCallback((newTelefono: string) => {
-        setTelefono(newTelefono);
-        localStorage.setItem("telefono", newTelefono);
-        console.log("Teléfono actualizado en contexto:", newTelefono);
-    }, []);
-
-    const login = (userId: number, userRole: UserRole, userName: string, userEmail: string, userTelefono: string, userBaja: boolean) => {
-        if (!userRole || !userName) return;
-        console.log("LOGIN()", { userId, userRole, userName, userEmail, userTelefono, userBaja });
-
+    const login = (userId: number, userRole: UserRole, userName: string, userEmail: string, userTelefono: string | null, userBaja: boolean) => {
         setId(userId);
         setIsAuthenticated(true);
         setRole(userRole);
         setUsername(userName);
         setEmail(userEmail);
         setTelefono(userTelefono);
-        setBaja(userBaja)
+        setBaja(userBaja);
         localStorage.setItem("id", userId.toString());
         localStorage.setItem("role", userRole);
         localStorage.setItem("username", userName);
-        localStorage.setItem("email", userEmail);
-        localStorage.setItem("telefono", userTelefono);
+        if (userEmail) localStorage.setItem("email", userEmail);
+        if (userTelefono) localStorage.setItem("telefono", userTelefono);
         localStorage.setItem("baja", userBaja.toString());
     };
 
     const logout = () => {
-        console.log("Cerrando sesión");
         setId(null);
         setIsAuthenticated(false);
         setRole(null);
@@ -131,28 +69,26 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setEmail(null);
         setTelefono(null);
         setBaja(false);
-        localStorage.removeItem("id");
-        localStorage.removeItem("role");
-        localStorage.removeItem("username");
-        localStorage.removeItem("email");
-        localStorage.removeItem("telefono");
-        localStorage.removeItem("baja");
+        localStorage.clear();
+    };
+
+    const updateAuthData = (data: { telefono?: string; username?: string; email?: string }) => {
+        if (data.telefono !== undefined) {
+            setTelefono(data.telefono);
+            localStorage.setItem("telefono", data.telefono);
+        }
+        if (data.username !== undefined) {
+            setUsername(data.username);
+            localStorage.setItem("username", data.username);
+        }
+        if (data.email !== undefined) {
+            setEmail(data.email);
+            localStorage.setItem("email", data.email);
+        }
     };
 
     return (
-        <AuthContext.Provider value={{
-            id,
-            isAuthenticated,
-            role,
-            username,
-            email,
-            telefono,
-            baja,
-            login,
-            logout,
-            refreshUserData, // ✨ Nueva función
-            updateTelefono   // ✨ Nueva función
-        }}>
+        <AuthContext.Provider value={{ id, isAuthenticated, role, username, email, telefono, baja, login, logout, updateAuthData }}>
             {children}
         </AuthContext.Provider>
     );
@@ -163,7 +99,6 @@ function useAuth() {
     if (!context) {
         throw new Error("useAuth debe usarse dentro de <AuthProvider>");
     }
-    console.log("USE AUTH CONTEXT DATOS", context);
     return context;
 }
 
