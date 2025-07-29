@@ -86,6 +86,8 @@ export default function CheckoutPage() {
   const [isClientBaja, setIsClientBaja] = useState(false);
 
   const auth = useAuth();
+  console.log("CONTENIDO DEL CONTEXTO EN CHECKOUT:", auth);
+
   useEffect(() => {
 
     if (auth?.isAuthenticated && auth?.baja) { // Asegúrate de que auth.baja existe y es un boolean
@@ -260,9 +262,9 @@ export default function CheckoutPage() {
 
   const deliveryFee = deliveryType === TipoEnvio.DELIVERY ? (totalAmount >= 25 ? 0 : 3.99) : 0;
   const finalTotal =
-      deliveryType === TipoEnvio.RETIRO_EN_LOCAL
-          ? totalAmount * 0.90
-          : totalAmount + deliveryFee;
+    deliveryType === TipoEnvio.RETIRO_EN_LOCAL
+      ? totalAmount * 0.90
+      : totalAmount + deliveryFee;
 
   const handleSubmitOrder = async () => {
     setIsProcessing(true);
@@ -313,6 +315,7 @@ export default function CheckoutPage() {
       if (paymentMethod === FormaPago.MERCADO_PAGO) {
         try {
           const preferenceId = await mercadoPagoService.createPreference(pedido);
+          auth.updateAuthData({ telefono: customerInfo.phone });
           localStorage.setItem("pendingOrderData", JSON.stringify(pedido));
           localStorage.setItem("mercadoPagoInitiated", "true");
           window.location.href = JSON.parse(preferenceId).initPoint;
@@ -324,6 +327,7 @@ export default function CheckoutPage() {
         }
       } else {
         const response = await pedidoService.sendPedido(pedido);
+        auth.updateAuthData({ telefono: customerInfo.phone });
         setIsComplete(true);
         setTimeout(() => {
           navigate(`/order-confirmation?pedido=${response.id}`);

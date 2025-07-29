@@ -202,6 +202,30 @@ export default function ProductDetailPage() {
             <div className="text-4xl font-bold text-orange-500">
               {isPromocion ? `$${producto.precioPromocional?.toFixed(2)}` : `$${(producto as Articulo).precioVenta?.toFixed(2)}`}
             </div>
+            {/* --- INICIO DEL BLOQUE PARA MOSTRAR DETALLES DE LA PROMOCIÓN --- */}
+            {isPromocion && (producto.promocionDetalles?.length > 0 || producto.promocionInsumoDetalles?.length > 0) && (
+              <div className="mt-6 border-t pt-4">
+                <h4 className="text-lg font-semibold text-gray-800">Esta promoción incluye:</h4>
+                <ul className="list-disc list-inside mt-2 space-y-1 text-gray-700">
+
+                  {/* Mapea y muestra los artículos manufacturados */}
+                  {producto.promocionDetalles?.map((detalle) => (
+                    <li key={`detalle-manu-${detalle.id}`}>
+                      <span className="font-medium">{detalle.cantidad}x</span> {detalle.articuloManufacturado.denominacion}
+                    </li>
+                  ))}
+
+                  {/* Mapea y muestra los artículos insumos (ej: bebidas) */}
+                  {producto.promocionInsumoDetalles?.map((detalleInsumo) => (
+                    <li key={`detalle-insumo-${detalleInsumo.id}`}>
+                      <span className="font-medium">{detalleInsumo.cantidad}x</span> {detalleInsumo.articuloInsumo.denominacion}
+                    </li>
+                  ))}
+
+                </ul>
+              </div>
+            )}
+            {/* --- FIN DEL BLOQUE --- */}
             <div className="flex items-center gap-4">
               {/* Botón de decrementar para el producto principal */}
               {isProductBaja ? (
