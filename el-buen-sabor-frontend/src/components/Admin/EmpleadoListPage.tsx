@@ -82,11 +82,6 @@ export default function EmpleadoListPage() {
             // 2. Luego baja persona
             await clienteService.toggleBaja(personaId, baja);
 
-            // No need to call fetchData() immediately here,
-            // as the optimistic update already reflects the change.
-            // fetchData() can be kept for more robust sync in case of complex operations,
-            // but for a simple toggle, optimistic update is better.
-
         } catch (error) {
             // Revert optimistic update if there's an error
             alert("Error al cambiar el estado del empleado");
@@ -302,12 +297,6 @@ export default function EmpleadoListPage() {
                                             alert("El username solo debe contener letras y espacios.");
                                             return;
                                         }
-                                        // The email input is disabled, so its value shouldn't be changed by the user.
-                                        // No need to validate it here unless it's editable.
-                                        // if (!validarEmail(editUser?.email || "")) {
-                                        //     alert("El email no es válido.");
-                                        //     return;
-                                        // }
                                         try {
                                             // Solo actualiza datos de usuario
                                             await usuarioService.updateUsuario(editUser!.id!, {

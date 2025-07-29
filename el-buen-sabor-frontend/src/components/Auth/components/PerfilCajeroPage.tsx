@@ -16,6 +16,7 @@ type PerfilGeneralDTO = {
     email: string;
     username: string;
     rol: string;
+    baja: boolean;
   };
   domicilios?: IDomicilioDTO[];
 };
@@ -152,7 +153,7 @@ export default function PerfilCajeroPage() {
       );
 
       setPerfil(res.data);
-      login(userId!, role!, `${res.data.nombre} ${res.data.apellido}`.trim(), res.data.usuario.email, res.data.telefono);
+      login(userId!, role!, `${res.data.nombre} ${res.data.apellido}`.trim(), res.data.usuario.email, res.data.telefono, res.data.usuario.baja);
 
       setMsg("Perfil actualizado exitosamente.");
       setEditMode(false);
