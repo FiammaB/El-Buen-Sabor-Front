@@ -17,7 +17,7 @@ Routing: React Router
 Estilos: Tailwind CSS
 Iconos: Lucide React
 Gestión de Estado: React Context API
-##🚀 Instalación y Puesta en Marcha
+## 🚀 Instalación y Puesta en Marcha
 Para ejecutar este proyecto en tu máquina local, necesitás tener el backend de El Buen Sabor corriendo primero.
 
 Requisitos Previos
