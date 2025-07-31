@@ -56,13 +56,21 @@ El código fuente está organizado de la siguiente manera para mantener un proye
 
 /src
 ├── /components/    # Componentes reutilizables (Botones, Cards, Forms, etc.)
+
 │   ├── /Auth/
+
 │   └── /Cart/
+
 ├── /context/       # Proveedores de Contexto (AuthContext, CartContext)
+
 ├── /models/        # Definiciones de Tipos y Interfaces (TypeScript)
+
 ├── /pages/         # Componentes de página principal (Landing, Checkout, Admin, etc.)
+
 ├── /services/      # Lógica para las llamadas a la API (PromocionService, PedidoService, etc.)
+
 ├── App.tsx         # Componente raíz y configuración de rutas (React Router)
+
 └── main.tsx        # Punto de entrada de la aplicación
 ## ✒️ Autores
 Fiamma Brizuela, Laura Pelayes, Gastón Sisterna, Faustino Viñolo
