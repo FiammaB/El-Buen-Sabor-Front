@@ -373,15 +373,15 @@ export default function Ingredientes() {
                 <div>
                   <label htmlFor="stockActual" className="block text-sm font-medium text-gray-700 mb-1">Stock actual</label>
                   <input
-                      type="number"
-                      id="stockActual"
-                      value={formData.stockActual ?? ""}
-                      onChange={(e) =>
-                          setFormData({ ...formData, stockActual: e.target.value === "" ? undefined : parseFloat(e.target.value) })
-                      }
-                      className="border border-gray-300 rounded p-2 w-full"
-                      min={0}
-                      max={999999}
+                    type="number"
+                    id="stockActual"
+                    value={formData.stockActual ?? ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, stockActual: e.target.value === "" ? undefined : parseFloat(e.target.value) })
+                    }
+                    className="border border-gray-300 rounded p-2 w-full"
+                    min={0}
+                    max={999999}
                   />
                 </div>
 
