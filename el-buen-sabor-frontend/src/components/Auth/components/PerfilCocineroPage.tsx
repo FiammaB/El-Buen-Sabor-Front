@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "../../../config/api";
 // src/pages/cocinero/PerfilCocineroPage.tsx
 import { useEffect, useState } from "react";
 import { useAuth } from "../Context/AuthContext.tsx";
@@ -55,7 +56,7 @@ export default function PerfilCocineroPage() {
     try {
       setLoading(true);
       // El endpoint `/api/usuarios/perfil/${email}` es el general
-      const res = await axios.get<PerfilGeneralDTO>(`http://localhost:8080/api/usuarios/perfil/${email}`);
+      const res = await axios.get<PerfilGeneralDTO>(`${API_ORIGIN}/api/usuarios/perfil/${email}`);
 
       const p = res.data;
       setPerfil(p);
@@ -141,7 +142,7 @@ export default function PerfilCocineroPage() {
     try {
       // Endpoint de actualización: asumiendo que también es general por email
       const res = await axios.put<PerfilGeneralDTO>(
-          `http://localhost:8080/api/usuarios/perfil/${email}`,
+          `${API_ORIGIN}/api/usuarios/perfil/${email}`,
           {
             nombre: form.nombre,
             apellido: form.apellido,

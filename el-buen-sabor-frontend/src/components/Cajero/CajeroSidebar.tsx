@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 
 const navItems = [
   { href: "/cajero/caja", label: "Caja" },
+  { href: "/cajero/venta-mostrador", label: "Registrar Venta" },
 ];
 
 export default function CajeroSidebar() {

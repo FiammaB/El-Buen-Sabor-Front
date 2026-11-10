@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { API_ORIGIN } from "../../../config/api";
 
 export default function ChangePasswordForm() {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ export default function ChangePasswordForm() {
 
     try {
       const res = await fetch(
-        `http://localhost:8080/api/auth/cambiar-password?email=${email}&codigo=${codigo}&nuevaPassword=${encodeURIComponent(
+        `${API_ORIGIN}/api/auth/cambiar-password?email=${email}&codigo=${codigo}&nuevaPassword=${encodeURIComponent(
           password
         )}`,
         { method: "POST" }

@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "../../../config/api";
 // src/pages/Cart/CartPage.tsx
 
 import { useEffect, useState } from 'react'
@@ -16,6 +17,7 @@ export default function CartPage() {
         totalItems,
         totalAmount,
         updateQuantity,
+        updateObservaciones,
         removeFromCart,
         clearCart,
         addToCart
@@ -60,7 +62,7 @@ export default function CartPage() {
             }
 
             try {
-                const res = await fetch(`http://localhost:8080/api/articuloManufacturado/filtrar?categoriaId=${categoriaId}&baja=false`);
+                const res = await fetch(`${API_ORIGIN}/api/articuloManufacturado/filtrar?categoriaId=${categoriaId}&baja=false`);
                 if (!res.ok) {
                     throw new Error(`HTTP error! status: ${res.status}`);
                 }
@@ -161,7 +163,7 @@ export default function CartPage() {
                                             }
                                         } else if (purchasableItem.tipo === 'promocion') {
                                             const promocion = purchasableItem as IPromocionDTO;
-                                            // <-- CAMBIO CLAVE AQUÍ: Elimina el prefijo `http://localhost:8080/`
+                                            // <-- CAMBIO CLAVE AQUÍ: Elimina el prefijo `${API_ORIGIN}/`
                                             imageUrl = promocion.imagen?.denominacion || imageUrl; // Las URL de Cloudinary son completas
                                             itemName = promocion.denominacion;
                                             itemCategoryOrType = "Promoción";
@@ -186,6 +188,13 @@ export default function CartPage() {
                                                         )}
                                                     </p>
                                                     <p className="text-orange-500 font-bold">${itemPrice.toFixed(2)}</p>
+                                                    <input
+                                                        type="text"
+                                                        value={item.observaciones ?? ""}
+                                                        onChange={(e) => updateObservaciones(item.id, e.target.value)}
+                                                        placeholder="Alguna aclaración? Ej: sin lechuga"
+                                                        className="mt-2 w-full text-xs border border-gray-200 rounded-md px-2 py-1"
+                                                    />
                                                 </div>
 
                                                 <div className="flex items-center space-x-3">

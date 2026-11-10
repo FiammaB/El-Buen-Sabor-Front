@@ -17,8 +17,6 @@ export default function IngredienteForm({ onSave, onCancel, insumosExistentes }:
     // Estado individual por campo
     const [denominacion, setDenominacion] = useState("");
     const [precioCompra, setPrecioCompra] = useState<number | "">("");
-    const [stockActual, setStockActual] = useState<number | "">("");
-    const [stockMinimo, setStockMinimo] = useState<number | "">("");
     const [categoriaId, setCategoriaId] = useState<number | "">("");
     const [unidadMedidaId, setUnidadMedidaId] = useState<number | "">("");
     const [imagenId, setImagenId] = useState<number | undefined>(undefined);
@@ -91,8 +89,6 @@ export default function IngredienteForm({ onSave, onCancel, insumosExistentes }:
         if (
             !denominacion ||
             precioCompra === "" ||
-            stockActual === "" ||
-            stockMinimo === "" ||
             !categoriaId ||
             !unidadMedidaId
         ) {
@@ -100,12 +96,11 @@ export default function IngredienteForm({ onSave, onCancel, insumosExistentes }:
             return;
         }
 
-        // Armar el objeto tal como espera tu backend
+        // El insumo se crea sin stock en ninguna sucursal — el stock inicial se carga aparte,
+        // por sucursal, desde "Registrar Compra de Ingredientes".
         const payload = {
             denominacion,
             precioCompra: Number(precioCompra),
-            stockActual: Number(stockActual),
-            stockMinimo: Number(stockMinimo),
             precioVenta: 0, // Asegúrate de que este campo sea requerido por tu backend si es 0
             esParaElaborar: esParaElaborar, // <--- USA EL NUEVO ESTADO AQUÍ
             categoriaId: Number(categoriaId),
@@ -119,8 +114,6 @@ export default function IngredienteForm({ onSave, onCancel, insumosExistentes }:
             // Reset form después de crear
             setDenominacion("");
             setPrecioCompra("");
-            setStockActual("");
-            setStockMinimo("");
             setCategoriaId(categorias[0]?.id ?? "");
             setUnidadMedidaId(unidades[0]?.id ?? "");
             setImagenId(undefined);
@@ -155,24 +148,9 @@ export default function IngredienteForm({ onSave, onCancel, insumosExistentes }:
                 min={0}
                 step="0.01"
             />
-            <input
-                type="number"
-                value={stockActual}
-                onChange={e => setStockActual(e.target.value === "" ? "" : Number(e.target.value))}
-                placeholder="Stock actual"
-                required
-                className="border rounded p-2 w-full"
-                min={0}
-            />
-            <input
-                type="number"
-                value={stockMinimo}
-                onChange={e => setStockMinimo(e.target.value === "" ? "" : Number(e.target.value))}
-                placeholder="Stock mínimo"
-                required
-                className="border rounded p-2 w-full"
-                min={0}
-            />
+            <p className="text-xs text-gray-500">
+                El ingrediente se crea sin stock — se carga por sucursal desde "Registrar Compra de Ingredientes" una vez creado.
+            </p>
             <select
                 value={categoriaId}
                 onChange={e => setCategoriaId(Number(e.target.value))}

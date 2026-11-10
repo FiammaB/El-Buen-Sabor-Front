@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ICategoriaResponseDTO } from "../../models/DTO/ICategoriaResponseDTO";
 import { CategoriaForm } from "./CategoriaForm.tsx";
 import { Pencil, Trash2, Check } from "lucide-react";
@@ -58,14 +58,6 @@ export default function CategoriaInsumoPage() {
     const categoriasFiltradas = categorias.filter(cat =>
         cat.denominacion?.toLowerCase().includes(search.toLowerCase())
     );
-
-    function normalizarTexto(str: string) {
-        return str
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase()
-            .trim();
-    }
 
     const handleBaja = async (id: number, baja: boolean) => {
         try {

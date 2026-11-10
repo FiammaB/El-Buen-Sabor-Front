@@ -1,4 +1,3 @@
-import React from "react";
 import Ingredientes from "../admin/pages/ingredientes";
 
 export default function IngredienteFormModal({ onClose, onCreate }) {

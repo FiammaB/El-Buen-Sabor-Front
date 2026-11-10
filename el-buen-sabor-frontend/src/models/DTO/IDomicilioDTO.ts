@@ -4,6 +4,7 @@ export interface IDomicilioDTO {
     calle: string;
     numero: number;
     cp: number;
+    referencia?: string;
     localidad?: {
         id: number;
         nombre: string;

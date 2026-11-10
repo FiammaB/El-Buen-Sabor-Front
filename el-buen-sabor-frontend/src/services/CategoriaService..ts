@@ -1,7 +1,8 @@
 import axios from "axios"
 import type { Categoria } from "../models/Categoria/Categoria"
+import { API_ORIGIN } from "../config/api";
 
-const API_BASE_URL = 'http://localhost:8080/api/categorias'
+const API_BASE_URL = `${API_ORIGIN}/api/categorias`
 
 export class CategoriaService {
   async getAll(): Promise<Categoria[]> {

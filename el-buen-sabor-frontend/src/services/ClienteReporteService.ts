@@ -1,8 +1,9 @@
+import { API_ORIGIN } from "../config/api";
 // src/services/ClienteReporteService.ts
 
 import type { ClienteReporteDTO } from "../models/DTO/ClienteReporteDTO";
 
-const BASE_URL = "http://localhost:8080/api/pedidos";
+const BASE_URL = `${API_ORIGIN}/api/pedidos`;
 
 export const getReporteClientes = async (
     desde: string,

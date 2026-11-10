@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArticuloService } from '../../services/ArticuloService';
 import { ArticuloInsumo } from '../../models/Articulos/ArticuloInsumo';
+import { getSucursales, type ISucursalDTO } from '../../services/SucursalService';
 import { Plus } from 'lucide-react';
 import IngredienteForm from "./IngredieteForm.tsx";
 import { useLocation } from "react-router-dom";
@@ -9,14 +10,25 @@ const articuloService = new ArticuloService();
 
 const CompraIngredientesPage: React.FC = () => {
     const [insumos, setInsumos] = useState<ArticuloInsumo[]>([]);
+    const [sucursales, setSucursales] = useState<ISucursalDTO[]>([]);
+    const [sucursalId, setSucursalId] = useState<number | null>(null);
     const location = useLocation();
     const [selectedInsumoId, setSelectedInsumoId] = useState<number | null>(null);
     useEffect(() => {
-        const state = location.state as { insumoId?: number } | null;
+        const state = location.state as { insumoId?: number; sucursalId?: number } | null;
         if (state?.insumoId) {
             setSelectedInsumoId(state.insumoId);
         }
+        if (state?.sucursalId) {
+            setSucursalId(state.sucursalId);
+        }
     }, [location.state]);
+    useEffect(() => {
+        getSucursales().then(data => {
+            setSucursales(data);
+            setSucursalId(prev => prev ?? (data.length > 0 ? data[0].id : null));
+        });
+    }, []);
     const [cantidad, setCantidad] = useState<number>(0);
     const [nuevoPrecio, setNuevoPrecio] = useState<number | undefined>(undefined);
     const [error, setError] = useState<string | null>(null);
@@ -46,13 +58,13 @@ const CompraIngredientesPage: React.FC = () => {
     }, [selectedInsumoId, insumos]);
 
     const handleSumarStock = async () => {
-        if (!selectedInsumoId || cantidad <= 0) {
-            setError('Debe seleccionar un ingrediente y la cantidad debe ser mayor a 0 para sumar stock.');
+        if (!selectedInsumoId || !sucursalId || cantidad <= 0) {
+            setError('Debe seleccionar un ingrediente, una sucursal, y la cantidad debe ser mayor a 0 para sumar stock.');
             return;
         }
         setError(null); // Clear previous errors
         try {
-            await articuloService.sumarStock(selectedInsumoId, cantidad);
+            await articuloService.sumarStock(selectedInsumoId, sucursalId, cantidad);
             setCantidad(0);
             fetchInsumos();
         } catch (err) {
@@ -62,13 +74,13 @@ const CompraIngredientesPage: React.FC = () => {
     };
 
     const handleRestarStock = async () => {
-        if (!selectedInsumoId || cantidad <= 0) {
-            setError('Debe seleccionar un ingrediente y la cantidad debe ser mayor a 0 para restar stock.');
+        if (!selectedInsumoId || !sucursalId || cantidad <= 0) {
+            setError('Debe seleccionar un ingrediente, una sucursal, y la cantidad debe ser mayor a 0 para restar stock.');
             return;
         }
         setError(null); // Clear previous errors
         try {
-            await articuloService.restarStock(selectedInsumoId, cantidad);
+            await articuloService.restarStock(selectedInsumoId, sucursalId, cantidad);
             setCantidad(0);
             fetchInsumos();
         } catch (err) {
@@ -95,6 +107,8 @@ const CompraIngredientesPage: React.FC = () => {
     const insumosDisponiblesEnDropdown = insumos.slice().sort((a, b) => a.denominacion.localeCompare(b.denominacion)); // All insumos, sorted
 
     const selectedInsumo = insumos.find(i => i.id === selectedInsumoId);
+    const stockEnSucursal = (ins: ArticuloInsumo | undefined) =>
+        ins?.stockPorSucursal.find(s => s.sucursalId === sucursalId)?.stockActual ?? 0;
 
     // Modal de alta rápida
     const handleAltaIngrediente = () => setShowAltaIngrediente(true);
@@ -107,6 +121,18 @@ const CompraIngredientesPage: React.FC = () => {
         <div className="max-w-2xl mx-auto py-8">
             <h1 className="text-2xl font-bold mb-4">Registrar Compra de Ingredientes</h1>
             {error && <div className="text-red-500 mb-4">{error}</div>}
+            <div className="mb-4 flex items-center gap-2">
+                <label className="font-medium">Sucursal:</label>
+                <select
+                    className="border rounded p-2"
+                    value={sucursalId ?? ""}
+                    onChange={e => setSucursalId(Number(e.target.value))}
+                >
+                    {sucursales.map(s => (
+                        <option key={s.id} value={s.id}>{s.nombre}</option>
+                    ))}
+                </select>
+            </div>
             <div className="bg-white p-6 rounded shadow mb-8 flex flex-col gap-4">
                 <div className="flex items-end gap-4">
                     <div className="flex-1">
@@ -234,7 +260,7 @@ const CompraIngredientesPage: React.FC = () => {
                                 <div className="text-lg font-bold text-green-700">{selectedInsumo.denominacion}</div>
                                 <div className="text-sm text-gray-500">
                                     Unidad: {selectedInsumo.unidadMedida?.denominacion ?? "-"}
-                                    {" | "} Stock actual: {selectedInsumo.stockActual}
+                                    {" | "} Stock actual en esta sucursal: {stockEnSucursal(selectedInsumo)}
                                     {" | "} Precio compra: ${selectedInsumo.precioCompra?.toFixed(2)}
                                 </div>
                             </div>
@@ -255,7 +281,7 @@ const CompraIngredientesPage: React.FC = () => {
                 <tr className="bg-gray-100">
                     <th className="p-3">Nombre</th>
                     <th className="p-3">Unidad</th>
-                    <th className="p-3">Stock Actual</th>
+                    <th className="p-3">Stock en esta sucursal</th>
                     <th className="p-3">Precio Compra</th>
                     <th className="p-3">Activo</th>
                 </tr>
@@ -271,7 +297,7 @@ const CompraIngredientesPage: React.FC = () => {
                         >
                             <td className="p-3">{ins.denominacion}</td>
                             <td className="p-3">{ins.unidadMedida?.denominacion || '-'}</td>
-                            <td className="p-3">{ins.stockActual}</td>
+                            <td className="p-3">{stockEnSucursal(ins)}</td>
                             <td className="p-3">${ins.precioCompra.toFixed(2)}</td>
                             <td className="p-3">
                                 {ins.baja ? (

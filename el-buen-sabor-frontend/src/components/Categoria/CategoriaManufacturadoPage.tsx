@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ICategoriaResponseDTO } from "../../models/DTO/ICategoriaResponseDTO";
 
 import { Pencil, Trash2, Check } from "lucide-react";

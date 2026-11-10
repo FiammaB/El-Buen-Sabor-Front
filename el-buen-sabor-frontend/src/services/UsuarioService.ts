@@ -1,7 +1,8 @@
 import axios from "axios";
 import type { UsuarioDTO } from "../models/DTO/UsuarioDTO";
+import { API_ORIGIN } from "../config/api";
 
-const API_URL = "http://localhost:8080/api/usuarios";
+const API_URL = `${API_ORIGIN}/api/usuarios`;
 
 export class UsuarioService {
     // Obtener todos los usuarios

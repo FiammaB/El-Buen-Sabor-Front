@@ -1,5 +1,4 @@
 // src/components/Cliente/PedidoDetallePopup.tsx
-import React from "react";
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO";
 import { X, ExternalLink, Download } from "lucide-react";
 import { PedidoService } from "../../services/PedidoService";

@@ -2,7 +2,7 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "./Context/AuthContext";
-import React, { type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 // Importa el tipo UserRole desde el contexto
 import type { UserRole as ContextUserRole } from "./Context/AuthContext";

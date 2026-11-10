@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../Auth/Context/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
+import { API_ORIGIN } from "../../../config/api";
 
 type RegisterProps = {
   rolDestino?: "CLIENTE" | "COCINERO" | "CAJERO" | "DELIVERY";
@@ -162,7 +163,7 @@ export default function RegisterPage(props: RegisterProps) {
         fechaNacimiento: formData.dateOfBirth,
       };
 
-      const res = await axios.post(`http://localhost:8080${endpoint}`, payload, {
+      const res = await axios.post(`${API_ORIGIN}${endpoint}`, payload, {
         headers: {
           Authorization:
             rolDestino !== "CLIENTE"
@@ -179,7 +180,8 @@ export default function RegisterPage(props: RegisterProps) {
           `${usuario.nombre} ${usuario.apellido}`,
           usuario.email,
           usuario.telefono,
-          usuario.baja ?? false // por si no viene
+          usuario.baja ?? false, // por si no viene
+          usuario.token
         );
 
         alert("¡Registro exitoso!");
@@ -477,7 +479,7 @@ export default function RegisterPage(props: RegisterProps) {
                       const token = credentialResponse.credential;
                       axios
                         .post(
-                          "http://localhost:8080/api/auth/google",
+                          `${API_ORIGIN}/api/auth/google`,
                           { token }
                         )
                         .then((res) => {
@@ -488,7 +490,8 @@ export default function RegisterPage(props: RegisterProps) {
                             `${usuario.nombre} ${usuario.apellido}`,
                             usuario.email,
                             usuario.telefono,
-                            usuario.baja ?? false // por si no viene
+                            usuario.baja ?? false, // por si no viene
+                            usuario.token
                           );
 
                           alert("¡Login con Google exitoso!");

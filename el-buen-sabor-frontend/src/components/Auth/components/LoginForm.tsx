@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../Context/AuthContext.tsx";
 import { GoogleLogin } from "@react-oauth/google";
+import { API_ORIGIN } from "../../../config/api";
 
 type LoginFormProps = {
   onSuccess?: () => void;
@@ -49,7 +50,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     setErrors((prev) => ({ ...prev, general: "" }));
 
     try {
-      const res = await axios.post("http://localhost:8080/api/auth/login", {
+      const res = await axios.post(`${API_ORIGIN}/api/auth/login`, {
         email: formData.email,
         password: formData.password,
       });
@@ -71,6 +72,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       // ✅ Si debe cambiar la contraseña inicial, guardamos el email y redirigimos
       if (cambiarPassword) {
         localStorage.setItem("email-cambio-inicial", usuario.email); // ✅ clave correcta
+        localStorage.setItem("token-cambio-inicial", res.data.tempToken);
         alert("Debes cambiar tu contraseña antes de continuar.");
         navigate("/cambiar-password-inicial");
         return;
@@ -84,7 +86,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
         fullName || "Sin Nombre",
         usuario.email,
         usuario.telefono,
-        usuario.baja
+        usuario.baja,
+        res.data.token
       );
 
       if (onSuccess) {
@@ -142,7 +145,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
           onSuccess={(credentialResponse) => {
             const token = credentialResponse.credential;
             axios
-              .post("http://localhost:8080/api/auth/google", { token })
+              .post(`${API_ORIGIN}/api/auth/google`, { token })
               .then((res) => {
                 const usuario = res.data;
                 login(
@@ -151,7 +154,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                   `${usuario.nombre} ${usuario.apellido}`,
                   usuario.email,
                   usuario.telefono,
-                  usuario.baja
+                  usuario.baja,
+                  usuario.token
                 );
                 alert("¡Login con Google exitoso!");
                 switch (usuario.rol) {

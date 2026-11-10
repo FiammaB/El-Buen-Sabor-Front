@@ -132,7 +132,7 @@ const ReporteClientesPage: React.FC = () => {
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     >
                         <option value="cantidad">Cantidad de Pedidos</option>
-                        <option value="importe">Importe Total</option>
+                        <option value="total">Importe Total</option>
                     </select>
                 </div>
 
@@ -236,11 +236,11 @@ const ReporteClientesPage: React.FC = () => {
                                             fill="#82ca9d"
                                             label={({ percent }) => `${(percent * 100).toFixed(0)}%`} // Formato de porcentaje
                                         >
-                                            {clientes.map((entry, index) => (
+                                            {clientes.map((_entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                             ))}
                                         </Pie>
-                                        <Tooltip formatter={(value, name, props) => [`$${(value as number).toFixed(2)}`, props.payload.nombre]} />
+                                        <Tooltip formatter={(value, _name, props) => [`$${(value as number).toFixed(2)}`, props.payload.nombre]} />
                                         <Legend />
                                     </PieChart>
                                 </ResponsiveContainer>

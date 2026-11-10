@@ -11,7 +11,6 @@ import { uploadImage } from "../../services/imagenService";
 import type { IArticuloManufacturadoResponseDTO } from "../../models/DTO/IAArticuloManufacturadoResponseDTO";
 import type { IArticuloInsumoResponseDTO } from "../../models/DTO/IAArticuloInsumoResponseDTO";
 import type { PromocionCreateDTO } from "../../models/DTO/PromocionCreateDTO";
-import type { IImagenResponseDTO } from "../../models/DTO/IImagenResponseDTO";
 import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO";
 
 const MySwal = withReactContent(Swal);
@@ -39,7 +38,7 @@ const PromocionForm: React.FC = () => {
     const isEditing = !!id;
     const navigate = useNavigate();
 
-    const { register, handleSubmit, reset, setValue } = useForm<FormularioPromocion>();
+    const { register, handleSubmit, setValue } = useForm<FormularioPromocion>();
     const articuloService = useMemo(() => new ArticuloService(), []);
 
     const [articulosManufacturadosDisponibles, setArticulosManufacturadosDisponibles] = useState<IArticuloManufacturadoResponseDTO[]>([]);

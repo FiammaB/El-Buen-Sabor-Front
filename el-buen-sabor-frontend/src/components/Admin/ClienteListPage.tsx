@@ -34,7 +34,10 @@ export default function ClienteListPage() {
     const handleUpdateCliente = async () => {
         if (!clienteEdit) return;
         try {
-            await clienteService.updateCliente(clienteEdit.id, clienteEdit);
+            await clienteService.actualizarDesdeAdmin(clienteEdit.id, {
+                telefono: clienteEdit.telefono,
+                activo: !clienteEdit.baja,
+            });
             setShowForm(false);
             setClienteEdit(null);
             fetchClientes(); // Volver a cargar los clientes para reflejar los cambios

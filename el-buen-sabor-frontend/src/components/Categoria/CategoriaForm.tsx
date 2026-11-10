@@ -1,5 +1,6 @@
 import type { ICategoriaResponseDTO } from "../../models/DTO/ICategoriaResponseDTO.ts";
 import { useEffect, useRef, useState } from "react";
+import { API_ORIGIN } from "../../config/api";
 
 function normalizarTexto(texto: string): string {
 	return texto
@@ -64,13 +65,13 @@ export function CategoriaForm({
 			let categoriaCreada = null;
 			if (editCategoria) {
 				const dataEdit = { denominacion, categoriaPadreId: idCategoriaPadre, sucursalIds: [] };
-				res = await fetch(`http://localhost:8080/api/categorias/${editCategoria.id}`, {
+				res = await fetch(`${API_ORIGIN}/api/categorias/${editCategoria.id}`, {
 					method: "PUT",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify(dataEdit)
 				});
 			} else {
-				res = await fetch("http://localhost:8080/api/categorias", {
+				res = await fetch(`${API_ORIGIN}/api/categorias`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ ...data, baja })
@@ -78,7 +79,7 @@ export function CategoriaForm({
 				if (res.ok) {
 					categoriaCreada = await res.json();
 					if (baja) {
-						await fetch(`http://localhost:8080/api/categorias/${categoriaCreada.id}/baja?baja=true`, {
+						await fetch(`${API_ORIGIN}/api/categorias/${categoriaCreada.id}/baja?baja=true`, {
 							method: "PATCH"
 						});
 					}

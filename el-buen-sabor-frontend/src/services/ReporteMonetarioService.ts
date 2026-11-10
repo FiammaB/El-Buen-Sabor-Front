@@ -1,7 +1,8 @@
-import type { ReporteMonetarioDTO, ReporteMonetarioDiarioDTO } from "../models/DTO/ReporteMonetarioDTO";
+import type { ReporteMonetarioDiarioDTO } from "../models/DTO/ReporteMonetarioDTO";
+import { API_ORIGIN } from "../config/api";
 
-const BASE_URL = "http://localhost:8080/api";
-const API_URL = "http://localhost:8080/api/reportes/monetario";
+const BASE_URL = `${API_ORIGIN}/api`;
+const API_URL = `${API_ORIGIN}/api/reportes/monetario`;
 
 
 export const getReporteMonetario = async (desde: string, hasta: string) => {

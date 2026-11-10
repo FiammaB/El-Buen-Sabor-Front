@@ -1,8 +1,9 @@
+import { API_ORIGIN } from "../config/api";
 // src/services/DomicilioService.ts
 import axios from "axios";
 import type { IDomicilioDTO } from "../models/DTO/IDomicilioDTO";
 
-const API_URL = "http://localhost:8080/api/domicilios";
+const API_URL = `${API_ORIGIN}/api/domicilios`;
 
 export class DomicilioService {
     async getAll(): Promise<IDomicilioDTO[]> {

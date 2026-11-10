@@ -1,8 +1,9 @@
+import { API_ORIGIN } from "../config/api";
 // services/UnidadMedidaService.ts
 import axios from "axios";
 import { UnidadMedida } from "../models/Categoria/UnidadMedida";
 
-const API_BASE_URL = "http://localhost:8080/api/unidades-medida";
+const API_BASE_URL = `${API_ORIGIN}/api/unidades-medida`;
 
 export class UnidadMedidaService {
   async getAll(): Promise<UnidadMedida[]> {

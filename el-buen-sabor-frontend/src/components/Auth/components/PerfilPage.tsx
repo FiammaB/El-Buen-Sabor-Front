@@ -3,6 +3,7 @@ import axios from "axios";
 import { useAuth } from "../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react"; // Importar iconos para mostrar/ocultar contraseña
+import { API_ORIGIN } from "../../../config/api";
 
 export default function PerfilPage() {
   // Renombrar 'email' a 'userEmail' para evitar conflicto con 'form.email'
@@ -41,7 +42,7 @@ export default function PerfilPage() {
 useEffect(() => {
   if (userEmail) {
     axios
-      .get(`http://localhost:8080/api/usuarios/perfil/${userEmail}`)
+      .get(`${API_ORIGIN}/api/usuarios/perfil/${userEmail}`)
       .then((res) => {
         const perfil = res.data; // ✅ Es un PerfilDTO directo
 
@@ -195,7 +196,7 @@ useEffect(() => {
 
       // 3. Envío al backend (usando el ID del cliente)
       // Ajusta la URL si tu endpoint de actualización es diferente
-      const res = await axios.put(`http://localhost:8080/api/persona/${id}/perfil`, payload);
+      await axios.put(`${API_ORIGIN}/api/persona/${id}/perfil`, payload);
 
       // 4. Actualizar contexto de autenticación si es necesario (ej: nombre/apellido cambiaron)
       // Asegúrate de que los parámetros de login coincidan con los de tu AuthContext

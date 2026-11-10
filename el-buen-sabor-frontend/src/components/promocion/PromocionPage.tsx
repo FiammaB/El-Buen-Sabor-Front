@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { getPromociones } from "../../services/PromocionService";
 import type { IPromocionDTO } from "../../models/DTO/IPromocionDTO";
-import type { IArticuloManufacturadoResponseDTO } from "../../models/DTO/IAArticuloManufacturadoResponseDTO";
-import { getArticulosManufacturados } from "../../services/ArticuloManufacturadoService";
 import { useCart } from "../../components/Cart/context/cart-context";
 
 const PromocionPage: React.FC = () => {
     const [promociones, setPromociones] = useState<IPromocionDTO[]>([]);
-    const [articulos, setArticulos] = useState<IArticuloManufacturadoResponseDTO[]>([]);
     const { addToCart } = useCart();
 
     useEffect(() => {
         getPromociones().then(setPromociones).catch(console.error);
-        getArticulosManufacturados().then(setArticulos).catch(console.error);
     }, []);
 
     const hoy = new Date();

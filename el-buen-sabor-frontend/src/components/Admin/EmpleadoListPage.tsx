@@ -13,9 +13,6 @@ function soloLetras(texto: string) {
 function soloNumeros(texto: string) {
     return /^[0-9]*$/.test(texto);
 }
-function validarEmail(email: string) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
-}
 function edad(fechaNacimiento: string) {
     const hoy = new Date();
     const fnac = new Date(fechaNacimiento);
@@ -341,7 +338,7 @@ export default function EmpleadoListPage() {
                                         }
                                         // Si pasa validaciones, actualizá
                                         try {
-                                            await clienteService.updateCliente(editCliente.id!, { // Ensure editCliente.id is not null
+                                            await clienteService.actualizarDesdeAdmin(editCliente.id!, {
                                                 nombre: editCliente.nombre,
                                                 apellido: editCliente.apellido,
                                                 telefono: editCliente.telefono,

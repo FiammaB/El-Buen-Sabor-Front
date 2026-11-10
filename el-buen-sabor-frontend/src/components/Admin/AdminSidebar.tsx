@@ -10,7 +10,8 @@ import {
   ShoppingBag,
   Layers,
   FileText,
-  Tag
+  Tag,
+  Wallet
 } from "lucide-react";
 
 const navItems = [
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/admin/promociones", label: "Promociones ABM", icon: <Tag className="w-5 h-5" /> },
   { href: "/admin/movimientos-monetarios", label: "Movimientos Monetarios", icon: <FileText className="w-5 h-5" /> },
   { href: "/admin/empleados", label: "Panel de Empleados", icon: <Users className="w-5 h-5" /> },
+  { href: "/admin/cajas", label: "Historial de Cajas", icon: <Wallet className="w-5 h-5" /> },
 
   // ✅ NUEVO ÍTEM: PEDIDOS ENTREGADOS
   { href: "/admin/pedidos-entregados", label: "Pedidos Entregados", icon: <ClipboardList className="w-5 h-5" /> },

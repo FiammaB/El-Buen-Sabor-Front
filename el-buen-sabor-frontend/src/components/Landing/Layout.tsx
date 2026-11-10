@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom'; //'Link' is declared but its value is never read
+import { Link, Outlet, useNavigate, Navigate } from 'react-router-dom'; //'Link' is declared but its value is never read
 import { useAuth } from '../../components/Auth/Context/AuthContext'; // Ajusta la ruta si es necesario
 import { useCart } from '../../components/Cart/context/cart-context'; // Ajusta la ruta si es necesario
 import { Truck, CreditCard, Menu, X, ShoppingCart } from 'lucide-react';//'ShoppingBag' is declared but its value is never read
@@ -13,6 +13,7 @@ export default function Layout() {
     const { role, logout, username } = useAuth();//id' is declared but its value is never read
     const navigate = useNavigate();
     const { totalItems } = useCart();
+    const isStaff = role === "ADMINISTRADOR" || role === "CAJERO" || role === "COCINERO" || role === "DELIVERY";
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [headerSearch, setHeaderSearch] = useState<string>("");
@@ -41,11 +42,22 @@ export default function Layout() {
             : false;
     });
 
+    // El personal (admin/cajero/cocinero/delivery) no tiene nada que hacer en el
+    // sitio de venta al público (catálogo, carrito, checkout): lo mandamos a su panel.
+    if (isStaff) {
+        const staffHomePath =
+            role === "ADMINISTRADOR" ? "/admin" :
+            role === "CAJERO" ? "/cajero" :
+            role === "COCINERO" ? "/cocinero" :
+            "/delivery";
+        return <Navigate to={staffHomePath} replace />;
+    }
+
     return (
         <div className="min-h-screen bg-white ebs-landing">
 
-            {/* Take to cart si tiene algo (esto es global) */}
-            {totalItems > 0 && (
+            {/* Take to cart si tiene algo (solo para clientes/invitados, no para personal) */}
+            {!isStaff && totalItems > 0 && (
                 <a href="/cart" className="text-white fixed bottom-[20px] right-[20px] rounded-full font-bold bg-green-400 p-6 z-50 text-white">
                     <ShoppingCart className="w-10 h-10" />
                     <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
@@ -65,7 +77,8 @@ export default function Layout() {
                                 El Buen Sabor
                             </Link>
                         </div>
-                        {/* Desktop Search Bar (Header) */}
+                        {/* Desktop Search Bar (Header) - solo para clientes/invitados, no para personal */}
+                        {!isStaff && (
                         <nav className="hidden md:flex items-center space-x-8">
                             <div className="relative w-64">
                                 <input
@@ -121,6 +134,7 @@ export default function Layout() {
                                 )}
                             </div>
                         </nav>
+                        )}
                         {/* Desktop Navigation */}
                         <nav className="hidden md:flex items-center space-x-8">
                             <Link to="/" className="text-gray-700 hover:text-orange-500 transition duration-200">

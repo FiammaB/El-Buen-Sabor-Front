@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "../config/api";
 // src/services/PromocionService.ts
 
 import type { IPromocionDTO } from "../models/DTO/IPromocionDTO";
@@ -6,7 +7,7 @@ import type { IPromocionDTO } from "../models/DTO/IPromocionDTO";
 // Basado en tu backend PedidoServiceImpl, la interfaz del frontend debería ser más bien como PromocionCreateDTO:
 import type { PromocionCreateDTO } from "../models/DTO/PromocionCreateDTO"; // <-- Asegúrate que tienes esta interfaz en tu frontend
 
-const API_URL = "http://localhost:8080/api/promociones"; // Ruta base de tu API de promociones
+const API_URL = `${API_ORIGIN}/api/promociones`; // Ruta base de tu API de promociones
 
 /**
  * Crea una nueva promoción.

@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "../../../config/api";
 // src/pages/delivery/PerfilDeliveryPage.tsx
 import { useEffect, useState } from "react";
 import { useAuth } from "../Context/AuthContext.tsx";
@@ -54,7 +55,7 @@ export default function PerfilDeliveryPage() {
     try {
       setLoading(true);
       // Endpoint general para obtener el perfil por email
-      const res = await axios.get<PerfilGeneralDTO>(`http://localhost:8080/api/usuarios/perfil/${email}`);
+      const res = await axios.get<PerfilGeneralDTO>(`${API_ORIGIN}/api/usuarios/perfil/${email}`);
 
       const p = res.data;
       setPerfil(p);
@@ -140,7 +141,7 @@ export default function PerfilDeliveryPage() {
     try {
       // Endpoint de actualización: asumiendo que también es general por email
       const res = await axios.put<PerfilGeneralDTO>(
-          `http://localhost:8080/api/usuarios/perfil/${email}`,
+          `${API_ORIGIN}/api/usuarios/perfil/${email}`,
           {
             nombre: form.nombre,
             apellido: form.apellido,

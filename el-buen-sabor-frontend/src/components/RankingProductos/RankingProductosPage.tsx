@@ -8,10 +8,6 @@ import { useNavigate } from "react-router-dom";
 
 // Importar componentes de Recharts
 import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
     Tooltip,
     Legend,
     ResponsiveContainer,

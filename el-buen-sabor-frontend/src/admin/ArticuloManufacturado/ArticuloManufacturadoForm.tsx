@@ -4,7 +4,9 @@ import { ArticuloManufacturadoDetalle } from '../../models/Articulos/ArticuloMan
 import { ArticuloInsumo } from '../../models/Articulos/ArticuloInsumo';
 import { Categoria } from '../../models/Categoria/Categoria';
 import { Imagen } from '../../models/Categoria/Imagen';
+import { UnidadMedida } from '../../models/Categoria/UnidadMedida';
 import { ArticuloService } from '../../services/ArticuloService';
+import { UnidadMedidaService } from '../../services/UnidadMedidaService';
 import { uploadImage } from '../../services/imagenService';
 import axios from 'axios';
 import {CategoriaService} from "../../services/CategoriaService..ts";
@@ -23,10 +25,12 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
 
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [insumos, setInsumos] = useState<ArticuloInsumo[]>([]);
+    const [unidadesMedida, setUnidadesMedida] = useState<UnidadMedida[]>([]);
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [loadingMasterData, setLoadingMasterData] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const categoriaService = useMemo(() => new CategoriaService(), []);
+    const unidadMedidaService = useMemo(() => new UnidadMedidaService(), []);
     const [precioEditado, setPrecioEditado] = useState(false);
 
 
@@ -40,6 +44,10 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
                 // Cargar categorías
                 const categoriasData = await categoriaService.getAll();
                 setCategorias(categoriasData);
+
+                // Cargar unidades de medida
+                const unidadesData = await unidadMedidaService.getAll();
+                setUnidadesMedida(unidadesData);
 
                 // Cargar insumos
                 const insumosData = await articuloService.getAllArticulosInsumo();
@@ -77,7 +85,7 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
         };
         fetchMasterData();
         // eslint-disable-next-line
-    }, [articulo, articuloService, categoriaService]);
+    }, [articulo, articuloService, categoriaService, unidadMedidaService]);
 
 
     const [nombreDuplicado, setNombreDuplicado] = useState(false);
@@ -228,6 +236,10 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
         }
         if (!formData.categoriaId || Number(formData.categoriaId) === 0) {
             setError('Debe seleccionar una categoría.');
+            return;
+        }
+        if (!formData.unidadMedidaId || Number(formData.unidadMedidaId) === 0) {
+            setError('Debe seleccionar una unidad de medida.');
             return;
         }
         if (nombreDuplicado) {
@@ -403,6 +415,24 @@ const ArticuloManufacturadoForm: React.FC<ArticuloManufacturadoFormProps> = ({ a
 
                 </div>
 
+                {/* Selector de Unidad de Medida */}
+                <div style={{ marginBottom: '15px' }}>
+                    <label>Unidad de Medida:</label>
+                    <select
+                        name="unidadMedidaId"
+                        value={formData.unidadMedidaId ?? ''}
+                        onChange={handleChange}
+                        required
+                        style={{ width: '100%', padding: '8px' }}
+                    >
+                        <option value="">Seleccione una unidad de medida</option>
+                        {unidadesMedida.map(um => (
+                            <option key={um.id} value={um.id}>
+                                {um.denominacion}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
                 {/* Campo para URL de Imagen (ahora es un input de texto) */}
                 <div style={{marginBottom: '15px'}}>

@@ -58,41 +58,33 @@ function puedeDevolver(pedido: IPedidoDTO) {
     return pedido.estado === "CANCELADO";
 }
 
+// Muestra cuántos minutos faltan (o si ya se pasó) para la hora estimada de finalización.
+function minutosRestantesLabel(horaEstimadaFinalizacion?: string): string {
+    if (!horaEstimadaFinalizacion) return "-";
+    const [h, m, s] = horaEstimadaFinalizacion.split(":").map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return "-";
+    const estimado = new Date();
+    estimado.setHours(h, m, s || 0, 0);
+    const diffMin = Math.round((estimado.getTime() - Date.now()) / 60000);
+    if (diffMin > 0) return `~${diffMin} min`;
+    if (diffMin === 0) return "En cualquier momento";
+    return "Demorado";
+}
+
 export default function CajeroPedidosPage() {
-    const [pedidos, setPedidos] = useState<IPedidoDTO[]>([]);
-    const [estadoFiltro, setEstadoFiltro] = useState<string>("");
     const [openSlide, setOpenSlide] = useState<number | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [allPedidos, setAllPedidos] = useState<IPedidoDTO[]>([]);
     const [filteredPedidos, setFilteredPedidos] = useState<IPedidoDTO[]>([]);
     const [selectedEstados, setSelectedEstados] = useState<string[]>([]);
     const [idBusqueda, setIdBusqueda] = useState<string>("");
-    const [fechaFiltro, setFechaFiltro] = useState<string>("");
+    // Por defecto mostramos solo los pedidos de hoy (si no, la lista crece para siempre con
+    // todo el historial). El cajero puede cambiar o borrar la fecha para buscar otro día.
+    const [fechaFiltro, setFechaFiltro] = useState<string>(() => {
+        const hoy = new Date();
+        const pad = (n: number) => String(n).padStart(2, "0");
+        return `${hoy.getFullYear()}-${pad(hoy.getMonth() + 1)}-${pad(hoy.getDate())}`;
+    });
     const { id: userId, role } = useAuth();
-    const [loadingPedidoId, setLoadingPedidoId] = useState<number | null>(null);
-
-    const fetchPedidos = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            let data: IPedidoDTO[];
-            if (idBusqueda) {
-                const pedido = await new PedidoService().getPedidoById(Number(idBusqueda));
-                data = pedido ? [pedido] : [];
-            } else if (estadoFiltro) {
-                data = await new PedidoService().getPedidosByEstado(estadoFiltro);
-            } else {
-                data = await new PedidoService().getAllPedidos();
-            }
-            console.log("Respuesta del backend de pedidos:", data);
-            setPedidos(data);
-        } catch {
-            setError("Error cargando pedidos.");
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleCancelar = async (pedido: IPedidoDTO) => {
         if (!window.confirm("¿Seguro que deseas cancelar este pedido?")) return;
@@ -132,19 +124,10 @@ export default function CajeroPedidosPage() {
 
 
 
-    useEffect(() => {
-        fetchPedidos();
-    }, [estadoFiltro, idBusqueda]);
-
-    const handleLimpiarBusqueda = () => {
-        setIdBusqueda("");
-    };
-
     // Función para avanzar el estado
     const handleAvanzarEstado = async (pedido: IPedidoDTO) => {
         const prox = getProximoEstado(pedido);
         if (!prox) return;
-        setLoadingPedidoId(pedido.id!);
         // Armá el payload con el estado y, si existe, el id del usuario logueado
         try {
             // Armá el payload con el estado y, si existe, el id del usuario logueado
@@ -162,18 +145,18 @@ export default function CajeroPedidosPage() {
             setAllPedidos(nuevosPedidos);
         } catch (e: any) {
             alert("Error al avanzar el estado del pedido: " + (e?.response?.data?.error || e.message));
-        } finally {
-            // Siempre quita el ID de carga, ya sea éxito o error
-            setLoadingPedidoId(null);
         }
     };
 
 
     useEffect(() => {
-        (async () => {
+        const cargarPedidos = async () => {
             const data = await new PedidoService().getAllPedidos();
             setAllPedidos(data);
-        })();
+        };
+        cargarPedidos();
+        const intervalId = setInterval(cargarPedidos, 8000);
+        return () => clearInterval(intervalId);
     }, []);
 
     // Filtrado por estados seleccionados y por ID
@@ -238,7 +221,7 @@ export default function CajeroPedidosPage() {
                         <button
                             type="button"
                             className="text-xs text-red-600 ml-1 hover:underline"
-                            onClick={() => { setIdBusqueda(""); fetchPedidos(); }}
+                            onClick={() => setIdBusqueda("")}
                         >
                             Limpiar
                         </button>
@@ -298,6 +281,7 @@ export default function CajeroPedidosPage() {
                             <th className="p-2">Cliente</th>
                             <th className="p-2">Fecha</th>
                             <th className="p-2">Total</th>
+                            <th className="p-2">Tiempo estimado</th>
                             <th className="p-2">Estado</th>
                             <th className="p-2">Acción</th>
                         </tr>
@@ -305,7 +289,7 @@ export default function CajeroPedidosPage() {
                     <tbody>
                         {filteredPedidos.length === 0 ? (
                             <tr>
-                                <td colSpan={7} className="text-center p-4 text-gray-500">
+                                <td colSpan={8} className="text-center p-4 text-gray-500">
                                     No hay pedidos para mostrar.
                                 </td>
                             </tr>
@@ -340,6 +324,9 @@ export default function CajeroPedidosPage() {
                                         </td>
                                         <td className="p-2 text-center font-semibold text-green-700">
                                             ${pedido.total?.toFixed(2) ?? "-"}
+                                        </td>
+                                        <td className="p-2 text-center text-sm text-gray-700">
+                                            {minutosRestantesLabel(pedido.horaEstimadaFinalizacion)}
                                         </td>
                                         <td className="p-2 text-center">
                                             {getProximoEstado(pedido) ? (

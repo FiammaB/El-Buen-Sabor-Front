@@ -1,8 +1,9 @@
 import axios from "axios";
 import type { ILocalidadDTO } from "../models/DTO/ILocalidadDTO";
 import type {ILocalidadCreateUpdateDTO} from "../models/DTO/ILocalidadCreateUpdateDTO.ts";
+import { API_ORIGIN } from "../config/api";
 
-const API_URL = "http://localhost:8080/api/localidades";
+const API_URL = `${API_ORIGIN}/api/localidades`;
 
 export class LocalidadService {
     async getAll(): Promise<ILocalidadDTO[]> {

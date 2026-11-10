@@ -127,14 +127,6 @@ export default function Ingredientes() {
     resetForm();
   };
 
-  function normalizarTexto(str: string) {
-    return str
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .trim();
-  }
-
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -162,12 +154,6 @@ export default function Ingredientes() {
     if (!formData.denominacion?.trim()) errores.push("La denominación es obligatoria.");
     if (formData.precioCompra === undefined || formData.precioCompra <= 0)
       errores.push("El precio de compra debe ser mayor a 0.");
-    if (formData.stockActual === undefined || formData.stockActual < 0)
-      errores.push("El stock actual no puede ser negativo.");
-    if (formData.stockActual > 999999)
-      errores.push("El stock actual no puede ser mayor a 999999.");
-    if (formData.stockMinimo === undefined || formData.stockMinimo < 0)
-      errores.push("El stock mínimo no puede ser negativo.");
     if (formData.precioVenta === undefined || formData.precioVenta < 0) // <-- Validación para precioVenta
       errores.push("El precio de venta no puede ser negativo.");
     if (!formData.categoria?.id) errores.push("Debe seleccionar una categoría.");
@@ -178,11 +164,15 @@ export default function Ingredientes() {
       return;
     }
 
+    // El stock (por sucursal) no se toca desde acá — se maneja en "Control de Stock" /
+    // "Registrar Compra de Ingredientes". Se mandan en 0 solo para satisfacer el tipo; el
+    // backend ya no los usa (ver ArticuloInsumoDTO).
     const payload: ArticuloInsumo = {
       denominacion: formData.denominacion?.trim() || "",
       precioCompra: Number(formData.precioCompra) || 0,
-      stockActual: Number(formData.stockActual) || 0,
-      stockMinimo: Number(formData.stockMinimo) || 0,
+      stockActual: 0,
+      stockMinimo: 0,
+      stockPorSucursal: [],
       categoriaId: formData.categoria?.id || 0,
       unidadMedidaId: formData.unidadMedida?.id || 0,
       imagenId: formData.imagen?.id || 0,
@@ -251,8 +241,7 @@ export default function Ingredientes() {
                     "Denominación",
                     "Precio Compra",
                     "Precio Venta", // <-- NUEVA COLUMNA EN LA TABLA
-                    "Stock Actual",
-                    "Stock Mínimo",
+                    "Stock Total (todas las sucursales)",
                     "Es para Elaborar",
                     "Unidad",
                     "Categoría",
@@ -272,7 +261,6 @@ export default function Ingredientes() {
                     <td className="px-4 py-3 whitespace-nowrap">${ing.precioCompra?.toFixed(2)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">${ing.precioVenta?.toFixed(2)}</td> {/* <-- MOSTRAR PRECIO VENTA */}
                     <td className="px-4 py-3 whitespace-nowrap">{ing.stockActual ?? "-"}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">{ing.stockMinimo ?? "-"}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {ing.esParaElaborar ? "Sí" : "No"}
                     </td>
@@ -369,35 +357,14 @@ export default function Ingredientes() {
                   />
                 </div>
 
-                {/* Stock actual */}
-                <div>
-                  <label htmlFor="stockActual" className="block text-sm font-medium text-gray-700 mb-1">Stock actual</label>
-                  <input
-                    type="number"
-                    id="stockActual"
-                    value={formData.stockActual ?? ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, stockActual: e.target.value === "" ? undefined : parseFloat(e.target.value) })
-                    }
-                    className="border border-gray-300 rounded p-2 w-full"
-                    min={0}
-                    max={999999}
-                  />
-                </div>
-
-                {/* Stock mínimo */}
-                <div>
-                  <label htmlFor="stockMinimo" className="block text-sm font-medium text-gray-700 mb-1">Stock mínimo</label>
-                  <input
-                    type="number"
-                    id="stockMinimo"
-                    value={formData.stockMinimo ?? ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, stockMinimo: e.target.value === "" ? undefined : parseFloat(e.target.value) })
-                    }
-                    className="border border-gray-300 rounded p-2 w-full"
-                  />
-                </div>
+                {/* El stock ya no se edita acá: es por sucursal. Ver "Control de Stock" /
+                    "Registrar Compra de Ingredientes". */}
+                {esEdicion && (
+                  <div className="sm:col-span-2 text-xs text-gray-500 bg-gray-50 rounded p-2">
+                    Stock total (todas las sucursales): {formData.stockActual ?? "-"}. Para cargar o
+                    ajustar stock por sucursal, usá "Registrar Compra de Ingredientes".
+                  </div>
+                )}
 
                 {/* Categoría */}
                 <div>

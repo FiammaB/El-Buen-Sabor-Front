@@ -30,6 +30,7 @@ export interface IPedidoDTO {
     calle: string;
     numero: number;
     cp: number;
+    referencia?: string;
     localidad?: {
       id: number; // <-- Añadido ID para referencia
       nombre: string
@@ -67,6 +68,7 @@ export interface IDetallePedidoDTO {
   articuloManufacturado?: IArticuloManufacturadoResponseDTO | null; // Usar el DTO de respuesta
   articuloInsumo?: IArticuloInsumoResponseDTO | null; // Usar el DTO de respuesta
   promocion?: IPromocionDTO | null;
+  observaciones?: string | null;
 }
 
 // Enum para los estados del pedido (debe coincidir con el backend)

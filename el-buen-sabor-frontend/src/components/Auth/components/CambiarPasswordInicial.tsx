@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
+import { API_ORIGIN } from "../../../config/api";
 
 export default function CambiarPasswordInicial() {
   const navigate = useNavigate();
@@ -47,19 +48,24 @@ export default function CambiarPasswordInicial() {
 
     setCargando(true);
     try {
+      const tempToken = localStorage.getItem("token-cambio-inicial") || "";
       await axios.post(
-        `http://localhost:8080/api/auth/cambiar-password-inicial`,
+        `${API_ORIGIN}/api/auth/cambiar-password-inicial`,
         null,
         {
           params: {
             email: email,
             nuevaPassword: password,
           },
+          headers: {
+            Authorization: `Bearer ${tempToken}`,
+          },
         }
       );
 
       setMensaje("✅ Contraseña actualizada. Redirigiendo...");
       localStorage.removeItem("email-cambio-inicial");
+      localStorage.removeItem("token-cambio-inicial");
 
       setTimeout(() => {
         navigate("/login");

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_ORIGIN } from "../../../config/api";
 
 export default function VerifyCodeForm() {
     const navigate = useNavigate();
@@ -11,7 +12,7 @@ export default function VerifyCodeForm() {
         e.preventDefault();
         try {
             const res = await fetch(
-                ` http://localhost:8080/api/auth/verificar-codigo?email=${email}&codigo=${codigo}`,
+                ` ${API_ORIGIN}/api/auth/verificar-codigo?email=${email}&codigo=${codigo}`,
                 { method: "POST" }
             );
 

@@ -1,4 +1,5 @@
-const BASE_URL = "http://localhost:8080/api/articuloManufacturado";
+import { API_ORIGIN } from "../config/api";
+const BASE_URL = `${API_ORIGIN}/api/articuloManufacturado`;
 
 export const getArticulosManufacturados = async () => {
     const res = await fetch(`${BASE_URL}/manufacturados`);

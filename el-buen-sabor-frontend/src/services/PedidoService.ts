@@ -1,8 +1,9 @@
+import { API_ORIGIN } from "../config/api";
 // src/services/PedidoService.ts
 import axios from "axios";
 import type { IPedidoDTO } from '../models/DTO/IPedidoDTO';
 
-const API_BASE_URL = 'http://localhost:8080/api/pedidos';
+const API_BASE_URL = `${API_ORIGIN}/api/pedidos`;
 
 export class PedidoService {
   async sendPedido(pedido: IPedidoDTO): Promise<IPedidoDTO> {
@@ -27,8 +28,8 @@ export class PedidoService {
     }
   }
 
-  async getPedidosByEstado(estado: string): Promise<IPedidoDTO[]> {
-    const response = await axios.get(`${API_BASE_URL}/estado/${encodeURIComponent(estado)}`);
+  async getPedidosByEstado(estado: string, sucursalId: number): Promise<IPedidoDTO[]> {
+    const response = await axios.get(`${API_BASE_URL}/estado/${encodeURIComponent(estado)}?sucursalId=${sucursalId}`);
     return response.data;
   }
 
@@ -44,10 +45,10 @@ export class PedidoService {
     }
   }
 
-  // Cocinero: Obtener pedidos en preparación o cocina
-  async getPedidosEnCocina(): Promise<IPedidoDTO[]> {
+  // Cocinero: Obtener pedidos en preparación o cocina (de la sucursal donde está trabajando)
+  async getPedidosEnCocina(sucursalId: number): Promise<IPedidoDTO[]> {
     try {
-      const response = await axios.get(`${API_BASE_URL}/cocinero`);
+      const response = await axios.get(`${API_BASE_URL}/cocinero?sucursalId=${sucursalId}`);
       return response.data;
     } catch (error: any) {
       console.error('Error al obtener pedidos en preparación:', error.response?.data || error.message);
@@ -60,10 +61,10 @@ export class PedidoService {
     await axios.patch(`${API_BASE_URL}/${id}/estado`, payload);
   }
 
-  // Cajero: Obtener pedidos listos para cobrar
-  async getPedidosParaCobrar(): Promise<IPedidoDTO[]> {
+  // Cajero: Obtener pedidos listos para cobrar (de la sucursal donde está trabajando)
+  async getPedidosParaCobrar(sucursalId: number): Promise<IPedidoDTO[]> {
     try {
-      const response = await axios.get(`${API_BASE_URL}/cajero`);
+      const response = await axios.get(`${API_BASE_URL}/cajero?sucursalId=${sucursalId}`);
       return response.data;
     } catch (error: any) {
       console.error('Error al obtener pedidos para cajero:', error.response?.data || error.message);
@@ -74,6 +75,22 @@ export class PedidoService {
   // Cajero: Marcar un pedido como cobrado
   async cobrarPedido(id: number): Promise<void> {
     await this.actualizarEstadoPedido(id, "COBRADO");
+  }
+
+  // Cajero: registrar una venta de mostrador (cliente que pide directo en el local)
+  async registrarVentaMostrador(
+    empleadoId: number,
+    sucursalId: number,
+    detalles: { articuloId?: number; promocionId?: number; cantidad: number; observaciones?: string }[],
+    formaPago: "EFECTIVO" | "MERCADO_PAGO" = "EFECTIVO"
+  ): Promise<IPedidoDTO> {
+    const response = await axios.post<IPedidoDTO>(`${API_BASE_URL}/venta-mostrador`, {
+      empleadoId,
+      sucursalId,
+      detalles,
+      formaPago,
+    });
+    return response.data;
   }
 
   // Cocinero: Actualizar hora estimada

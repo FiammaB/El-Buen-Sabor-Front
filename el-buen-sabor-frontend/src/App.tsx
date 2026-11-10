@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import './App.css';
 import Layout from './components/Landing/Layout';
 // 🌐 Páginas públicas
@@ -46,6 +46,7 @@ import CompraIngredientesPage from "./components/CompraIngrediente/CompraIngredi
 import ControlStockPage from "./components/ControlStock/ControlStockPage.tsx";
 import ReporteMonetarioPage from "./components/Reportes/ReporteMonetarioPage.tsx";
 import PedidosEntregadosAdmin from "./components/Admin/PedidosEntregadosAdmin";
+import HistorialCajasPage from "./components/Admin/HistorialCajasPage";
 
 // 👨‍🍳 Panel Cocinero
 import CocineroAdminLayout from "./components/Cocinero/CocineroAdminLayout.tsx";
@@ -56,6 +57,7 @@ import PerfilCocineroPage from "./components/Auth/components/PerfilCocineroPage.
 import CajeroAdminLayout from "./components/Cajero/CajeroAdminLayout.tsx";
 import CajeroPedidosPage from "./components/Cajero/CajeroPedidosPage.tsx";
 import PerfilCajeroPage from "./components/Auth/components/PerfilCajeroPage.tsx";
+import RegistrarVentaPage from "./components/Cajero/RegistrarVentaPage.tsx";
 
 // 🚚 Panel Delivery
 import DeliveryAdminLayout from "./components/Delivery/DeliveryAdminLayout.tsx";
@@ -160,6 +162,7 @@ function App() {
             <Route path="movimientos-monetarios" element={<ReporteMonetarioPage />} />
             <Route path="empleados" element={<EmpleadoListPage />} />
             <Route path="pedidos-entregados" element={<PedidosEntregadosAdmin />} />
+            <Route path="cajas" element={<HistorialCajasPage />} />
 
 
             {/* <-- CAMBIO CLAVE AQUÍ: RUTA PARA VER TODOS LOS PEDIDOS DE UN CLIENTE (ADMIN) */}
@@ -209,6 +212,7 @@ function App() {
               </ProtectedRoute>
             }
           >
+            <Route index element={<Navigate to="pedidos" replace />} />
             <Route path="pedidos" element={<PedidosPage />} />
             <Route path="productos" element={<ArticuloManufacturadoList />} />
             <Route path="ingredientes" element={<Ingredientes />} />
@@ -228,7 +232,9 @@ function App() {
               </ProtectedRoute>
             }
           >
+            <Route index element={<Navigate to="caja" replace />} />
             <Route path="caja" element={<CajeroPedidosPage />} />
+            <Route path="venta-mostrador" element={<RegistrarVentaPage />} />
             <Route path="perfil" element={<PerfilCajeroPage />} />
           </Route>
 
@@ -241,6 +247,7 @@ function App() {
               </ProtectedRoute>
             }
           >
+            <Route index element={<Navigate to="pedidos" replace />} />
             <Route path="pedidos" element={<DeliveryPedidosPage />} />
             <Route path="pedido/:pedidoId" element={<VerPedidoPage />} />
             <Route path="perfil" element={<PerfilDeliveryPage />} />

@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "../../config/api";
 // src/pages/OrderConfirmation/OrderConfirmationPage.tsx
 
 "use client"; // Directiva para frameworks como Next.js, si aplica
@@ -49,12 +50,21 @@ interface PedidoDetailDTO {
 }
 
 
+// Minutos entre ahora y una hora "HH:mm:ss" de hoy (negativo si ya pasó).
+function minutosHasta(horaEstimadaFinalizacion?: string): number | null {
+  if (!horaEstimadaFinalizacion) return null;
+  const [h, m, s] = horaEstimadaFinalizacion.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  const objetivo = new Date();
+  objetivo.setHours(h, m, s || 0, 0);
+  return Math.round((objetivo.getTime() - Date.now()) / 60000);
+}
+
 export default function OrderConfirmationPage() {
   const navigate = useNavigate();
-  // ✨ CAMBIO CLAVE AQUÍ: TIEMPO ESTIMADO FIJO E INICIAL.
-  const FIXED_ESTIMATED_MINUTES = 30; // Define el tiempo fijo aquí
-  const [estimatedTime, setEstimatedTime] = useState(FIXED_ESTIMATED_MINUTES);
-  const [remainingTime, setRemainingTime] = useState(FIXED_ESTIMATED_MINUTES); // Comienza la cuenta regresiva desde el fijo
+  // Tiempo estimado real, calculado a partir de lo que carga el cocinero (horaEstimadaFinalizacion).
+  const [estimatedTime, setEstimatedTime] = useState<number | null>(null);
+  const [remainingTime, setRemainingTime] = useState<number | null>(null);
 
   const [isCancelling, setIsCancelling] = useState(false);
 
@@ -69,28 +79,21 @@ export default function OrderConfirmationPage() {
 
   console.log("PEDIDO ID en confirmación: ", pedidoId);
 
-  // --- EFECTO 1: Temporizador de cuenta regresiva (desde el valor fijo) ---
-  // Este efecto hace que los "min restantes" disminuyan.
-  // Si no quieres que haya cuenta regresiva, puedes eliminar este `useEffect` entero.
+  // --- EFECTO 1: Recalcular los minutos restantes cada 30s a partir de la hora
+  // real que cargó el cocinero (pedidoData.horaEstimadaFinalizacion), en vez de
+  // una cuenta regresiva inventada. ---
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
-    if (remainingTime > 0) {
-      timer = setInterval(() => {
-        setRemainingTime((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer as NodeJS.Timeout); // Asegura que el timer es NodeJS.Timeout
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 60000); // Actualiza cada minuto
-    }
-
-    // Función de limpieza
-    return () => {
-      if (timer) clearInterval(timer);
+    const recalcular = () => {
+      const restantes = minutosHasta(pedidoData?.horaEstimadaFinalizacion);
+      if (restantes === null) return;
+      setRemainingTime(Math.max(restantes, 0));
+      // La primera vez que vemos una hora estimada, la usamos como "total" para la barra de progreso.
+      setEstimatedTime((prev) => (prev === null ? Math.max(restantes, 1) : prev));
     };
-  }, [remainingTime]); // Dependencia: remainingTime, para re-evaluar el timer
+    recalcular();
+    const timer = setInterval(recalcular, 30000);
+    return () => clearInterval(timer);
+  }, [pedidoData?.horaEstimadaFinalizacion]);
 
   // --- EFECTO 2: Vaciar el carrito y limpiar la bandera de Mercado Pago ---
   useEffect(() => {
@@ -102,37 +105,69 @@ export default function OrderConfirmationPage() {
     }
   }, [clearCart, cartCleared]);
 
-  // --- EFECTO 3: Cargar los datos completos del pedido desde el backend (SOLO DATOS, NO TIEMPO) ---
-  useEffect(() => {
-    const fetchPedidoDetails = async () => {
-      if (!pedidoId) {
-        setIsLoadingPedido(false);
-        return;
-      }
-      setIsLoadingPedido(true);
+  // --- EFECTO 3: Cargar los datos del pedido y mantenerlos al día ---
+  // Mientras el pedido llega vía Mercado Pago, puede tardar unos segundos en pasar
+  // de "A_CONFIRMAR" a "PAGADO" (el webhook de MP es asíncrono), así que ahí
+  // reintentamos seguido. Una vez confirmado, seguimos consultando cada tanto
+  // mientras el pedido siga activo, para que el cliente vea el tiempo real que
+  // va cargando el cocinero sin tener que recargar la página.
+  const ESTADOS_FINALES = ["ENTREGADO", "CANCELADO", "RECHAZADO", "DEVOLUCION"];
 
+  useEffect(() => {
+    if (!pedidoId) {
+      setIsLoadingPedido(false);
+      return;
+    }
+
+    let cancelado = false;
+    let intento = 0;
+    const MAX_INTENTOS_CONFIRMACION = 15; // ~45s de espera para la confirmación del pago
+
+    const fetchPedidoDetails = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/api/pedidos/${pedidoId}`);
+        const res = await fetch(`${API_ORIGIN}/api/pedidos/${pedidoId}`);
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
         const data: PedidoDetailDTO = await res.json();
-        setPedidoData(data); // Almacena los datos del pedido en el estado
+        if (cancelado) return;
 
-        // ✨ YA NO SE HACE NINGÚN CÁLCULO DE TIEMPO AQUÍ.
-        // Los estados `estimatedTime` y `remainingTime` mantienen su valor fijo.
-
+        setPedidoData(data);
         setIsLoadingPedido(false);
 
+        if (ESTADOS_FINALES.includes(data.estado)) return; // ya terminó, no hace falta seguir preguntando
+
+        if (data.estado === "A_CONFIRMAR") {
+          intento++;
+          if (intento < MAX_INTENTOS_CONFIRMACION) {
+            setTimeout(fetchPedidoDetails, 3000);
+          }
+        } else {
+          // Pedido activo (pagado/en cocina/en preparación/listo/en delivery):
+          // seguimos consultando cada 15s para reflejar cambios de estado y de tiempo estimado.
+          setTimeout(fetchPedidoDetails, 15000);
+        }
       } catch (error) {
+        if (cancelado) return;
         console.error("Error al cargar los detalles del pedido:", error);
-        alert("Error al cargar los detalles de tu pedido. Por favor, intenta de nuevo más tarde.");
-        setPedidoData(null); // Asegurarse de que no se muestren datos parciales
         setIsLoadingPedido(false);
+
+        intento++;
+        if (intento < MAX_INTENTOS_CONFIRMACION) {
+          setTimeout(fetchPedidoDetails, 3000);
+        } else {
+          alert("Error al cargar los detalles de tu pedido. Por favor, intenta de nuevo más tarde.");
+          setPedidoData(null);
+        }
       }
     };
 
+    setIsLoadingPedido(true);
     fetchPedidoDetails();
+
+    return () => {
+      cancelado = true;
+    };
   }, [pedidoId]); // Dependencia: `pedidoId`
 
   // --- EFECTO 4: Actualizar el teléfono en AuthContext después de un pedido ---
@@ -178,7 +213,7 @@ export default function OrderConfirmationPage() {
     setIsCancelling(true);
 
     try {
-      const response = await fetch(`http://localhost:8080/api/pedidos/${pedidoId}/anular`, {
+      const response = await fetch(`${API_ORIGIN}/api/pedidos/${pedidoId}/anular`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -252,23 +287,41 @@ export default function OrderConfirmationPage() {
                 <span className="font-bold text-gray-900">#{pedidoData.id}</span>
               </div>
 
+              {pedidoData.formaPago === "MERCADO_PAGO" && pedidoData.estado === "A_CONFIRMAR" && (
+                <div className="flex items-center gap-2 bg-orange-50 text-orange-700 text-sm rounded-md p-3 mb-4">
+                  <span className="inline-block w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
+                  Confirmando tu pago con Mercado Pago...
+                </div>
+              )}
+
               <div className="space-y-6">
-                {/* Tiempo estimado de entrega (ahora fijo y con cuenta regresiva simple) */}
+                {/* Tiempo estimado de entrega (real, cargado por el cocinero) */}
                 <div className="flex items-center">
                   <Clock className="w-6 h-6 text-orange-500 mr-4 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="font-medium">Tiempo estimado de entrega</p>
-                    <div className="flex justify-between mt-1">
-                      <p className="text-sm text-gray-500">Aproximadamente {estimatedTime} minutos</p>
-                      <p className="text-sm font-medium text-orange-500">{remainingTime} min restantes</p>
-                    </div>
-                    {/* Barra de progreso (simulada) */}
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                      <div
-                        className="bg-orange-500 h-2 rounded-full"
-                        style={{ width: `${(1 - remainingTime / estimatedTime) * 100}%` || 0 }}
-                      ></div>
-                    </div>
+                    {remainingTime === null ? (
+                      <p className="text-sm text-gray-500 mt-1">
+                        Estamos confirmando tu pedido en cocina, en breve vas a ver el tiempo estimado.
+                      </p>
+                    ) : (
+                      <>
+                        <div className="flex justify-between mt-1">
+                          <p className="text-sm text-gray-500">Aproximadamente {estimatedTime} minutos</p>
+                          <p className="text-sm font-medium text-orange-500">
+                            {remainingTime > 0 ? `${remainingTime} min restantes` : "¡Ya está casi listo!"}
+                          </p>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                          <div
+                            className="bg-orange-500 h-2 rounded-full"
+                            style={{
+                              width: `${estimatedTime ? Math.min(Math.max((1 - remainingTime / estimatedTime) * 100, 0), 100) : 0}%`,
+                            }}
+                          ></div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 

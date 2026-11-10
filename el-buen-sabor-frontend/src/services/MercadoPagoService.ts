@@ -1,11 +1,11 @@
 import type { IPedidoDTO } from "../models/DTO/IPedidoDTO"
+import { API_ORIGIN } from "../config/api";
 
 export class MercadoPagoService {
   private baseUrl: string
 
   constructor() {
-    // Use environment variable or hardcoded URL depending on your setup
-    this.baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080/api"
+    this.baseUrl = `${API_ORIGIN}/api`
   }
 
   async createPreference(pedido: IPedidoDTO): Promise<string> {

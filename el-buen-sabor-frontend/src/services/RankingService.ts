@@ -1,6 +1,7 @@
 import type { ProductoRankingDTO } from "../models/DTO/ProductoRankingDTO";
+import { API_ORIGIN } from "../config/api";
 
-const BASE_URL = "http://localhost:8080/api/detallepedido";
+const BASE_URL = `${API_ORIGIN}/api/detallepedido`;
 
 export const getRanking = async (desde: string, hasta: string): Promise<ProductoRankingDTO[]> => {
     

@@ -36,7 +36,7 @@ export default function Landing() {
 	const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(null);
 	const [isClientBaja, setIsClientBaja] = useState(false);
 	// Importamos las funciones del carrito
-	const { addToCart, getItemQuantity, totalItems, removeFromCart, updateQuantity } = useCart() // Asegúrate de importar updateQuantity
+	const { addToCart, getItemQuantity, removeFromCart, updateQuantity } = useCart() // Asegúrate de importar updateQuantity
 
 	const articuloService = new ArticuloService();
 

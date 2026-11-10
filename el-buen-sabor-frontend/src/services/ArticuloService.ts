@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "../config/api";
 // src/services/ArticuloService.ts
 import axios from 'axios'; // <-- Revertimos la importación de axios
 
@@ -20,8 +21,8 @@ import type { IArticuloManufacturadoDetalleResponseDTO } from '../models/DTO/IAA
 import type { ICategoriaResponseDTO } from '../models/DTO/ICategoriaResponseDTO';
 import type { IUnidadMedidaResponseDTO } from '../models/DTO/IUnidadMedidaResponseDTO';
 
-const API_BASE_URL = 'http://localhost:8080/api/articuloManufacturado';
-const API_INSUMO_BASE_URL = 'http://localhost:8080/api/articuloInsumo';
+const API_BASE_URL = `${API_ORIGIN}/api/articuloManufacturado`;
+const API_INSUMO_BASE_URL = `${API_ORIGIN}/api/articuloInsumo`;
 
 export class ArticuloService {
 
@@ -29,7 +30,7 @@ export class ArticuloService {
 
     async getAllArticulosManufacturados(): Promise<ArticuloManufacturado[]> {
         const response = await axios.get<IArticuloManufacturadoResponseDTO[]>(
-            `http://localhost:8080/api/articuloManufacturado/manufacturados`
+            `${API_ORIGIN}/api/articuloManufacturado/manufacturados`
         );
         console.log("Respuesta cruda del back:", response.data);
         return response.data.map(data => this.mapToArticuloManufacturado(data));
@@ -50,9 +51,12 @@ export class ArticuloService {
             const response = await axios.get<IArticuloInsumoResponseDTO[]>(`${API_INSUMO_BASE_URL}/insumos`);
             const allInsumos: IArticuloInsumoResponseDTO[] = response.data;
 
-            // Filtra en el frontend: solo activos (baja = false), con stockActual > 0 y NO esParaElaborar
+            // Filtra en el frontend: solo activos (baja = false), con stock en ALGUNA sucursal
+            // y NO esParaElaborar
             const filteredInsumos = allInsumos.filter(insumo =>
-                insumo.baja === false && insumo.stockActual > 0 && insumo.esParaElaborar === false // <--- NUEVA CONDICIÓN
+                insumo.baja === false
+                && (insumo.stockPorSucursal ?? []).some(s => s.stockActual > 0)
+                && insumo.esParaElaborar === false // <--- NUEVA CONDICIÓN
             );
 
             return filteredInsumos.map(data => this.mapToArticuloInsumo(data));
@@ -97,7 +101,7 @@ export class ArticuloService {
     }
 
     async toggleArticuloManufacturadoBaja(id: number, baja: boolean): Promise<void> {
-        await axios.patch(`http://localhost:8080/api/articuloManufacturado/${id}/baja?baja=${baja}`);
+        await axios.patch(`${API_ORIGIN}/api/articuloManufacturado/${id}/baja?baja=${baja}`);
     }
 
     // --- Métodos para ArticuloInsumo (ABM de Insumos) ---
@@ -125,13 +129,17 @@ export class ArticuloService {
         return response.data.map(data => this.mapToArticuloInsumo(data));
     }
 
-    async sumarStock(id: number, cantidad: number): Promise<ArticuloInsumo> {
-        const response = await axios.put<ArticuloInsumo>(`${API_INSUMO_BASE_URL}/${id}/sumar-stock?cantidad=${cantidad}`);
-        return response.data;
+    async sumarStock(id: number, sucursalId: number, cantidad: number): Promise<ArticuloInsumo> {
+        const response = await axios.put<IArticuloInsumoResponseDTO>(`${API_INSUMO_BASE_URL}/${id}/sumar-stock?sucursalId=${sucursalId}&cantidad=${cantidad}`);
+        return this.mapToArticuloInsumo(response.data);
     }
 
-    async restarStock(id: number, cantidad: number): Promise<void> {
-        await axios.put(`${API_INSUMO_BASE_URL}/${id}/restar-stock?cantidad=${cantidad}`);
+    async restarStock(id: number, sucursalId: number, cantidad: number): Promise<void> {
+        await axios.put(`${API_INSUMO_BASE_URL}/${id}/restar-stock?sucursalId=${sucursalId}&cantidad=${cantidad}`);
+    }
+
+    async actualizarStockMinimo(id: number, sucursalId: number, stockMinimo: number): Promise<void> {
+        await axios.put(`${API_INSUMO_BASE_URL}/${id}/stock-minimo?sucursalId=${sucursalId}&stockMinimo=${stockMinimo}`);
     }
 
 
@@ -281,13 +289,20 @@ export class ArticuloService {
             ? new UnidadMedida(data.unidadMedida.denominacion, data.unidadMedida.id)
             : undefined;
 
+        // El backend ya no manda un stockActual/stockMinimo global (es por sucursal, ver
+        // stockPorSucursal) — acá se arma un consolidado (suma de todas las sucursales) para
+        // las pantallas que todavía no distinguen por sucursal.
+        const stockPorSucursal = data.stockPorSucursal ?? [];
+        const stockActual = stockPorSucursal.reduce((acc, s) => acc + (s.stockActual ?? 0), 0);
+        const stockMinimo = stockPorSucursal.reduce((acc, s) => acc + (s.stockMinimo ?? 0), 0);
+
         return new ArticuloInsumo(
             data.denominacion,
             data.precioVenta,
             data.categoriaId,
             data.precioCompra,
-            data.stockActual,
-            data.stockMinimo,
+            stockActual,
+            stockMinimo,
             data.esParaElaborar,
             data.unidadMedidaId,
             data.id,
@@ -295,27 +310,28 @@ export class ArticuloService {
             imagen,
             categoria,
             unidadMedida,
-            data.baja
+            data.baja,
+            stockPorSucursal
         );
     }
 
 
     async getAllCategorias(): Promise<Categoria[]> {
-        const response = await axios.get<ICategoriaResponseDTO[]>(`http://localhost:8080/api/categorias`);
+        const response = await axios.get<ICategoriaResponseDTO[]>(`${API_ORIGIN}/api/categorias`);
         return response.data.map(data =>
             new Categoria(data.denominacion, data.id, data.categoriaPadreId, data.sucursalIds)
         );
     }
 
     async getAllUnidadesMedida(): Promise<UnidadMedida[]> {
-        const response = await axios.get<IUnidadMedidaResponseDTO[]>(`http://localhost:8080/api/unidades-medida`);
+        const response = await axios.get<IUnidadMedidaResponseDTO[]>(`${API_ORIGIN}/api/unidades-medida`);
         return response.data.map(data =>
             new UnidadMedida(data.denominacion, data.id)
         );
     }
 
     async uploadArticuloImagen(articuloId: number, file: File): Promise<Imagen> {
-        const API_UPLOAD_URL = 'http://localhost:8080/api/uploads';
+        const API_UPLOAD_URL = `${API_ORIGIN}/api/uploads`;
 
         const formData = new FormData();
         formData.append('file', file);

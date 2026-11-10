@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "../../config/api";
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -69,6 +70,7 @@ export default function CheckoutPage() {
     numero: "",
     cp: "",
     localidadId: "",
+    referencia: "",
   });
 
   const [customerInfo, setCustomerInfo] = useState({
@@ -140,7 +142,7 @@ export default function CheckoutPage() {
 
     let response;
     try {
-      response = await fetch("http://localhost:8080/api/pedidos/validar-stock", {
+      response = await fetch(`${API_ORIGIN}/api/pedidos/validar-stock`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -184,7 +186,7 @@ export default function CheckoutPage() {
         return;
       }
       try {
-        const res = await fetch(`http://localhost:8080/api/domicilios/persona/${auth.id}`);
+        const res = await fetch(`${API_ORIGIN}/api/domicilios/persona/${auth.id}`);
         const data = await res.json();
         if (Array.isArray(data)) {
           setAddresses(data);
@@ -203,7 +205,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     const fetchLocalidades = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/localidades");
+        const res = await fetch(`${API_ORIGIN}/api/localidades`);
         const data = await res.json();
         setLocalidades(data);
       } catch (err) {
@@ -261,10 +263,7 @@ export default function CheckoutPage() {
   }, [items, validateCartStock]);
 
   const deliveryFee = deliveryType === TipoEnvio.DELIVERY ? (totalAmount >= 25 ? 0 : 3.99) : 0;
-  const finalTotal =
-    deliveryType === TipoEnvio.RETIRO_EN_LOCAL
-      ? totalAmount * 0.90
-      : totalAmount + deliveryFee;
+  const finalTotal = totalAmount + deliveryFee;
 
   const handleSubmitOrder = async () => {
     setIsProcessing(true);
@@ -285,6 +284,7 @@ export default function CheckoutPage() {
               cantidad: item.quantity,
               promocionId: promocion.id,
               subTotal: Number((promocion.precioPromocional * item.quantity).toFixed(2)),
+              observaciones: item.observaciones || undefined,
             };
           } else if (item.purchasableItem.tipo === "articulo") {
             const articulo = item.purchasableItem as Articulo;
@@ -292,6 +292,7 @@ export default function CheckoutPage() {
               cantidad: item.quantity,
               articuloId: articulo.id,
               subTotal: Number((articulo.precioVenta * item.quantity).toFixed(2)),
+              observaciones: item.observaciones || undefined,
             };
           }
           return null;
@@ -633,6 +634,9 @@ export default function CheckoutPage() {
                                 <span className="block font-medium">{`${d.calle} ${d.numero}`}</span>
                                 <span className="text-sm text-gray-500">{`${d.localidad?.nombre ?? ""
                                   } (${d.cp})`}</span>
+                                {d.referencia && (
+                                  <span className="block text-sm text-gray-500 italic">{d.referencia}</span>
+                                )}
                               </label>
                             ))}
 
@@ -702,19 +706,33 @@ export default function CheckoutPage() {
                                 ))}
                               </select>
                             </div>
+                            <div className="md:col-span-2">
+                              <label htmlFor="newAddressReferencia" className="text-sm block text-gray-700 mb-1">
+                                Punto de referencia (opcional)
+                              </label>
+                              <input
+                                type="text"
+                                id="newAddressReferencia"
+                                className="w-full px-3 py-2 border rounded-md"
+                                value={newAddress.referencia}
+                                onChange={(e) => setNewAddress({ ...newAddress, referencia: e.target.value })}
+                                placeholder="Ej: casa naranja, portón negro, al lado de la farmacia"
+                              />
+                            </div>
                           </div>
 
                           <div className="flex gap-4 pt-2">
                             <button
                               onClick={async () => {
                                 try {
-                                  const res = await fetch(`http://localhost:8080/api/domicilios/persona/${auth.id}`, {
+                                  const res = await fetch(`${API_ORIGIN}/api/domicilios/persona/${auth.id}`, {
                                     method: "POST",
                                     headers: { "Content-Type": "application/json" },
                                     body: JSON.stringify({
                                       calle: newAddress.calle,
                                       numero: parseInt(newAddress.numero),
                                       cp: newAddress.cp,
+                                      referencia: newAddress.referencia || null,
                                       localidad: {
                                         id: parseInt(newAddress.localidadId),
                                       },
@@ -728,7 +746,7 @@ export default function CheckoutPage() {
                                   setSelectedAddressId(saved.id);
                                   autopopulate(saved);
                                   setShowNewAddressForm(false);
-                                  setNewAddress({ calle: "", numero: "", cp: "", localidadId: "" });
+                                  setNewAddress({ calle: "", numero: "", cp: "", localidadId: "", referencia: "" });
                                 } catch (err) {
                                   console.error(err);
                                   alert("Error al guardar el domicilio. Verificá los datos.");
@@ -741,7 +759,7 @@ export default function CheckoutPage() {
                             <button
                               onClick={() => {
                                 setShowNewAddressForm(false);
-                                setNewAddress({ calle: "", numero: "", cp: "", localidadId: "" });
+                                setNewAddress({ calle: "", numero: "", cp: "", localidadId: "", referencia: "" });
                               }}
                               className="border border-gray-300 px-4 py-2 rounded-md"
                             >
@@ -952,17 +970,9 @@ export default function CheckoutPage() {
                       <div className="bg-gray-50 p-4 rounded-md space-y-3">
                         {items.map((item) => {
                           let itemDisplayName: string = item.purchasableItem.denominacion;
-                          let itemDisplayPrice: number;
 
-                          if (item.purchasableItem.tipo === "articulo") {
-                            const articulo = item.purchasableItem as Articulo;
-                            itemDisplayPrice = articulo.precioVenta || 0;
-                          } else if (item.purchasableItem.tipo === "promocion") {
-                            const promocion = item.purchasableItem as IPromocionDTO;
-                            itemDisplayPrice = promocion.precioPromocional || 0;
+                          if (item.purchasableItem.tipo === "promocion") {
                             itemDisplayName = `${item.purchasableItem.denominacion} (Promo)`;
-                          } else {
-                            itemDisplayPrice = 0;
                           }
 
                           return (

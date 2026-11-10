@@ -104,3 +104,24 @@ para que la banderita se posicione correctamente sobre él. */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra sutil */
   z-index: 10; /* Asegura que esté por encima de la imagen */
 }
+
+/* Impresión de comandas: en pantalla no se ve, al imprimir tapa todo lo demás. */
+.comanda-print {
+  display: none;
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .comanda-print,
+  .comanda-print * {
+    visibility: visible;
+  }
+  .comanda-print {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 280px;
+  }
+}

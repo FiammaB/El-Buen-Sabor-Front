@@ -1,5 +1,5 @@
 // src/pages/cliente/PedidoDetalle.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PedidoService } from '../../services/PedidoService';
 import type { IPedidoDTO } from '../../models/DTO/IPedidoDTO';

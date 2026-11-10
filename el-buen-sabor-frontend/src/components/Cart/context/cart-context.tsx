@@ -20,12 +20,14 @@ export interface CartItem {
   purchasableItem: PurchasableItem; // El objeto Articulo o Promocion
   quantity: number;
   subtotal: number;
+  observaciones?: string; // Pedido especial del cliente, ej: "sin lechuga"
 }
 
 type CartAction =
   | { type: "ADD_TO_CART"; payload: { item: Articulo | IPromocionDTO; quantity: number } }
   | { type: "REMOVE_FROM_CART"; payload: { id: number } }
   | { type: "UPDATE_QUANTITY"; payload: { id: number; quantity: number } }
+  | { type: "UPDATE_OBSERVACIONES"; payload: { id: number; observaciones: string } }
   | { type: "CLEAR_CART" }
   | { type: "LOAD_CART"; payload: { items: CartItem[] } }
 
@@ -44,6 +46,7 @@ export interface CartContextType {
   addToCart: (item: Articulo | IPromocionDTO, quantity?: number) => void;
   removeFromCart: (id: number) => void;
   updateQuantity: (id: number, quantity: number) => void;
+  updateObservaciones: (id: number, observaciones: string) => void;
   clearCart: () => void;
   isInCart: (id: number) => boolean;
   getItemQuantity: (id: number) => number;
@@ -138,6 +141,14 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         return item
       })
       return { ...state, items: updatedItems }
+    }
+
+    case "UPDATE_OBSERVACIONES": {
+      const { id, observaciones } = action.payload;
+      const updatedItems = state.items.map((item) =>
+        item.id === id ? { ...item, observaciones } : item
+      );
+      return { ...state, items: updatedItems };
     }
 
     case "CLEAR_CART": {
@@ -262,6 +273,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "CLEAR_CART" });
   };
 
+  const updateObservaciones = (id: number, observaciones: string) => {
+    dispatch({ type: "UPDATE_OBSERVACIONES", payload: { id, observaciones } });
+  };
+
   const isInCart = (id: number) => {
     // <-- CAMBIO IMPORTANTE: isInCart ahora necesita verificar también el tipo
     // Para promociones, el ID es único para la promo.
@@ -286,6 +301,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     addToCart,
     removeFromCart,
     updateQuantity,
+    updateObservaciones,
     clearCart,
     isInCart,
     getItemQuantity,

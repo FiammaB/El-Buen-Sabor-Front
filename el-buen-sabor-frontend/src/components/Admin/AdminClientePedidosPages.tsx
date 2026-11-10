@@ -1,5 +1,5 @@
 // src/pages/Admin/AdminClientePedidosPage.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom'; // Importa useParams
 import { PedidoService } from '../../services/PedidoService';
 import type { IPedidoDTO } from '../../models/DTO/IPedidoDTO'; // Importa interfaces necesarias

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PedidoService } from "../../services/PedidoService";
 import type { IPedidoDTO } from "../../models/DTO/IPedidoDTO";
@@ -49,6 +49,21 @@ export default function VerPedidoPage() {
                     {pedido.domicilio
                         ? `${pedido.domicilio.calle} ${pedido.domicilio.numero}, ${pedido.domicilio.localidad?.nombre ?? ""}`
                         : "-"}
+                    {pedido.domicilio?.referencia && (
+                        <div className="text-sm text-gray-500 italic">Referencia: {pedido.domicilio.referencia}</div>
+                    )}
+                    {pedido.domicilio && (
+                        <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                `${pedido.domicilio.calle} ${pedido.domicilio.numero}, ${pedido.domicilio.localidad?.nombre ?? ""}`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block mt-1 text-sm text-blue-600 hover:underline font-medium"
+                        >
+                            Abrir en Google Maps
+                        </a>
+                    )}
                 </div>
                 <div><span className="font-semibold">Total:</span> ${pedido.total?.toFixed(2)}</div>
             </div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Mail } from "lucide-react";
+import { API_ORIGIN } from "../../../config/api";
 
 export default function RecoverPasswordForm() {
     const [email, setEmail] = useState("");
@@ -11,7 +12,7 @@ export default function RecoverPasswordForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post(`http://localhost:8080/api/auth/recuperar?email=${email}`);
+            await axios.post(`${API_ORIGIN}/api/auth/recuperar?email=${email}`);
             setMensaje("📩 Código enviado al correo");
 
             localStorage.setItem("email-recuperacion", email);

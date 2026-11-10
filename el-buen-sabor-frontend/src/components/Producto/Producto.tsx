@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "../../config/api";
 "use client";
 
 import { useEffect, useState } from "react";
@@ -41,7 +42,7 @@ export default function ProductDetailPage() {
       let fetchedProduct: ProductDetailType | null = null;
 
       try {
-        const res = await fetch(`http://localhost:8080/api/articuloManufacturado/${id}`);
+        const res = await fetch(`${API_ORIGIN}/api/articuloManufacturado/${id}`);
         if (res.ok) {
           fetchedProduct = Object.setPrototypeOf(await res.json(), ArticuloManufacturado.prototype) as ArticuloManufacturado;
         } else if (res.status === 404) {
@@ -49,7 +50,7 @@ export default function ProductDetailPage() {
             const promo = await getPromocionById(Number(id));
             fetchedProduct = promo;
           } catch {
-            const insumoRes = await fetch(`http://localhost:8080/api/articuloInsumo/${id}`);
+            const insumoRes = await fetch(`${API_ORIGIN}/api/articuloInsumo/${id}`);
             if (insumoRes.ok) {
               fetchedProduct = Object.setPrototypeOf(await insumoRes.json(), ArticuloInsumo.prototype) as ArticuloInsumo;
             } else {
@@ -84,7 +85,7 @@ export default function ProductDetailPage() {
         try {
           const res = await fetch(
             // ✅ FILTRADO POR `baja=false` PARA PRODUCTOS RELACIONADOS
-            `http://localhost:8080/api/articuloManufacturado/filtrar?categoriaId=${producto.categoria.id}&baja=false`
+            `${API_ORIGIN}/api/articuloManufacturado/filtrar?categoriaId=${producto.categoria.id}&baja=false`
           );
           const data: ArticuloManufacturado[] = await res.json();
           const filtrados = data

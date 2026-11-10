@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "../../config/api";
 //src/pages/cliente/ClientePerfilPage.tsx
 import { useEffect, useState } from "react";
 import { useAuth } from "../Auth/Context/AuthContext";
@@ -22,7 +23,7 @@ type PerfilDTO = {
 };
 
 export default function ClientePerfilPage() {
-  const { email, id: userId, role } = useAuth();
+  const { email } = useAuth();
   const [perfil, setPerfil] = useState<PerfilDTO | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,7 +50,7 @@ export default function ClientePerfilPage() {
     if (!email) return;
     try {
       setLoading(true);
-      const res = await axios.get<PerfilDTO>(`http://localhost:8080/api/usuarios/perfil/${email}`);
+      const res = await axios.get<PerfilDTO>(`${API_ORIGIN}/api/usuarios/perfil/${email}`);
       const p = res.data;
       setPerfil(p);
       setForm({
@@ -131,7 +132,7 @@ export default function ClientePerfilPage() {
 
     try {
       const res = await axios.put<PerfilDTO>(
-          `http://localhost:8080/api/usuarios/perfil/${email}`,
+          `${API_ORIGIN}/api/usuarios/perfil/${email}`,
           {
             nombre: form.nombre,
             apellido: form.apellido,

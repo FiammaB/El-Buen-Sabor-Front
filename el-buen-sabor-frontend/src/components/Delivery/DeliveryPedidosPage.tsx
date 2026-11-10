@@ -28,6 +28,8 @@ export default function DeliveryPedidosPage() {
 
     useEffect(() => {
         fetchPedidos();
+        const intervalId = setInterval(fetchPedidos, 8000);
+        return () => clearInterval(intervalId);
     }, []);
 
     // Cambia el estado a ENTREGADO y recarga la grilla
@@ -43,19 +45,6 @@ export default function DeliveryPedidosPage() {
             alert("No se pudo actualizar el pedido.");
         }
     };
-
-    const calcularTotal = (pedido: IPedidoDTO) => {
-        if (!pedido.detalles) return 0;
-        return pedido.detalles.reduce((acc, det) => {
-            if (det.articuloManufacturado) {
-                return acc + (det.cantidad || 0) * (det.articuloManufacturado.precioVenta || 0);
-            } else if (det.articuloInsumo) {
-                return acc + (det.cantidad || 0) * (det.articuloInsumo.precioVenta || 0);
-            }
-            return acc;
-        }, 0);
-    };
-
 
     return (
         <div className="p-6">
@@ -101,9 +90,26 @@ export default function DeliveryPedidosPage() {
                                     </td>
                                     {/* DOMICILIO */}
                                     <td className="p-2 text-center">
-                                        {pedido.domicilio
-                                            ? `${pedido.domicilio.calle} ${pedido.domicilio.numero}, ${pedido.domicilio.localidad?.nombre || ""}`
-                                            : "-"}
+                                        {pedido.domicilio ? (
+                                            <div className="flex flex-col items-center gap-1">
+                                                <span>
+                                                    {`${pedido.domicilio.calle} ${pedido.domicilio.numero}, ${pedido.domicilio.localidad?.nombre || ""}`}
+                                                </span>
+                                                {pedido.domicilio.referencia && (
+                                                    <span className="text-xs text-gray-500 italic">{pedido.domicilio.referencia}</span>
+                                                )}
+                                                <a
+                                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                                        `${pedido.domicilio.calle} ${pedido.domicilio.numero}, ${pedido.domicilio.localidad?.nombre || ""}`
+                                                    )}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-xs text-blue-600 hover:underline font-medium"
+                                                >
+                                                    Abrir en Maps
+                                                </a>
+                                            </div>
+                                        ) : "-"}
                                     </td>
                                     {/* TELEFONO */}
                                     <td className="p-2 text-center">
